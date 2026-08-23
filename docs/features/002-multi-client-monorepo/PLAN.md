@@ -94,7 +94,7 @@
   - Checkpoint: `0ea559af07f5ad8c4d0f477681cc6a44b0b71780`
   - Evidence: frozen root install, workspace policy, contract generation/typecheck, repository-local Web package, and provenance check passed; server 212/212 and imported Web 40/40 tests passed; Vite built 11,300 modules into a deterministic single-file renderer; `make help` exposes all app commands.
 
-- [ ] **S2 — Explicit server and desktop application ownership**
+- [x] **S2 — Explicit server and desktop application ownership**
   - Covers: AC-002, AC-004, AC-008, RC-001, RC-006, NFR-004/010
   - Blocked by: S1 · Risk: high; path movement affects aliases, runtime data roots, bundling, Electron IPC, and native dependencies
   - Files: move `src` and `tests` into `apps/server`; move Electron main/preload/dev sources into `apps/desktop`; update TypeScript configs, build scripts, Electron builder, module checks, imports, and tests
@@ -104,8 +104,8 @@
   - Affected verify: `bun run server:check && bun run desktop:check && bun run build:runtime` → exit 0
   - Manual/scripted probe: start moved server on an isolated data copy and request `/api/meta`
   - Rollback: revert S2 commit on data-root, alias, Electron IPC, or native-load mismatch
-  - Checkpoint: commit SHA recorded on completion in this PLAN
-  - Evidence: recorded after fresh slice checks
+  - Checkpoint: `d0a27c73092ab6f4b99de43a81b1426ef99d1a54`
+  - Evidence: server and desktop TypeScript 7 checks, module/architecture/route/OpenAPI checks, 212/212 server tests, three Bun runtime bundles, repository-local Web packaging/provenance, isolated SQLite `/api/meta` start/close, and Electron `safeStorage` round-trip/delete probes passed. User `data/db2.sqlite` and `HANDOFF.md` digests remained unchanged.
 
 - [ ] **S3 — Hono HTTP runtime with preserved API and Socket.IO**
   - Covers: AC-005, AC-010, AC-013, RC-002-005, NFR-002-004, NFR-007-009
