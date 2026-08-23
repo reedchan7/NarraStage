@@ -133,7 +133,7 @@
   - Checkpoint: `913a991193ae4036637978a50d880bff32c89acc`
   - Evidence: React 19.2.8, React Router 7.18.2, TanStack Query 5.102.2, Zustand 5.0.15, Vite 8.2.2, and TypeScript 7.0.2 run from one frozen lock. Native TypeScript checking, five Web tests, Oxfmt, Oxlint, the full Vue/Pinia forbidden scan, and production packaging passed. The single-file renderer is 311.63 kB (98.33 kB gzip), down from the 26,953.39 kB Vue baseline. Browser acceptance at `http://localhost:50188` completed login, empty state, project creation, project card rendering, seven-locale selection, and redacted provider-status navigation against an isolated Hono runtime; secrets remained unavailable to the browser surface.
 
-- [ ] **S5 — React conversation, image, and video production tracer bullets**
+- [x] **S5 — React conversation, image, and video production tracer bullets**
   - Covers: AC-009-013, RC-004/005, NFR-005-009
   - Blocked by: S4 · Risk: high; streaming/reconnect and paid-job idempotency are user-critical
   - Files: create React conversation/socket, generation form/job/result, asset, and production surfaces and tests; port framework-neutral request builders/job stores/hooks; add deterministic end-to-end fixture server and browser acceptance
@@ -143,8 +143,8 @@
   - Affected verify: `bun run web:check && bun run acceptance:deterministic` → all named P1 flows pass without external spend
   - Manual/scripted probe: Browser executes conversation, image, and video workflow against deterministic adapters and inspects console errors
   - Rollback: revert S5 commit on duplicate submission, lost terminal state, inaccessible control, or unusable media result
-  - Checkpoint: commit SHA recorded on completion in this PLAN
-  - Evidence: recorded after fresh slice checks
+  - Checkpoint: `741d52ec0ae9387ef09a08249450155955657f42`
+  - Evidence: TypeScript 7 compilation, Oxlint/Oxfmt, eight Web tests, and the deterministic product acceptance passed. The acceptance covers login/catalog, Socket.IO streamed conversation terminal state, image/video idempotent submission, polling, owned media authorization, and non-empty media bytes. Browser acceptance at `http://localhost:50188` exercised the same three-stage UI: the conversation streamed to complete, the image decoded and rendered, and the video resolved to an authenticated Blob URL in the playable media element. A first browser pass exposed an invalid fixture-relative preview path; the fixture was corrected to exercise the production-owned media endpoint and the same browser path then passed.
 
 - [ ] **S6 — Contracted legacy removal, embedded renderer, desktop package, and CI**
   - Covers: AC-001-013, RC-001-006, NFR-001-010
