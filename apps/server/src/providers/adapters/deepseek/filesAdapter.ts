@@ -34,20 +34,9 @@ export class DeepSeekFilesAdapter implements FilesUploadPort {
           ? await this.#assetResolver?.resolveFile(input.assetId, context)
           : undefined;
       if ("source" in input && !owned) throw new Error("provider.asset_resolver_unavailable");
-      const bytes =
-        "source" in input
-          ? owned!.source.kind === "path"
-            ? await readFile(owned!.source.path)
-            : Buffer.from(await owned!.source.blob.arrayBuffer())
-          : decodeDeepSeekBase64(input.dataBase64);
       const byteLength = "source" in input ? owned!.byteLength : input.byteLength;
       const mediaType = "source" in input ? owned!.mimeType : input.mediaType;
-      const filename =
-        input.filename ?? ("source" in input ? owned!.filename : undefined) ?? "upload";
-      if (bytes.byteLength !== byteLength) {
-        throw new Error("deepseek.file_byte_length_mismatch");
-      }
-      if (bytes.byteLength > deepSeekManifest.visionLimits.maximumProviderFileBytes) {
+      if (byteLength > deepSeekManifest.visionLimits.maximumProviderFileBytes) {
         throw new Error("deepseek.image_byte_limit_exceeded");
       }
       if (
@@ -56,6 +45,17 @@ export class DeepSeekFilesAdapter implements FilesUploadPort {
         )
       ) {
         throw new Error("deepseek.image_media_type_unsupported");
+      }
+      const bytes =
+        "source" in input
+          ? owned!.source.kind === "path"
+            ? await readFile(owned!.source.path)
+            : Buffer.from(await owned!.source.blob.arrayBuffer())
+          : decodeDeepSeekBase64(input.dataBase64);
+      const filename =
+        input.filename ?? ("source" in input ? owned!.filename : undefined) ?? "upload";
+      if (bytes.byteLength !== byteLength) {
+        throw new Error("deepseek.file_byte_length_mismatch");
       }
       validateDeepSeekImageBytes(bytes, mediaType);
       if (context.abortSignal?.aborted) throw new DOMException("Aborted", "AbortError");

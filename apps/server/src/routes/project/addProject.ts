@@ -15,6 +15,7 @@ export const projectImageOfferingIdSchema = z
   .string()
   .min(1)
   .refine(isImageOffering, "project.image_offering_invalid");
+export const optionalProjectImageOfferingIdSchema = projectImageOfferingIdSchema.optional();
 
 // 新增项目
 export default router.post(
@@ -28,7 +29,7 @@ export default router.post(
     directorManual: z.string(),
     videoRatio: z.string(),
     imageModel: projectModelIdSchema,
-    imageOfferingId: projectImageOfferingIdSchema,
+    imageOfferingId: optionalProjectImageOfferingIdSchema,
     videoModel: projectModelIdSchema,
     imageQuality: projectImageQualitySchema,
     mode: z.string(),
@@ -63,7 +64,7 @@ export default router.post(
       directorManual,
       userId: 1,
       imageModel,
-      imageOfferingId,
+      ...(imageOfferingId ? { imageOfferingId } : {}),
       videoModel,
       createTime: Date.now(),
       imageQuality,

@@ -24,6 +24,10 @@ describe("release package entry points", () => {
     expect(workflow).toContain(
       "bun run web:package && git diff --exit-code -- data/web data/contracts/web-build.json",
     );
+    expect(packageJson.scripts.check).toContain("bun run artifacts:check");
+    expect(packageJson.scripts["artifacts:check"]).toContain(
+      "git diff --exit-code -- data/web data/contracts/web-build.json data/serve/app.js",
+    );
   });
 
   test("parses the checked-in Bun JSONC lock before evaluating product evidence", async () => {

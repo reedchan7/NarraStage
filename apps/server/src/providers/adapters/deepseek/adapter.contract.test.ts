@@ -3,6 +3,7 @@ import type { FetchFunction } from "@ai-sdk/provider-utils";
 import { MemoryCredentialVault } from "@/security/credentials/memoryVault";
 import { createDeepSeekAdapter } from "@/providers/adapters/deepseek";
 import { ProviderExecutionError } from "@/providers/adapters/deepseek/errors";
+import { DeepSeekFilesAdapter } from "@/providers/adapters/deepseek/filesAdapter";
 import type {
   FilesUploadPort,
   LanguageGeneratePort,
@@ -510,6 +511,54 @@ describe("DeepSeek V4 adapter contract", () => {
       byteLength: Buffer.from(onePixelPng, "base64").byteLength,
       expiresAt: "2026-08-23T10:20:00.000Z",
     });
+  });
+
+  test("rejects oversized owned files before touching their content", async () => {
+    const oversizedAssetId = `sha256:${"a".repeat(64)}`;
+    let blobReads = 0;
+    const oversizedBlob = new Blob();
+    Object.defineProperty(oversizedBlob, "arrayBuffer", {
+      value: async () => {
+        blobReads += 1;
+        throw new Error("oversized blob must not be read");
+      },
+    });
+    const oversizedSources = [
+      { kind: "path" as const, path: "/definitely-not-present/toonflow-oversize.png" },
+      { kind: "blob" as const, blob: oversizedBlob },
+    ];
+
+    for (const source of oversizedSources) {
+      const files = new DeepSeekFilesAdapter(undefined, {
+        async resolveFile() {
+          return {
+            assetId: oversizedAssetId,
+            mimeType: "image/png",
+            byteLength: 65 * 1024 * 1024,
+            sha256: "a".repeat(64),
+            source,
+          };
+        },
+      });
+      await expect(
+        files.upload(
+          {
+            schemaVersion: "1.0.0",
+            offeringId: "deepseek:v4-flash-vision-exp:official",
+            idempotencyKey: `oversized-owned-${source.kind}`,
+            input: { source: "owned_asset", assetId: oversizedAssetId },
+          },
+          { principalId: "user:1" },
+        ),
+      ).rejects.toMatchObject({
+        providerError: {
+          category: "invalid_input",
+          code: "deepseek.image_byte_limit_exceeded",
+        },
+      });
+    }
+
+    expect(blobReads).toBe(0);
   });
 
   test("rejects spoofed image formats and non-image Files before network", async () => {

@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import {
+  optionalProjectImageOfferingIdSchema,
   projectImageOfferingIdSchema,
   projectImageQualitySchema,
   projectModelIdSchema,
@@ -36,5 +37,12 @@ describe("project creation defaults", () => {
         preferenceMode: "pinned",
       }),
     ).toMatchObject({ videoOfferingId: "minimax:h3:official" });
+  });
+
+  test("keeps the exact image offering optional for legacy project clients", () => {
+    expect(optionalProjectImageOfferingIdSchema.parse(undefined)).toBeUndefined();
+    expect(optionalProjectImageOfferingIdSchema.parse("google:nano-banana-2-lite:official")).toBe(
+      "google:nano-banana-2-lite:official",
+    );
   });
 });

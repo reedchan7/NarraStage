@@ -42065,8 +42065,8 @@ var init_metadata = __esm(() => {
 
 // apps/server/src/assets/mediaAssetRepository.ts
 import { createHash as createHash2, randomUUID as randomUUID2 } from "node:crypto";
-import { createWriteStream as createWriteStream2 } from "node:fs";
-import { mkdir as mkdir2, readFile, rename as rename2, rm as rm2, stat as stat2, writeFile } from "node:fs/promises";
+import { createWriteStream as createWriteStream2, openAsBlob } from "node:fs";
+import { mkdir as mkdir2, rename as rename2, rm as rm2, stat as stat2, writeFile } from "node:fs/promises";
 import path3 from "node:path";
 import { Transform as Transform2 } from "node:stream";
 import { pipeline as pipeline2 } from "node:stream/promises";
@@ -42299,8 +42299,8 @@ class OwnedMediaAssetResolver {
       throw new Error("provider.asset_not_found");
     if (stored.kind !== asset.kind)
       throw new Error("provider.asset_kind_mismatch");
-    const bytes = await readFile(stored.filePath);
-    if (bytes.byteLength !== stored.byteLength)
+    const blob = await openAsBlob(stored.filePath, { type: stored.mimeType });
+    if (blob.size !== stored.byteLength)
       throw new Error("provider.asset_length_mismatch");
     return {
       assetId: stored.id,
@@ -42308,7 +42308,7 @@ class OwnedMediaAssetResolver {
       mimeType: stored.mimeType,
       byteLength: stored.byteLength,
       sha256: stored.sha256,
-      source: { kind: "blob", blob: new Blob([bytes], { type: stored.mimeType }) }
+      source: { kind: "blob", blob }
     };
   }
   async resolveFile(assetId, context) {
@@ -62210,7 +62210,7 @@ var init_languageAdapter = __esm(() => {
 });
 
 // apps/server/src/providers/adapters/deepseek/filesAdapter.ts
-import { readFile as readFile2 } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 
 class DeepSeekFilesAdapter {
   operation = "files.upload";
@@ -62229,18 +62229,18 @@ class DeepSeekFilesAdapter {
       const owned = "source" in input ? await this.#assetResolver?.resolveFile(input.assetId, context) : undefined;
       if ("source" in input && !owned)
         throw new Error("provider.asset_resolver_unavailable");
-      const bytes = "source" in input ? owned.source.kind === "path" ? await readFile2(owned.source.path) : Buffer.from(await owned.source.blob.arrayBuffer()) : decodeDeepSeekBase64(input.dataBase64);
       const byteLength = "source" in input ? owned.byteLength : input.byteLength;
       const mediaType = "source" in input ? owned.mimeType : input.mediaType;
-      const filename = input.filename ?? ("source" in input ? owned.filename : undefined) ?? "upload";
-      if (bytes.byteLength !== byteLength) {
-        throw new Error("deepseek.file_byte_length_mismatch");
-      }
-      if (bytes.byteLength > deepSeekManifest.visionLimits.maximumProviderFileBytes) {
+      if (byteLength > deepSeekManifest.visionLimits.maximumProviderFileBytes) {
         throw new Error("deepseek.image_byte_limit_exceeded");
       }
       if (!deepSeekManifest.visionLimits.supportedMediaTypes.includes(mediaType)) {
         throw new Error("deepseek.image_media_type_unsupported");
+      }
+      const bytes = "source" in input ? owned.source.kind === "path" ? await readFile(owned.source.path) : Buffer.from(await owned.source.blob.arrayBuffer()) : decodeDeepSeekBase64(input.dataBase64);
+      const filename = input.filename ?? ("source" in input ? owned.filename : undefined) ?? "upload";
+      if (bytes.byteLength !== byteLength) {
+        throw new Error("deepseek.file_byte_length_mismatch");
       }
       validateDeepSeekImageBytes(bytes, mediaType);
       if (context.abortSignal?.aborted)
@@ -81958,7 +81958,7 @@ var require_getCredentials = __commonJS(function(exports) {
   var fs2 = __require("fs");
   var util_1 = __require("util");
   var errorWithCode_1 = require_errorWithCode();
-  var readFile3 = fs2.readFile ? (0, util_1.promisify)(fs2.readFile) : async () => {
+  var readFile2 = fs2.readFile ? (0, util_1.promisify)(fs2.readFile) : async () => {
     throw new errorWithCode_1.ErrorWithCode("use key rather than keyFile.", "MISSING_CREDENTIALS");
   };
   var ExtensionFiles;
@@ -81977,7 +81977,7 @@ var require_getCredentials = __commonJS(function(exports) {
       this.keyFilePath = keyFilePath;
     }
     async getCredentials() {
-      const key = await readFile3(this.keyFilePath, "utf8");
+      const key = await readFile2(this.keyFilePath, "utf8");
       let body;
       try {
         body = JSON.parse(key);
@@ -82000,7 +82000,7 @@ var require_getCredentials = __commonJS(function(exports) {
       this.keyFilePath = keyFilePath;
     }
     async getCredentials() {
-      const privateKey = await readFile3(this.keyFilePath, "utf8");
+      const privateKey = await readFile2(this.keyFilePath, "utf8");
       return { privateKey };
     }
   }
@@ -83198,7 +83198,7 @@ var require_filesubjecttokensupplier = __commonJS(function(exports) {
   exports.FileSubjectTokenSupplier = undefined;
   var util_1 = __require("util");
   var fs2 = __require("fs");
-  var readFile3 = (0, util_1.promisify)(fs2.readFile ?? (() => {}));
+  var readFile2 = (0, util_1.promisify)(fs2.readFile ?? (() => {}));
   var realpath = (0, util_1.promisify)(fs2.realpath ?? (() => {}));
   var lstat = (0, util_1.promisify)(fs2.lstat ?? (() => {}));
 
@@ -83225,7 +83225,7 @@ var require_filesubjecttokensupplier = __commonJS(function(exports) {
         throw err;
       }
       let subjectToken;
-      const rawText = await readFile3(parsedFilePath, { encoding: "utf8" });
+      const rawText = await readFile2(parsedFilePath, { encoding: "utf8" });
       if (this.formatType === "text") {
         subjectToken = rawText;
       } else if (this.formatType === "json" && this.subjectTokenFieldName) {
@@ -111776,7 +111776,7 @@ var require_fs5 = __commonJS(function(exports, module) {
   var path6 = __require("path");
   var { promisify: promisify2 } = __require("util");
   var stat5 = promisify2(fs3.stat);
-  var readFile3 = promisify2(fs3.readFile);
+  var readFile2 = promisify2(fs3.readFile);
   var writeFile3 = promisify2(fs3.writeFile);
   var readdir = promisify2(fs3.readdir);
   var mkdir3 = promisify2(fs3.mkdir);
@@ -111812,7 +111812,7 @@ var require_fs5 = __commonJS(function(exports, module) {
     existsSync: existsSync2,
     stat: stat5,
     readdir,
-    readFile: readFile3,
+    readFile: readFile2,
     writeFile: writeFile3,
     createTemp,
     ensureDirectoryExists,
@@ -111823,13 +111823,13 @@ var require_fs5 = __commonJS(function(exports, module) {
 // node_modules/.bun/knex@3.3.0+9606eb3220952147/node_modules/knex/lib/migrations/util/template.js
 var require_template2 = __commonJS(function(exports, module) {
   var template = require_template();
-  var { readFile: readFile3, writeFile: writeFile3 } = require_fs5();
+  var { readFile: readFile2, writeFile: writeFile3 } = require_fs5();
   var jsSourceTemplate = (content, options2) => template(content, {
     interpolate: /<%=([\s\S]+?)%>/g,
     ...options2
   });
   var jsFileTemplate = async (filePath, options2) => {
-    const contentBuffer = await readFile3(filePath);
+    const contentBuffer = await readFile2(filePath);
     return jsSourceTemplate(contentBuffer.toString(), options2);
   };
   var writeJsFileUsingTemplate = async (targetFilePath, sourceFilePath, options2, variables) => writeFile3(targetFilePath, (await jsFileTemplate(sourceFilePath, options2))(variables));
@@ -112550,7 +112550,7 @@ var require_cache = __commonJS(function(exports, module) {
 var require_async7 = __commonJS(function(exports, module) {
   var path6 = __require("path");
   var { promisify: promisify2 } = __require("util");
-  var readFile3 = promisify2(__require("fs").readFile);
+  var readFile2 = promisify2(__require("fs").readFile);
   var isNodeModules = require_is_node_modules();
   var resultsCache = require_cache();
   var promiseCache = new Map;
@@ -112559,7 +112559,7 @@ var require_async7 = __commonJS(function(exports, module) {
       return "commonjs";
     }
     try {
-      return JSON.parse(await readFile3(path6.resolve(directory, "package.json"))).type || "commonjs";
+      return JSON.parse(await readFile2(path6.resolve(directory, "package.json"))).type || "commonjs";
     } catch (_) {}
     const parent = path6.dirname(directory);
     if (parent === directory) {
@@ -261925,9 +261925,9 @@ var init_openapi = __esm(() => {
 });
 
 // apps/server/src/contracts/v2/meta.ts
-import { readFile as readFile3 } from "node:fs/promises";
+import { readFile as readFile2 } from "node:fs/promises";
 async function getApiMeta() {
-  const webBuildManifest = JSON.parse(await readFile3(getPath_default("contracts/web-build.json"), "utf8"));
+  const webBuildManifest = JSON.parse(await readFile2(getPath_default("contracts/web-build.json"), "utf8"));
   return metaSchema.parse({
     contractVersion,
     openapiSha256: createOpenApiArtifact().sha256,
@@ -264609,17 +264609,28 @@ var init_generationSelection = __esm(() => {
   ]);
 });
 
+// apps/server/src/providers/catalog/imageGenerationSelection.ts
+function isImageOffering(offeringId) {
+  return builtinCatalog.offerings.some((offering) => offering.id === offeringId && offering.support.implementation === "implemented" && offering.operations.some((operation) => operation.operation === "image.generate" && operation.enabled));
+}
+var init_imageGenerationSelection = __esm(() => {
+  init_builtinCatalog();
+});
+
 // apps/server/src/routes/project/addProject.ts
-var router93, projectModelIdSchema, projectImageQualitySchema, addProject_default;
+var router93, projectModelIdSchema, projectImageQualitySchema, projectImageOfferingIdSchema, optionalProjectImageOfferingIdSchema, addProject_default;
 var init_addProject = __esm(() => {
   init_compat2();
   init_utils3();
   init_zod();
   init_middleware();
   init_generationSelection();
+  init_imageGenerationSelection();
   router93 = compat_default.Router();
   projectModelIdSchema = exports_external.string().regex(/^[a-z0-9_-]+:.+$/i);
   projectImageQualitySchema = exports_external.enum(["1K", "2K", "4K"]);
+  projectImageOfferingIdSchema = exports_external.string().min(1).refine(isImageOffering, "project.image_offering_invalid");
+  optionalProjectImageOfferingIdSchema = projectImageOfferingIdSchema.optional();
   addProject_default = router93.post("/", validateFields({
     projectType: exports_external.string(),
     name: exports_external.string(),
@@ -264629,6 +264640,7 @@ var init_addProject = __esm(() => {
     directorManual: exports_external.string(),
     videoRatio: exports_external.string(),
     imageModel: projectModelIdSchema,
+    imageOfferingId: optionalProjectImageOfferingIdSchema,
     videoModel: projectModelIdSchema,
     imageQuality: projectImageQualitySchema,
     mode: exports_external.string(),
@@ -264643,6 +264655,7 @@ var init_addProject = __esm(() => {
       artStyle,
       videoRatio,
       imageModel,
+      imageOfferingId,
       videoModel,
       imageQuality,
       mode,
@@ -264660,6 +264673,7 @@ var init_addProject = __esm(() => {
       directorManual,
       userId: 1,
       imageModel,
+      ...imageOfferingId ? { imageOfferingId } : {},
       videoModel,
       createTime: Date.now(),
       imageQuality,
@@ -265375,13 +265389,10 @@ var init_updateGenerationSelection = __esm(() => {
 });
 
 // apps/server/src/routes/project/updateImageGenerationSelection.ts
-function isImageOffering(offeringId) {
-  return builtinCatalog.offerings.some((offering) => offering.id === offeringId && offering.support.implementation === "implemented" && offering.operations.some((operation) => operation.operation === "image.generate" && operation.enabled));
-}
 async function persistProjectImageOffering(database, projectId, userId, offeringId) {
   if (!isImageOffering(offeringId))
     throw new Error("project.image_offering_invalid");
-  const updated = await database("o_project").where({ id: projectId, userId }).update({ imageModel: offeringId });
+  const updated = await database("o_project").where({ id: projectId, userId }).update({ imageOfferingId: offeringId });
   return updated > 0;
 }
 var router106, updateImageGenerationSelection_default;
@@ -265389,7 +265400,7 @@ var init_updateImageGenerationSelection = __esm(() => {
   init_zod();
   init_compat2();
   init_middleware();
-  init_builtinCatalog();
+  init_imageGenerationSelection();
   init_utils3();
   router106 = compat_default.Router();
   updateImageGenerationSelection_default = router106.post("/", validateFields({ id: exports_external.number().int().positive(), offeringId: exports_external.string().min(1) }), async (req, res) => {
@@ -281093,6 +281104,18 @@ var providerFileOwnershipMigration = {
   }
 };
 
+// apps/server/src/lib/migrations/0008_image_generation_selection.ts
+var imageGenerationSelectionMigration = {
+  id: "0008_image_generation_selection",
+  async up(database) {
+    if (await database.schema.hasTable("o_project") && !await database.schema.hasColumn("o_project", "imageOfferingId")) {
+      await database.schema.alterTable("o_project", (table) => {
+        table.string("imageOfferingId");
+      });
+    }
+  }
+};
+
 // apps/server/src/lib/migrations/ledger.ts
 var ledgerTable = "o_provider_schema_migrations";
 async function runMigrationLedger(database, migrations) {
@@ -281127,7 +281150,8 @@ var migrations = [
   generationContinuationsMigration,
   generationAssetOutputsMigration,
   providerPlatformHardeningMigration,
-  providerFileOwnershipMigration
+  providerFileOwnershipMigration,
+  imageGenerationSelectionMigration
 ];
 async function runProviderPlatformMigrations(database) {
   await runMigrationLedger(database, migrations);
