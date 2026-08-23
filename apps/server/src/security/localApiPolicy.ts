@@ -23,11 +23,12 @@ export function resolveLocalApiPolicy(input: LocalApiPolicyInput): LocalApiPolic
 
   if (input.runtime === "desktop") {
     allowedOrigins.add("null");
-    if (input.nodeEnv === "dev") {
-      allowedOrigins.add("http://localhost:50188");
-      allowedOrigins.add("http://127.0.0.1:50188");
-    }
-  } else if (!loopbackHosts.has(host) && allowedOrigins.size === 0) {
+  }
+  if (input.nodeEnv === "dev" && loopbackHosts.has(host)) {
+    allowedOrigins.add("http://localhost:50188");
+    allowedOrigins.add("http://127.0.0.1:50188");
+  }
+  if (input.runtime === "standalone" && !loopbackHosts.has(host) && allowedOrigins.size === 0) {
     throw new Error("local_api.allowed_origins_required");
   }
 

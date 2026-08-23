@@ -201,7 +201,8 @@ describe("paid submission crash matrix", () => {
         provenance: { providerRequestId: "google-request-1" },
       },
     });
-    const assetId = (completed?.result as { artifacts: Array<{ assetId: string }> }).artifacts[0]!
+    expect(completed).toBeDefined();
+    const assetId = (completed!.result as { artifacts: Array<{ assetId: string }> }).artifacts[0]!
       .assetId;
     expect(await mediaAssets.getOwned(assetId, "local")).toMatchObject({ mimeType: "image/png" });
     expect((await repository.listAttempts(job.id))[0]).toMatchObject({

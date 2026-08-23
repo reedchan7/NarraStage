@@ -1,19 +1,16 @@
 {
-  "extends": "@vue/tsconfig/tsconfig.dom.json",
-  "include": ["src/**/*", "src/**/*.vue"],
+  "extends": "../../tsconfig.base.json",
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["node_modules", "dist", "coverage", "src/**/*.test.ts", "src/**/*.test.tsx"],
   "compilerOptions": {
-    "ignoreDeprecations": "5.0",
     "composite": false,
     "noEmit": true,
     "declaration": false,
-    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
     "types": ["vite/client"],
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
     }
-  },
-  "exclude": ["node_modules", "dist", "coverage", "**/*.test.ts", "src/**/__tests__/*"]
+  }
 }

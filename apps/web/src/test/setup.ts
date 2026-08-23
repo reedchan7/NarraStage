@@ -1,13 +1,17 @@
+import "@testing-library/jest-dom/vitest";
 import { afterEach } from "vitest";
-import { config, enableAutoUnmount } from "@vue/test-utils";
 
-enableAutoUnmount(afterEach);
+class ResizeObserverMock {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
 
-Object.assign(globalThis, {
-  $t: (key: string) => key,
+Object.defineProperty(window, "ResizeObserver", {
+  configurable: true,
+  value: ResizeObserverMock,
 });
 
-config.global.mocks = {
-  ...config.global.mocks,
-  $t: (key: string) => key,
-};
+afterEach(() => {
+  window.localStorage.clear();
+});

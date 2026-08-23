@@ -10,7 +10,9 @@ const strictWhiteList: string[] = [];
 function isStrictWhiteLicense(license: string): boolean {
   const normalized = license.replace(/[\(\)]/g, "").trim();
   const parts = normalized.split(/\s*(OR|AND|\/)\s*/i).map((part) => part.trim());
-  return parts.every((part) => strictWhiteList.some((wl) => part === wl || part.replace(/ with .*/i, "") === wl));
+  return parts.every((part) =>
+    strictWhiteList.some((wl) => part === wl || part.replace(/ with .*/i, "") === wl),
+  );
 }
 
 // 读取 package.json 里的直接依赖
@@ -60,7 +62,9 @@ checker.init({ start: process.cwd() }, (err: Error, packages: Record<string, any
   }
 
   // 排除名单过滤
-  const filteredDeclare = needDeclare.filter((pkg) => pkg.name && !excludeNames.some((exName) => pkg.name.startsWith(exName)));
+  const filteredDeclare = needDeclare.filter(
+    (pkg) => pkg.name && !excludeNames.some((exName) => pkg.name.startsWith(exName)),
+  );
   const content = filteredDeclare
     .map(
       (pkg) =>

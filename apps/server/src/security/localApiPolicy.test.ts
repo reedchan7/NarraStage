@@ -43,5 +43,13 @@ describe("local API network policy", () => {
     expect(policy.isOriginAllowed("http://localhost:50188")).toBe(false);
     expect(policy.isOriginAllowed("https://localhost:10588")).toBe(false);
     expect(policy.isOriginAllowed("https://attacker.example")).toBe(false);
+
+    const developmentPolicy = resolveLocalApiPolicy({
+      runtime: "standalone",
+      nodeEnv: "dev",
+      env: {},
+    });
+    expect(developmentPolicy.isOriginAllowed("http://localhost:50188")).toBe(true);
+    expect(developmentPolicy.isOriginAllowed("https://attacker.example")).toBe(false);
   });
 });

@@ -1,24 +1,30 @@
-Name: @eonova/v3-directives
+Name: @tanstack/react-query
 License: MIT
+Repository: https://github.com/TanStack/query
+
+-----------------------------
+
+Name: @testing-library/jest-dom
+License: MIT
+Repository: https://github.com/testing-library/jest-dom
+
+-----------------------------
+
+Name: @testing-library/react
+License: MIT
+Repository: https://github.com/testing-library/react-testing-library
+
+-----------------------------
+
+Name: @testing-library/user-event
+License: MIT
+Repository: https://github.com/testing-library/user-event
+
+-----------------------------
+
+Name: @toonflow/contracts
+License: UNLICENSED
 Repository: N/A
-
------------------------------
-
-Name: @icon-park/vue-next
-License: Apache-2.0
-Repository: https://github.com/bytedance/IconPark
-
------------------------------
-
-Name: @tsconfig/node22
-License: MIT
-Repository: https://github.com/tsconfig/bases
-
------------------------------
-
-Name: @types/license-checker
-License: MIT
-Repository: https://github.com/DefinitelyTyped/DefinitelyTyped
 
 -----------------------------
 
@@ -28,177 +34,63 @@ Repository: https://github.com/DefinitelyTyped/DefinitelyTyped
 
 -----------------------------
 
-Name: @types/uuid
+Name: @types/react-dom
 License: MIT
-Repository: N/A
+Repository: https://github.com/DefinitelyTyped/DefinitelyTyped
 
 -----------------------------
 
-Name: @vitejs/plugin-vue
+Name: @types/react
 License: MIT
-Repository: https://github.com/vitejs/vite-plugin-vue
+Repository: https://github.com/DefinitelyTyped/DefinitelyTyped
 
 -----------------------------
 
-Name: @vue/eslint-config-prettier
+Name: @vitejs/plugin-react
 License: MIT
-Repository: https://github.com/vuejs/eslint-config-prettier
+Repository: https://github.com/vitejs/vite-plugin-react
 
 -----------------------------
 
-Name: @vue/eslint-config-typescript
+Name: jsdom
 License: MIT
-Repository: https://github.com/vuejs/eslint-config-typescript
+Repository: https://github.com/jsdom/jsdom
 
 -----------------------------
 
-Name: @vue/tsconfig
+Name: lucide-react
+License: ISC
+Repository: https://github.com/lucide-icons/lucide
+
+-----------------------------
+
+Name: react-dom
 License: MIT
-Repository: https://github.com/vuejs/tsconfig
+Repository: https://github.com/react/react
 
 -----------------------------
 
-Name: @vueuse/core
+Name: react-router-dom
 License: MIT
-Repository: https://github.com/vueuse/vueuse
+Repository: https://github.com/remix-run/react-router
 
 -----------------------------
 
-Name: @vueuse/core
+Name: react
 License: MIT
-Repository: https://github.com/vueuse/vueuse
+Repository: https://github.com/react/react
 
 -----------------------------
 
-Name: ant-design-vue
+Name: socket.io-client
 License: MIT
-Repository: https://github.com/vueComponent/ant-design-vue
-
------------------------------
-
-Name: axios
-License: MIT
-Repository: https://github.com/axios/axios
-
------------------------------
-
-Name: class-variance-authority
-License: Apache-2.0
-Repository: https://github.com/joe-bell/cva
-
------------------------------
-
-Name: clsx
-License: MIT
-Repository: https://github.com/lukeed/clsx
-
------------------------------
-
-Name: dayjs
-License: MIT
-Repository: https://github.com/iamkun/dayjs
-
------------------------------
-
-Name: element-plus
-License: MIT
-Repository: https://github.com/element-plus/element-plus
-
------------------------------
-
-Name: eslint-plugin-oxlint
-License: MIT
-Repository: https://github.com/oxc-project/eslint-plugin-oxlint
-
------------------------------
-
-Name: eslint-plugin-vue
-License: MIT
-Repository: https://github.com/vuejs/eslint-plugin-vue
-
------------------------------
-
-Name: eslint
-License: MIT
-Repository: https://github.com/eslint/eslint
-
------------------------------
-
-Name: license-checker
-License: BSD-3-Clause
-Repository: https://github.com/davglass/license-checker
-
------------------------------
-
-Name: mammoth
-License: BSD-2-Clause
-Repository: https://github.com/mwilliamson/mammoth.js
-
------------------------------
-
-Name: npm-run-all2
-License: MIT
-Repository: https://github.com/bcomnes/npm-run-all2
-
------------------------------
-
-Name: oxlint
-License: MIT
-Repository: https://github.com/oxc-project/oxc
-
------------------------------
-
-Name: pinia-plugin-persistedstate
-License: MIT
-Repository: https://codeberg.org/praz/pinia-plugin-persistedstate
-
------------------------------
-
-Name: pinia
-License: MIT
-Repository: https://github.com/vuejs/pinia
-
------------------------------
-
-Name: prettier
-License: MIT
-Repository: https://github.com/prettier/prettier
-
------------------------------
-
-Name: sass
-License: MIT
-Repository: https://github.com/sass/dart-sass
+Repository: https://github.com/socketio/socket.io
 
 -----------------------------
 
 Name: typescript
 License: Apache-2.0
 Repository: https://github.com/microsoft/TypeScript
-
------------------------------
-
-Name: unplugin-auto-import
-License: MIT
-Repository: https://github.com/unplugin/unplugin-auto-import
-
------------------------------
-
-Name: unplugin-vue-components
-License: MIT
-Repository: https://github.com/unplugin/unplugin-vue-components
-
------------------------------
-
-Name: uuid
-License: MIT
-Repository: https://github.com/uuidjs/uuid
-
------------------------------
-
-Name: vite-plugin-lazy-import
-License: MIT
-Repository: https://github.com/x-extends/vite-plugin-lazy-import
 
 -----------------------------
 
@@ -214,30 +106,12 @@ Repository: https://github.com/vitejs/vite
 
 -----------------------------
 
-Name: vue-router
+Name: vitest
 License: MIT
-Repository: https://github.com/vuejs/router
+Repository: https://github.com/vitest-dev/vitest
 
 -----------------------------
 
-Name: vue-tsc
+Name: zustand
 License: MIT
-Repository: https://github.com/vuejs/language-tools
-
------------------------------
-
-Name: vue
-License: MIT
-Repository: https://github.com/vuejs/core
-
------------------------------
-
-Name: vuedraggable
-License: MIT
-Repository: https://github.com/SortableJS/Vue.Draggable
-
------------------------------
-
-Name: vxe-table
-License: MIT
-Repository: https://github.com/x-extends/vxe-table
+Repository: https://github.com/pmndrs/zustand

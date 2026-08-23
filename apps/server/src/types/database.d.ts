@@ -1,4 +1,4 @@
-// @db-hash f5d050145d03a52b5b502043bc559ec0
+// @db-hash 239db0309a54e1af02ef4e7eea89720d
 //该文件由脚本自动生成，请勿手动修改
 
 export interface memories {
@@ -78,6 +78,90 @@ export interface o_eventChapter {
   id?: number;
   novelId?: number | null;
 }
+export interface o_generation_asset_outputs {
+  asset_id: number;
+  created_at: number;
+  image_id: number;
+  job_id?: string | null;
+  principal_id: string;
+  project_id: number;
+}
+export interface o_generation_attempts {
+  created_at: number;
+  error_json?: string | null;
+  id?: string | null;
+  job_id: string;
+  offering_id: string;
+  provider_handle?: string | null;
+  provider_id: string;
+  provider_idempotency_key: string;
+  sequence: number;
+  state: string;
+  updated_at: number;
+}
+export interface o_generation_job_events {
+  created_at: number;
+  from_state?: string | null;
+  id?: number;
+  job_id: string;
+  metadata_json?: string | null;
+  reason: string;
+  sequence: number;
+  to_state: string;
+}
+export interface o_generation_jobs {
+  cancel_reason?: string | null;
+  cancel_requested_at?: number | null;
+  canonical_model_id: string;
+  consumer_context_json?: string | null;
+  consumer_key?: string | null;
+  consumer_type?: string | null;
+  created_at: number;
+  deadline_at?: number | null;
+  error_json?: string | null;
+  id?: string | null;
+  idempotency_key: string;
+  import_attempt_count?: number;
+  import_deadline_at?: number | null;
+  import_payload_json?: string | null;
+  input_json: string;
+  lease_expires_at?: number | null;
+  lease_owner?: string | null;
+  next_run_at: number;
+  offering_id: string;
+  operation: string;
+  parent_job_id?: string | null;
+  poll_attempt_count?: number;
+  principal_id: string;
+  provider_handle?: string | null;
+  provider_id: string;
+  provider_outcome?: string | null;
+  request_hash: string;
+  result_json?: string | null;
+  schema_version: string;
+  state: string;
+  updated_at: number;
+  version: number;
+}
+export interface o_generation_reconciliations {
+  action: string;
+  actor: string;
+  created_at: number;
+  evidence_json?: string | null;
+  id?: number;
+  job_id: string;
+  provider_handle?: string | null;
+  reason: string;
+}
+export interface o_generation_workbench_outputs {
+  created_at: number;
+  job_id?: string | null;
+  principal_id: string;
+  project_id: number;
+  script_id: number;
+  track_id: number;
+  video_id: number;
+}
 export interface o_image {
   assetsId?: number | null;
   errorReason?: string | null;
@@ -92,12 +176,29 @@ export interface o_imageFlow {
   flowData: string;
   id?: number;
 }
+export interface o_media_asset_owners {
+  asset_id?: string;
+  created_at: number;
+  metadata_json?: string | null;
+  principal_id?: string;
+  project_id?: number | null;
+  source_id?: string | null;
+  source_kind: string;
+}
+export interface o_media_assets {
+  byte_length: number;
+  created_at: number;
+  file_path: string;
+  id?: string | null;
+  metadata_json?: string | null;
+  mime_type: string;
+  sha256: string;
+}
 export interface o_modelPrompt {
   fileName?: string | null;
   id?: number;
   model?: string | null;
   path?: string | null;
-  prompt?: string | null;
   vendorId?: string | null;
 }
 export interface o_novel {
@@ -125,7 +226,12 @@ export interface o_project {
   projectType?: string | null;
   type?: string | null;
   userId?: number | null;
+  videoCanonicalModelId?: string | null;
+  videoCatalogMode?: string | null;
   videoModel?: string | null;
+  videoOfferingId?: string | null;
+  videoOfferingPreferenceMode?: string | null;
+  videoProviderId?: string | null;
   videoRatio?: string | null;
 }
 export interface o_prompt {
@@ -134,6 +240,45 @@ export interface o_prompt {
   name?: string | null;
   type?: string | null;
   useData?: string | null;
+}
+export interface o_provider_asset_cache {
+  asset_sha256: string;
+  cleanup_handle?: string | null;
+  created_at: number;
+  credential_scope: string;
+  expires_at: number;
+  id?: number;
+  provider_asset_id: string;
+  provider_id: string;
+  updated_at: number;
+}
+export interface o_provider_credential_migrations {
+  completed_at?: string | null;
+  credential_fingerprint: string;
+  provider_id?: string;
+  slot?: string;
+  started_at: string;
+  state: string;
+}
+export interface o_provider_credential_refs {
+  provider_id?: string;
+  slot?: string;
+  source: string;
+  updated_at: string;
+}
+export interface o_provider_file_owners {
+  created_at: number;
+  credential_scope?: string;
+  expires_at?: number | null;
+  file_id?: string;
+  filename?: string | null;
+  media_type: string;
+  principal_id?: string;
+  provider_id?: string;
+}
+export interface o_provider_schema_migrations {
+  applied_at: string;
+  id?: string | null;
 }
 export interface o_script {
   content?: string | null;
@@ -200,6 +345,7 @@ export interface o_user {
   id?: number;
   name?: string | null;
   password?: string | null;
+  role?: string;
 }
 export interface o_vendorConfig {
   enable?: number | null;
@@ -239,12 +385,25 @@ export interface DB {
   o_assetsRole2Audio: o_assetsRole2Audio;
   o_event: o_event;
   o_eventChapter: o_eventChapter;
+  o_generation_asset_outputs: o_generation_asset_outputs;
+  o_generation_attempts: o_generation_attempts;
+  o_generation_job_events: o_generation_job_events;
+  o_generation_jobs: o_generation_jobs;
+  o_generation_reconciliations: o_generation_reconciliations;
+  o_generation_workbench_outputs: o_generation_workbench_outputs;
   o_image: o_image;
   o_imageFlow: o_imageFlow;
+  o_media_asset_owners: o_media_asset_owners;
+  o_media_assets: o_media_assets;
   o_modelPrompt: o_modelPrompt;
   o_novel: o_novel;
   o_project: o_project;
   o_prompt: o_prompt;
+  o_provider_asset_cache: o_provider_asset_cache;
+  o_provider_credential_migrations: o_provider_credential_migrations;
+  o_provider_credential_refs: o_provider_credential_refs;
+  o_provider_file_owners: o_provider_file_owners;
+  o_provider_schema_migrations: o_provider_schema_migrations;
   o_script: o_script;
   o_scriptAssets: o_scriptAssets;
   o_setting: o_setting;
