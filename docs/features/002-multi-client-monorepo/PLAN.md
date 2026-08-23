@@ -120,7 +120,7 @@
   - Checkpoint: `d06473b172ff60d4f9997c5e9eac0e4fd8dba9d7`
   - Evidence: Hono compatibility characterization and the complete 213/213 server suite passed; 100 local requests completed with zero failures; the isolated runtime served metadata and the embedded renderer, enforced the origin policy, kept the Script Agent Socket.IO namespace connected on the same listener, and closed cleanly. Express packages/imports were absent, the Electron vault probe passed, and all runtime bundles plus Web provenance regenerated successfully.
 
-- [ ] **S4 — React shell, routing, localization, projects, and provider settings**
+- [x] **S4 — React shell, routing, localization, projects, and provider settings**
   - Covers: AC-003, AC-008/009/013, RC-002/003/006, NFR-001/005/006/008/009
   - Blocked by: S3 · Risk: high; auth navigation, Electron bridge, locale state, and provider secrets cross trust boundaries
   - Files: replace `apps/web/src` Vue shell with React entry/router/layout/styles; preserve assets/locales/generated API; create API/query/store/i18n/provider/project components and tests; replace Web manifest/Vite/tsconfig/test setup
@@ -130,8 +130,8 @@
   - Affected verify: `bun run web:check && bun run web:build && bun run forbidden:check` → exit 0, no Vue result, bundle under ceiling
   - Manual/scripted probe: Browser login/project/provider/navigation at `http://localhost:50188`
   - Rollback: revert S4 commit if React shell cannot independently build/run or leaks credential values
-  - Checkpoint: commit SHA recorded on completion in this PLAN
-  - Evidence: recorded after fresh slice checks
+  - Checkpoint: `913a991193ae4036637978a50d880bff32c89acc`
+  - Evidence: React 19.2.8, React Router 7.18.2, TanStack Query 5.102.2, Zustand 5.0.15, Vite 8.2.2, and TypeScript 7.0.2 run from one frozen lock. Native TypeScript checking, five Web tests, Oxfmt, Oxlint, the full Vue/Pinia forbidden scan, and production packaging passed. The single-file renderer is 311.63 kB (98.33 kB gzip), down from the 26,953.39 kB Vue baseline. Browser acceptance at `http://localhost:50188` completed login, empty state, project creation, project card rendering, seven-locale selection, and redacted provider-status navigation against an isolated Hono runtime; secrets remained unavailable to the browser surface.
 
 - [ ] **S5 — React conversation, image, and video production tracer bullets**
   - Covers: AC-009-013, RC-004/005, NFR-005-009
