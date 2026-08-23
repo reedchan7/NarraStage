@@ -84,8 +84,9 @@ const props = defineProps<{
   modelParmas: ModelSetting;
   imageList: UploadItem[];
   clampDuration: (trackDuration: number) => number;
+  catalogBatchGenerate?: (tracks: TrackItem[]) => Promise<void>;
 }>();
-const activeTrackIndex = defineModel("activeTrackIndex", {
+const activeTrackIndex = defineModel<number>("activeTrackIndex", {
   default: 0,
 });
 const checkedTrackIds = ref<number[]>([]); // 已勾选的轨道 id
@@ -194,10 +195,13 @@ function confirmDeleteTrack(index: number) {
   });
 }
 async function addTrack() {
-  const { data: modelData } = await axios.post("/modelSelect/getModelDetail", { modelId: props.modelParmas.model });
-  const drMap = modelData.durationResolutionMap;
-  if (!Array.isArray(drMap) || drMap.length === 0 || !drMap[0].duration?.length) return;
-  const duration = drMap[0].duration[0];
+  let duration = props.modelParmas.duration;
+  if (!props.modelParmas.catalogMode) {
+    const { data: modelData } = await axios.post("/modelSelect/getModelDetail", { modelId: props.modelParmas.model });
+    const drMap = modelData.durationResolutionMap;
+    if (!Array.isArray(drMap) || drMap.length === 0 || !drMap[0].duration?.length) return;
+    duration = drMap[0].duration[0];
+  }
   const { data } = await axios.post("/production/workbench/addTrack", {
     projectId: project.value?.id,
     scriptId: episodesId.value ?? 0,
@@ -242,6 +246,10 @@ async function batchDownloadVideo(): Promise<void> {
 }
 const generateTextLoad = ref(false);
 function batchGenText() {
+  if (props.modelParmas.catalogMode) {
+    window.$message.warning($t("providerPlatform.h3.promptGenerationUsesCustomProvider"));
+    return;
+  }
   generateTextLoad.value = true;
   const trackData: any[] = [];
   trackList.value.forEach((track, index) => {
@@ -311,6 +319,22 @@ function batchGenVideo() {
       const checkedTrackData = trackList.value.filter((track) => checkedTrackIds.value.includes(track.id));
       const notHasPrompt = checkedTrackData.filter((i) => !i.prompt);
       if (notHasPrompt.length) return window.$message.warning($t("workbench.generate.skipDataWithEmptyVideoPromptWords"));
+
+      if (props.modelParmas.catalogMode) {
+        if (!props.catalogBatchGenerate) return window.$message.error($t("providerPlatform.h3.batchUnavailable"));
+        generateVideoLoad.value = true;
+        try {
+          await props.catalogBatchGenerate(checkedTrackData);
+          checkedTrackIds.value = [];
+          checkAll.value = false;
+          window.$message.success($t("workbench.generate.generateStarted"));
+        } catch (e) {
+          window.$message.error((e as Error)?.message ?? $t("workbench.generate.generateError"));
+        } finally {
+          generateVideoLoad.value = false;
+        }
+        return;
+      }
 
       const trackData = checkedTrackData.map((track) => {
         const trackId = track.id;

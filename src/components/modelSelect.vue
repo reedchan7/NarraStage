@@ -1,5 +1,7 @@
 <template>
+  <ModelOfferingPicker v-if="props.catalogMode" :model-value="catalogSelection" :operation="catalogOperation" @update:model-value="onCatalogChange" />
   <t-select
+    v-else
     :size="props.size"
     v-model="selectValue"
     :placeholder="props.placeholder ?? $t('components.modelSelect.placeholder')"
@@ -35,6 +37,8 @@
 <script setup lang="ts">
 import { providersLogo, modelProviderRules } from "@/utils/providersLogo";
 import settingStore from "@/stores/setting";
+import ModelOfferingPicker from "@/features/models/ModelOfferingPicker.vue";
+import type { ModelOfferingSelection, ModelOperation } from "@/features/models/catalog";
 
 import axios from "@/utils/axios";
 interface VendorChild {
@@ -56,6 +60,9 @@ const selectValue = defineModel({
 });
 
 const selectValueLabel = defineModel("label");
+const offeringSelection = defineModel<ModelOfferingSelection | null>("offering", {
+  default: null,
+});
 
 const props = defineProps({
   type: {
@@ -72,6 +79,14 @@ const props = defineProps({
   changeConfig: {
     type: Boolean,
     default: false,
+  },
+  catalogMode: {
+    type: Boolean,
+    default: false,
+  },
+  operation: {
+    type: String as () => ModelOperation | undefined,
+    default: undefined,
   },
 });
 const emit = defineEmits<{
@@ -92,11 +107,29 @@ async function onChange(value: any, { option }: any) {
 }
 const optionsData = ref<VendorOption[]>([]);
 onMounted(() => {
-  handleModelChange();
+  if (!props.catalogMode) handleModelChange();
 });
 
+const catalogOperation = computed<ModelOperation>(() => {
+  if (props.operation) return props.operation;
+  if (props.type === "video") return "video.generate";
+  if (props.type === "image") return "image.generate";
+  return "language.generate";
+});
+const catalogSelection = computed<ModelOfferingSelection | null>(() => {
+  if (offeringSelection.value) return offeringSelection.value;
+  return selectValue.value ? { canonicalModelId: "", offeringId: selectValue.value } : null;
+});
+
+function onCatalogChange(selection: ModelOfferingSelection) {
+  offeringSelection.value = selection;
+  selectValue.value = selection.offeringId;
+  selectValueLabel.value = selection.label ?? selection.offeringId;
+  emit("change", selection.offeringId, selection);
+}
+
 function onPopupVisibleChange(visible: boolean) {
-  if (visible) {
+  if (visible && !props.catalogMode) {
     handleModelChange();
   }
 }

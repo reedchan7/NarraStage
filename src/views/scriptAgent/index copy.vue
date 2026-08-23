@@ -432,6 +432,7 @@ async function handleSelectAssets() {
   if (assets.length) {
     const existing = new Set(scriptEditData.value.relatedAssets.map((a) => a.id));
     for (const a of assets) {
+      if (a.type === "audio") continue;
       if (!existing.has(a.id)) {
         scriptEditData.value.relatedAssets.push({ id: a.id, name: a.name, describe: a.describe, prompt: a.prompt, type: a.type });
       }

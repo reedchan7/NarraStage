@@ -3,6 +3,9 @@
     <!-- 左侧供应商列表 -->
     <div class="modelList">
       <div class="listFooter">
+        <t-button block theme="default" @click="showProviderPlatform = true">
+          {{ $t("providerPlatform.credentialsTitle") }}
+        </t-button>
         <t-button block theme="primary" @click="handleAddVendor">
           <template #icon><t-icon name="add" /></template>
           {{ $t("settings.vendor.addVendor") }}
@@ -10,7 +13,12 @@
       </div>
       <div class="listContent" v-loading="loading">
         <t-menu v-model="activeVendorId" theme="light" v-if="vendorList.length > 0">
-          <t-menu-item v-for="(item, index) in vendorList" :key="index" :value="item.id" @click="activeVendorId = item.id" style="position: relative">
+          <t-menu-item
+            v-for="(item, index) in vendorList"
+            :key="index"
+            :value="item.id"
+            @click="selectLegacyVendor(item.id)"
+            style="position: relative">
             <template #icon v-if="isValidBase64(item.icon)">
               <t-avatar size="24px" shape="round" :image="item.icon" />
             </template>
@@ -28,7 +36,12 @@
       </div>
     </div>
     <!-- 右侧配置面板 -->
-    <div v-if="currentVendor" class="modelParameter">
+    <div v-if="showProviderPlatform" class="modelParameter">
+      <div class="configuration">
+        <ProviderSettings />
+      </div>
+    </div>
+    <div v-else-if="currentVendor" class="modelParameter">
       <div class="configuration">
         <t-form :data="currentVendor" labelAlign="top">
           <div class="infoBox ac jb">
@@ -41,7 +54,7 @@
             :message="$t('settings.vendor.msg.vendorNeedsUpdate')"
             style="margin-bottom: 12px" />
           <t-form-item>
-            <MdPreview v-model="currentVendor.description" :theme="themeSetting.mode" />
+            <MdPreview v-model="currentVendor.description" :theme="themeSetting.mode === 'auto' ? undefined : themeSetting.mode" />
           </t-form-item>
           <t-form-item v-for="input in requiredInputs" :key="input.key" :name="input.key">
             <template #label>
@@ -51,7 +64,12 @@
                 <span class="requiredText">{{ $t("settings.vendor.required") }}</span>
               </span>
             </template>
-            <t-input v-model="currentVendor.inputValues[input.key]" :type="input.type" clearable @blur="onBlurFn">
+            <t-input
+              v-model="currentVendor.inputValues[input.key]"
+              :type="input.type"
+              :disabled="input.type === 'password' && !secureCredentialBridgeAvailable"
+              clearable
+              @blur="input.type === 'password' ? onSecretBlur(input) : onBlurFn()">
               <template #prefix-icon>
                 <t-icon :name="getInputIcon(input.type)" />
               </template>
@@ -65,7 +83,12 @@
             <t-collapse>
               <t-collapse-panel value="optional-inputs" :header="$t('settings.vendor.optionalSection')">
                 <t-form-item v-for="input in optionalInputs" :key="input.key" :name="input.key" :label="input.label">
-                  <t-input v-model="currentVendor.inputValues[input.key]" :type="input.type" clearable @blur="onBlurFn">
+                  <t-input
+                    v-model="currentVendor.inputValues[input.key]"
+                    :type="input.type"
+                    :disabled="input.type === 'password' && !secureCredentialBridgeAvailable"
+                    clearable
+                    @blur="input.type === 'password' ? onSecretBlur(input) : onBlurFn()">
                     <template #prefix-icon>
                       <t-icon :name="getInputIcon(input.type)" />
                     </template>
@@ -350,6 +373,7 @@ import settingStore from "@/stores/setting";
 import TextModelTest from "./vendorTest/TextModelTest.vue";
 import ImageModelTest from "./vendorTest/ImageModelTest.vue";
 import VideoModelTest from "./vendorTest/VideoModelTest.vue";
+import ProviderSettings from "@/features/providers/ProviderSettings.vue";
 const { themeSetting } = storeToRefs(settingStore());
 
 // ── 类型 ──
@@ -488,6 +512,13 @@ const audioOptions: { label: string; value: "optional" | false | true }[] = [
 
 // ── 供应商列表 ──
 const vendorList = ref<VendorItem[]>([]);
+const showProviderPlatform = ref(true);
+const secureCredentialBridgeAvailable = computed(() => Boolean(window.toonflowCredentials));
+
+function selectLegacyVendor(vendorId: string) {
+  showProviderPlatform.value = false;
+  activeVendorId.value = vendorId;
+}
 
 const loading = ref(false);
 async function getVendorList() {
@@ -1063,6 +1094,24 @@ function onBlurFn() {
       window.$message.error(`${$t("settings.vendor.msg.updateFailed")}${err.message}`);
     });
 }
+async function onSecretBlur(input: VendorInput) {
+  if (!currentVendor.value) return;
+  const value = currentVendor.value.inputValues[input.key] ?? "";
+  if (!value.trim()) return;
+  try {
+    if (!window.toonflowCredentials) throw new Error("credential.desktop_bridge_required");
+    await window.toonflowCredentials.set({
+      providerId: currentVendor.value.id,
+      slot: input.key,
+      value,
+    });
+    window.$message.success($t("providerPlatform.credentialSaved"));
+  } catch {
+    window.$message.error($t("providerPlatform.credentialSaveFailed"));
+  } finally {
+    currentVendor.value.inputValues[input.key] = "";
+  }
+}
 //是否启用供应商
 function onChange(item: any, val: number) {
   const prevEnable = val === 1 ? 0 : 1;
@@ -1268,6 +1317,8 @@ function handleFileChange(e: Event) {
     }
 
     .listFooter {
+      display: grid;
+      gap: 8px;
       padding: 0 10px 10px;
       margin-right: 6px;
     }

@@ -37,6 +37,21 @@
         @stop="handleStop">
         <template #footer-prefix>
           <div class="ac" style="gap: 5px">
+            <AgentAttachmentComposer
+              v-if="modelDetails?.acceptsAttachments"
+              v-model="attachments"
+              :target="modelDetails"
+              :disabled="status === 'pending' || status === 'streaming'" />
+            <t-button
+              v-if="modelDetails?.supportsGrounding"
+              size="small"
+              variant="outline"
+              :theme="grounding ? 'success' : 'default'"
+              :aria-pressed="grounding"
+              :title="$t('chat.grounding.description')"
+              @click="grounding = !grounding">
+              {{ $t("chat.grounding.label") }}
+            </t-button>
             <t-popup trigger="click" placement="top-left">
               <t-button shape="square" variant="outline" size="small">
                 <template #icon>
@@ -65,7 +80,7 @@
               </template>
             </t-popup>
             <t-popup trigger="click" placement="top" v-if="showThink">
-              <t-button size="small" variant="outline" :theme="['default', 'success', 'warning', 'danger'][thinkLevel] || 'default'">
+              <t-button size="small" variant="outline" :theme="(['default', 'success', 'warning', 'danger'] as const)[thinkLevel] || 'default'">
                 <template #icon>
                   <i-tips size="16" />
                 </template>
@@ -97,6 +112,9 @@ import _ from "lodash";
 import axios from "@/utils/axios";
 import productionAgentStore from "@/stores/productionAgent";
 import projectStore from "@/stores/project";
+import AgentAttachmentComposer from "@/features/chat/AgentAttachmentComposer.vue";
+import type { AgentModelDetails, ChatAttachment } from "@/features/chat/attachments";
+import { onProviderRuntimeChanged } from "@/features/providers/runtimeInvalidation";
 const { project } = storeToRefs(projectStore());
 const { connected, messages, status, episodesId, loadingHistory, thinkLevel } = storeToRefs(productionAgentStore());
 const thinkLevelOptions = [
@@ -111,10 +129,14 @@ const props = defineProps({ title: String });
 const emit = defineEmits(["close"]);
 
 const inputValue = ref("");
+const attachments = ref<ChatAttachment[]>([]);
+const modelDetails = ref<AgentModelDetails | null>(null);
+const grounding = ref(false);
 
 function handleSend(text: string) {
-  productionAgentStore().chat(text);
+  productionAgentStore().chat(text, attachments.value, grounding.value);
   inputValue.value = "";
+  attachments.value = [];
 }
 function handleStop() {
   productionAgentStore().stopGenerate();
@@ -182,12 +204,24 @@ watchEffect(() => {
 });
 
 const showThink = ref(false);
-onMounted(async () => {
-  const { data } = await axios.post(`/project/getModelDetails`, { key: "productionAgent" });
-  if (data && data.think) {
-    showThink.value = true;
+async function loadModelDetails() {
+  try {
+    const { data } = await axios.post(`/project/getModelDetails`, { key: "productionAgent" });
+    showThink.value = Boolean(data?.think);
+    modelDetails.value = data?.available && (data.acceptsAttachments || data.supportsGrounding) ? data : null;
+    if (!data?.available || !data?.supportsGrounding) grounding.value = false;
+  } catch {
+    showThink.value = false;
+    modelDetails.value = null;
+    grounding.value = false;
   }
+}
+let disposeRuntimeListener: (() => void) | undefined;
+onMounted(() => {
+  disposeRuntimeListener = onProviderRuntimeChanged(loadModelDetails);
+  void loadModelDetails();
 });
+onUnmounted(() => disposeRuntimeListener?.());
 watch(connected, (newVal) => {
   if (status.value != "idle" && newVal) {
     status.value = "idle";

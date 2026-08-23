@@ -2,6 +2,10 @@
 import { ref, shallowRef, onMounted, onUnmounted, computed } from "vue";
 import { io, Socket } from "socket.io-client";
 import type { ChatMessagesData, AIMessage, UserMessage, AIMessageContent, ChatMessageStatus } from "@tdesign-vue-next/chat";
+import {
+  chatAttachmentDisplayType,
+  type ChatAttachment,
+} from "@/features/chat/attachments";
 
 // Socket 事件类型定义
 export interface MessageEvent {
@@ -58,7 +62,7 @@ export interface XmlTagOption {
 
 export interface ChatSocketEvents {
   // 发送事件
-  chat: { content: string; attachments?: any[] };
+  chat: { content: string; attachments?: ChatAttachment[]; grounding?: boolean };
   stop: { messageId: string };
   regenerate: { messageId: string };
 
@@ -626,7 +630,7 @@ export function useChat(options: UseChatOptions) {
   };
 
   // 业务方法
-  const chat = (content: string, attachments?: any[]) => {
+  const chat = (content: string, attachments?: ChatAttachment[], grounding?: boolean) => {
     if (!content.trim() && !attachments?.length) return false;
 
     const userMessage: UserMessage = {
@@ -640,14 +644,24 @@ export function useChat(options: UseChatOptions) {
     if (attachments?.length) {
       userMessage.content.push({
         type: "attachment",
-        data: attachments,
+        data: attachments.map((attachment) => ({
+          fileType: chatAttachmentDisplayType(attachment.mediaType),
+          name: attachment.filename,
+          size: attachment.byteLength,
+          ...(attachment.source.type === "inline"
+            ? {
+                url: `data:${attachment.mediaType};base64,${attachment.source.dataBase64}`,
+              }
+            : {}),
+          metadata: { attachmentId: attachment.id, sourceType: attachment.source.type },
+        })),
         status: "complete",
       });
     }
 
     messages.value.push(userMessage);
 
-    return emit("chat", { content, attachments });
+    return emit("chat", { content, attachments, grounding });
   };
 
   const stopGenerate = (messageId?: string) => {

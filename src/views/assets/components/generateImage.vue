@@ -8,6 +8,7 @@
       :maskClosable="false"
       :footer="false"
       @close-btn-click="handleCancel">
+      <JobRecovery />
       <div class="data f">
         <t-card :bordered="false" :style="{ width: '40%' }">
           <div class="uploadReferenceImage">
@@ -46,12 +47,25 @@
               </t-loading>
             </div>
           </div>
+          <div class="modelSourceSwitch" role="group" :aria-label="$t('providerPlatform.modelSource')">
+            <button type="button" :aria-pressed="modelSource === 'custom'" @click="modelSource = 'custom'">
+              {{ $t("providerPlatform.customProvider") }}
+            </button>
+            <button type="button" :aria-pressed="modelSource === 'builtin'" @click="modelSource = 'builtin'">
+              {{ $t("providerPlatform.builtinCatalog") }}
+            </button>
+          </div>
           <div class="selectModel f">
-            <div style="width: 60%">
+            <div :style="{ width: modelSource === 'custom' ? '60%' : '100%' }">
               <span style="font-size: 16px; font-weight: 900">{{ $t("workbench.assets.gen.selectModel") }}</span>
-              <modelSelect v-model="selectValue" :type="`image`" />
+              <modelSelect
+                v-model="selectValue"
+                v-model:offering="offeringSelection"
+                type="image"
+                :catalog-mode="modelSource === 'builtin'"
+                :operation="catalogOperation" />
             </div>
-            <div style="width: 40%; margin-left: 15px">
+            <div v-if="modelSource === 'custom'" style="width: 40%; margin-left: 15px">
               <span style="font-size: 16px; font-weight: 900">{{ $t("workbench.assets.gen.selectResolution") }}</span>
               <t-select v-model="resolution">
                 <t-option key="1K" label="1K" value="1K" />
@@ -60,6 +74,13 @@
               </t-select>
             </div>
           </div>
+          <CapabilityForm
+            v-if="modelSource === 'builtin' && selectedCatalogCapability"
+            v-model="catalogInput"
+            class="catalogCapability"
+            :capability="selectedCatalogCapability"
+            :hidden-fields="['prompt']"
+            :violations="catalogViolations" />
           <div class="generateButton" style="margin-top: 20px">
             <t-button theme="primary" size="large" block :loading="generateLoading" @click="handleGenerate">
               {{ $t("workbench.assets.gen.generateBtn") }}
@@ -140,9 +161,30 @@
 
 <script setup lang="ts">
 import modelSelect from "@/components/modelSelect.vue";
+import CapabilityForm from "@/features/generation/CapabilityForm.vue";
+import JobRecovery from "@/features/generation/JobRecovery.vue";
+import { normalizeCapabilityInput } from "@/features/generation/capabilityInput";
+import { buildCatalogImageJobRequest } from "@/features/generation/catalogImageRequest";
+import { useGenerationJobStore } from "@/features/generation/jobStore";
+import {
+  getProviderCatalog,
+  preflightProviderRequest,
+  type CapabilityInput,
+  type CatalogCapability,
+  type CatalogOffering,
+  type ModelOfferingSelection,
+  type ModelOperation,
+  type ProviderCatalog,
+} from "@/features/models/catalog";
+import type { paths } from "@/api/generated/v2";
 import projectStore from "@/stores/project";
 const { project } = storeToRefs(projectStore());
 import axios from "@/utils/axios";
+import {
+  clearPendingIdempotencyKey,
+  getPendingIdempotencyKey,
+  logicalActionScope,
+} from "@/features/generation/idempotency";
 const props = defineProps<{
   formData: {
     id?: number;
@@ -173,6 +215,31 @@ const autoUpload = ref(false);
 const showImageFileName = ref(false);
 const generateLoading = ref(false);
 const selectValue = ref(""); //选择的模型
+const modelSource = ref<"custom" | "builtin">("custom");
+const offeringSelection = ref<ModelOfferingSelection | null>(null);
+const providerCatalog = ref<ProviderCatalog | null>(null);
+const catalogInput = ref<CapabilityInput>({ mode: "text", values: {}, assets: [] });
+const catalogViolations = ref<Awaited<ReturnType<typeof preflightProviderRequest>>["offerings"][number]["violations"]>([]);
+const generationJobStore = useGenerationJobStore();
+const materializedImageJobs = new Set<string>();
+
+type UploadOwnedMediaOperation = paths["/api/v2/media-assets/upload"]["put"];
+type UploadOwnedMediaEnvelope = UploadOwnedMediaOperation["responses"][201]["content"]["application/json"];
+
+const referenceFile = computed<File | undefined>(() => {
+  const raw = referenceFileList.value[0]?.raw ?? referenceFileList.value[0];
+  return raw instanceof File ? raw : undefined;
+});
+const catalogOperation = computed<ModelOperation>(() => (referenceFile.value ? "image.edit" : "image.generate"));
+const selectedCatalogOffering = computed<CatalogOffering | undefined>(() =>
+  providerCatalog.value?.offerings.find((offering) => offering.id === offeringSelection.value?.offeringId),
+);
+const selectedCatalogCapability = computed<CatalogCapability | undefined>(() => {
+  const operation = selectedCatalogOffering.value?.operations.find(
+    (candidate) => candidate.operation === catalogOperation.value && candidate.enabled,
+  );
+  return providerCatalog.value?.capabilitySchemas.find((capability) => capability.id === operation?.capabilitySchemaId);
+});
 
 const value2 = ref("");
 //智能生成提示词
@@ -205,7 +272,7 @@ async function handleGenerate() {
     window.$message.error($t("workbench.assets.gen.fillPrompt"));
     return;
   }
-  if (!resolution.value) {
+  if (modelSource.value === "custom" && !resolution.value) {
     window.$message.error($t("workbench.assets.gen.pickResolution"));
     return;
   }
@@ -215,6 +282,11 @@ async function handleGenerate() {
   }
   generateLoading.value = true;
   try {
+    if (modelSource.value === "builtin") {
+      await handleCatalogGenerate();
+      window.$message.success($t("workbench.assets.gen.assetGenSuccess"));
+      return;
+    }
     let referenceImageBase64 = "";
     if (referenceFileList.value.length > 0) {
       const file = referenceFileList.value[0].raw;
@@ -247,6 +319,82 @@ async function handleGenerate() {
   } finally {
     generateLoading.value = false;
   }
+}
+
+function assetType(): "role" | "scene" | "tool" {
+  return props.formData.type === "role" || props.formData.type === "scene" || props.formData.type === "tool" ? props.formData.type : "tool";
+}
+
+function catalogRequestInput(assetId?: string): CapabilityInput {
+  const normalized = selectedCatalogCapability.value
+    ? normalizeCapabilityInput(selectedCatalogCapability.value, catalogInput.value)
+    : catalogInput.value;
+  return {
+    ...normalized,
+    mode: referenceFile.value ? "reference" : "text",
+    values: { ...normalized.values, prompt: props.formData.prompt ?? "" },
+    assets: referenceFile.value ? [{ assetId: assetId ?? "pending-reference", kind: "image", role: "reference_image" }] : [],
+  };
+}
+
+async function assertCatalogImageEligible(input: CapabilityInput, offering: CatalogOffering) {
+  const result = await preflightProviderRequest({
+    schemaVersion: "2.0.0",
+    canonicalModelId: offering.canonicalModelId,
+    operation: catalogOperation.value,
+    input,
+    offeringPreference: { mode: "pinned", offeringId: offering.id },
+    displayCurrency: "CNY",
+  });
+  const candidate = result.offerings.find((item) => item.offeringId === offering.id);
+  catalogViolations.value = candidate?.violations ?? [];
+  if (!candidate?.eligible) throw new Error(candidate?.violations[0]?.message ?? $t("providerPlatform.preflightFailed"));
+}
+
+async function uploadReferenceImage(file: File): Promise<string> {
+  const response = (await axios.put("/v2/media-assets/upload", file, {
+    headers: {
+      "Content-Type": "application/octet-stream",
+      "X-Toonflow-Media-Type": file.type || "application/octet-stream",
+      "X-Toonflow-Filename": encodeURIComponent(file.name || "reference-image"),
+    },
+  })) as UploadOwnedMediaEnvelope;
+  if (response.data.kind !== "image") throw new Error($t("providerPlatform.imageReferenceRequired"));
+  return response.data.assetId;
+}
+
+async function handleCatalogGenerate() {
+  const projectId = Number(project.value?.id);
+  const assetId = Number(props.formData.id);
+  const offering = selectedCatalogOffering.value;
+  if (!Number.isSafeInteger(projectId) || projectId <= 0 || !Number.isSafeInteger(assetId) || assetId <= 0 || !offering) {
+    throw new Error($t("providerPlatform.incompleteAssetContext"));
+  }
+  if (!selectedCatalogCapability.value) throw new Error($t("providerPlatform.operationUnsupported"));
+
+  await assertCatalogImageEligible(catalogRequestInput(), offering);
+  const ownedReferenceId = referenceFile.value ? await uploadReferenceImage(referenceFile.value) : undefined;
+  const input = catalogRequestInput(ownedReferenceId);
+  await assertCatalogImageEligible(input, offering);
+  const actionScope = logicalActionScope("asset-image", {
+    offeringId: offering.id,
+    operation: catalogOperation.value,
+    input,
+    projectId,
+    assetId,
+    assetType: assetType(),
+  });
+  await generationJobStore.submit(
+    buildCatalogImageJobRequest({
+      offering,
+      capabilityInput: input,
+      projectId,
+      assetId,
+      assetType: assetType(),
+      idempotencyKey: getPendingIdempotencyKey(actionScope),
+    }),
+  );
+  clearPendingIdempotencyKey(actionScope);
 }
 //自定义上传图片
 const customFileList = ref<any[]>([]);
@@ -286,16 +434,72 @@ const hoveredImageIndex = ref<number | null>(null);
 
 watch(
   () => generateImageShow.value,
-  (newVal) => {
+  async (newVal) => {
     if (newVal) {
       referenceFileList.value = [];
       value2.value = "";
       selectedImageIndex.value = null;
       hoveredImageIndex.value = null;
       generateLoading.value = false;
-      fetchGeneratedImages();
+      await Promise.all([
+        fetchGeneratedImages(),
+        generationJobStore.refresh(),
+        providerCatalog.value
+          ? Promise.resolve()
+          : getProviderCatalog().then((catalog) => {
+              providerCatalog.value = catalog;
+            }),
+      ]);
     }
   },
+);
+
+watch(
+  [selectedCatalogCapability, catalogOperation],
+  ([capability]) => {
+    if (!capability) return;
+    const normalized = normalizeCapabilityInput(capability, {
+      ...catalogInput.value,
+      mode: catalogOperation.value === "image.edit" ? "reference" : "text",
+    });
+    if (JSON.stringify(normalized) !== JSON.stringify(catalogInput.value)) catalogInput.value = normalized;
+    catalogViolations.value = [];
+  },
+  { immediate: true },
+);
+
+watch(modelSource, () => {
+  selectValue.value = "";
+  offeringSelection.value = null;
+  catalogViolations.value = [];
+});
+
+watch(
+  () => generationJobStore.jobs.map((job) => `${job.id}:${job.state}:${job.version}`),
+  () => {
+    const projectId = Number(project.value?.id);
+    const assetId = Number(props.formData.id);
+    for (const job of generationJobStore.jobs) {
+      if (
+        job.state !== "succeeded" ||
+        job.consumer?.type !== "asset_image" ||
+        job.consumer.context.projectId !== projectId ||
+        job.consumer.context.assetId !== assetId ||
+        materializedImageJobs.has(job.id)
+      ) {
+        continue;
+      }
+      materializedImageJobs.add(job.id);
+      void generationJobStore
+        .materializeAssetImage(job.id)
+        .then(() => fetchGeneratedImages())
+        .catch((error: unknown) => {
+          materializedImageJobs.delete(job.id);
+          window.$message.error((error as Error)?.message ?? $t("providerPlatform.imageMaterializeFailed"));
+        });
+    }
+  },
+  { immediate: true },
 );
 // 获取图片列表
 let pollingTimer: ReturnType<typeof setTimeout> | null = null;
@@ -402,6 +606,31 @@ async function onClick() {
     }
     .selectModel {
       margin-top: 20px;
+    }
+    .modelSourceSwitch {
+      display: inline-flex;
+      margin-top: 20px;
+      padding: 2px;
+      border-radius: 6px;
+      background: var(--td-bg-color-secondarycontainer);
+
+      button {
+        padding: 5px 8px;
+        border: 0;
+        border-radius: 4px;
+        background: transparent;
+        color: var(--td-text-color-secondary);
+        font-size: 12px;
+
+        &[aria-pressed="true"] {
+          background: var(--td-bg-color-container);
+          color: var(--td-text-color-primary);
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+        }
+      }
+    }
+    .catalogCapability {
+      margin-top: 16px;
     }
     .resultImages {
       height: 600px;

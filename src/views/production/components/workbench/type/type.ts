@@ -102,4 +102,8 @@ interface ModelSetting {
   resolution: string;
   duration: number;
   audio: boolean;
+  catalogMode?: boolean;
+  canonicalModelId?: string;
+  providerId?: string;
+  offeringLabel?: string;
 }

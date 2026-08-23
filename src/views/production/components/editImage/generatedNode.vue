@@ -82,7 +82,6 @@ import modelSelect from "@/components/modelSelect.vue";
 import PromptEditor from "@/components/promptEditor.vue";
 import axios from "@/utils/axios";
 import { type GeneratedNodeData } from "../../utils/editImageType";
-import type { DropdownOption } from "tdesign-vue-next/es/dropdown";
 import type { Storyboard } from "../../utils/flowBuilder";
 import openAssetsSelector from "@/utils/assetsCheck";
 import { useFileDialog } from "@vueuse/core";
@@ -117,12 +116,13 @@ const props = defineProps<{
 function selectedFn() {
   selected.value = !selected.value;
 }
-function clickHandler(data: DropdownOption) {
-  if (data.value == 1) {
+function clickHandler(data: string | number | Record<string, any> | undefined) {
+  const value = typeof data === "object" && data !== null ? data.value : data;
+  if (value == 1) {
     uploadFn();
-  } else if (data.value == 2) {
+  } else if (value == 2) {
     getStoryboardImage();
-  } else if (data.value == 3) {
+  } else if (value == 3) {
     lensImage();
   }
 }

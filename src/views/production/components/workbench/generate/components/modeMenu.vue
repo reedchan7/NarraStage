@@ -1,13 +1,27 @@
 <template>
   <div class="modeMenu">
     <div class="left f ac">
-      <div class="model">
-        <modelSelect v-model="modelParmas.model" type="video" size="small" />
+      <div class="sourceSwitch" role="group" :aria-label="$t('providerPlatform.modelSource')">
+        <button type="button" :aria-pressed="!modelParmas.catalogMode" @click="setCatalogMode(false)">
+          {{ $t("providerPlatform.customProvider") }}
+        </button>
+        <button type="button" :aria-pressed="modelParmas.catalogMode === true" @click="setCatalogMode(true)">
+          {{ $t("providerPlatform.builtinCatalog") }}
+        </button>
       </div>
-      <t-select size="small" class="mode" :value="modelParmas.mode" :onChange="handleBeforeChange">
+      <div class="model">
+        <modelSelect
+          v-model="modelParmas.model"
+          v-model:offering="offeringSelection"
+          :catalog-mode="modelParmas.catalogMode === true"
+          type="video"
+          size="small" />
+      </div>
+      <t-select v-if="!modelParmas.catalogMode" size="small" class="mode" :value="modelParmas.mode" :onChange="handleBeforeChange">
         <t-option v-for="(item, index) in modeList" :key="index" :value="item.value" :label="item.label"></t-option>
       </t-select>
       <t-button
+        v-if="!modelParmas.catalogMode"
         size="small"
         variant="outline"
         :theme="modelParmas.audio ? 'success' : 'danger'"
@@ -18,7 +32,7 @@
           <i-volume-mute v-else size="16" />
         </template>
       </t-button>
-      <div class="status">
+      <div v-if="!modelParmas.catalogMode" class="status">
         <t-popup
           trigger="click"
           placement="top"
@@ -78,6 +92,7 @@
 <script setup lang="ts">
 import "@/views/production/components/workbench/type/type";
 import axios from "@/utils/axios";
+import type { ModelOfferingSelection } from "@/features/models/catalog";
 
 const props = defineProps<{
   modeOptions: VideoModel;
@@ -85,17 +100,46 @@ const props = defineProps<{
   trackId: number | undefined;
 }>();
 const modelParmas = defineModel<ModelSetting>({
-  default: {
+  default: () => ({
     mode: "",
     model: "",
     resolution: "480p",
     duration: 8,
     audio: false,
-  },
+  }),
 });
 const emit = defineEmits(["modeChange"]);
-function handleBeforeChange(newVal: string) {
-  emit("modeChange", newVal);
+const offeringSelection = computed<ModelOfferingSelection | null>({
+  get() {
+    if (!modelParmas.value.catalogMode || !modelParmas.value.model) return null;
+    return {
+      canonicalModelId: modelParmas.value.canonicalModelId ?? "",
+      offeringId: modelParmas.value.model,
+      providerId: modelParmas.value.providerId,
+      label: modelParmas.value.offeringLabel,
+    };
+  },
+  set(selection) {
+    if (!selection) return;
+    modelParmas.value.model = selection.offeringId;
+    modelParmas.value.canonicalModelId = selection.canonicalModelId;
+    modelParmas.value.providerId = selection.providerId;
+    modelParmas.value.offeringLabel = selection.label;
+  },
+});
+
+function handleBeforeChange(newVal: unknown) {
+  if (typeof newVal === "string") emit("modeChange", newVal);
+}
+
+function setCatalogMode(enabled: boolean) {
+  if (modelParmas.value.catalogMode === enabled) return;
+  modelParmas.value.catalogMode = enabled;
+  modelParmas.value.model = "";
+  modelParmas.value.mode = "";
+  modelParmas.value.canonicalModelId = undefined;
+  modelParmas.value.providerId = undefined;
+  modelParmas.value.offeringLabel = undefined;
 }
 function updateDuration(newDuration: number) {
   modelParmas.value.duration = newDuration;
@@ -111,6 +155,27 @@ function updateDuration(newDuration: number) {
     gap: 8px;
     .mode {
       width: 280px;
+    }
+    .sourceSwitch {
+      display: flex;
+      padding: 2px;
+      border-radius: 6px;
+      background: var(--td-bg-color-secondarycontainer);
+
+      button {
+        padding: 5px 8px;
+        border: 0;
+        border-radius: 4px;
+        background: transparent;
+        color: var(--td-text-color-secondary);
+        font-size: 12px;
+
+        &[aria-pressed="true"] {
+          background: var(--td-bg-color-container);
+          color: var(--td-text-color-primary);
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+        }
+      }
     }
     .status {
       .btn {

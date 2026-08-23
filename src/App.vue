@@ -2,6 +2,12 @@
   <div v-if="loading" class="app-loading">
     <t-loading :loading="true" size="large" text="加载中..." />
   </div>
+  <UpgradeRequired
+    v-else-if="compatibilityState !== 'compatible'"
+    :state="compatibilityState"
+    :code="compatibilityFailureCode"
+    :retrying="compatibilityRetrying"
+    @retry="verifyCompatibility" />
   <template v-else>
     <titleBar v-if="isElectron" />
     <t-config-provider :global-config="globalConfig">
@@ -19,12 +25,17 @@ import { cachedLocale, languageList } from "@/locales";
 import { initTheme } from "@/utils/theme";
 import { type GlobalConfigProvider } from "tdesign-vue-next";
 import { useI18n } from "vue-i18n";
+import UpgradeRequired from "@/features/compatibility/UpgradeRequired.vue";
+import { evaluateApiCompatibility, type ApiMeta, type CompatibilityFailureCode } from "@/features/compatibility/compatibility";
 
 const { locale } = useI18n();
 const { baseUrl, isElectron } = storeToRefs(settingStore());
 import { config } from "md-editor-v3";
 
 const loading = ref(true);
+const compatibilityState = ref<"compatible" | "incompatible" | "unreachable">("unreachable");
+const compatibilityFailureCode = ref<CompatibilityFailureCode>();
+const compatibilityRetrying = ref(false);
 
 watch(
   () => isElectron.value,
@@ -87,6 +98,7 @@ async function getPort() {
     }
   } catch (error) {}
 
+  await verifyCompatibility();
   loading.value = false;
 
   config({
@@ -124,6 +136,29 @@ async function getPort() {
     }
   } catch (e) {
     console.error("获取语言失败", e);
+  }
+}
+
+async function verifyCompatibility() {
+  compatibilityRetrying.value = true;
+  compatibilityFailureCode.value = undefined;
+  try {
+    const response = await fetch(`${baseUrl.value.replace(/\/$/, "")}/meta`, {
+      headers: { Accept: "application/json" },
+      credentials: "omit",
+    });
+    if (!response.ok) throw new Error(`api_meta_${response.status}`);
+    const result = evaluateApiCompatibility(
+      (await response.json()) as ApiMeta,
+      undefined,
+      isElectron.value ? "embedded" : "standalone",
+    );
+    compatibilityState.value = result.compatible ? "compatible" : "incompatible";
+    if (!result.compatible) compatibilityFailureCode.value = result.code;
+  } catch {
+    compatibilityState.value = "unreachable";
+  } finally {
+    compatibilityRetrying.value = false;
   }
 }
 

@@ -1,12 +1,42 @@
 <template>
   <div class="index fc">
-    <div class="referenceImage">
-      <div class="uploadBtn">
-        <imageSelect :mode="modelParmas.mode as VideoMode" v-model="imageList" :storyboard-list="storyboardList" />
-      </div>
-    </div>
+    <JobRecovery />
     <div class="modelSelect">
       <modeMenu v-model="modelParmas" :modeOptions="modeOptions" :trackId="currentTrack?.id" :modeList="modeList" @modeChange="modeChange" />
+    </div>
+    <div v-if="isCatalogVideo && selectedCatalogCapability && selectedCatalogOffering && providerCatalog" class="catalogControls">
+      <H3Form
+        v-if="isH3Catalog"
+        v-model="catalogInput"
+        :capability="selectedCatalogCapability"
+        :offering="selectedCatalogOffering"
+        :assets="catalogAssets"
+        :violations="selectedCatalogViolations"
+        :show-prompt="false" />
+      <CapabilityForm
+        v-else
+        v-model="catalogInput"
+        :capability="selectedCatalogCapability"
+        :hidden-fields="['prompt']"
+        :violations="selectedCatalogViolations" />
+      <label v-if="selectedCatalogMode?.requiresContinuation" class="continuationField">
+        <span>{{ $t("providerPlatform.continuationParent") }}</span>
+        <t-select v-model="continuationParentJobId" :placeholder="$t('providerPlatform.continuationParentPlaceholder')">
+          <t-option v-for="job in continuationParentJobs" :key="job.id" :value="job.id" :label="new Date(job.updatedAt).toLocaleString()" />
+        </t-select>
+      </label>
+      <H3OfferingComparison
+        v-if="isH3Catalog"
+        :catalog="providerCatalog"
+        :preflight="catalogPreflight"
+        :selected-offering-id="selectedCatalogOffering.id"
+        :resolution="String(catalogInput.values.resolution ?? '')"
+        @select="selectH3Offering" />
+    </div>
+    <div class="referenceImage">
+      <div class="uploadBtn">
+        <imageSelect :mode="imageSelectMode" v-model="imageList" :storyboard-list="storyboardList" />
+      </div>
     </div>
     <div class="generate ac">
       <div class="prompt" v-if="currentTrack">
@@ -27,6 +57,7 @@
         <videoCard
           v-if="currentTrack"
           :active-track-index="activeTrackIndex"
+          :generating="catalogJobGenerating"
           v-model:current-track="currentTrack"
           @refresh="getGenerateData"
           @generate="generateVideo" />
@@ -40,6 +71,7 @@
         @change="trackChange"
         :modelParmas="modelParmas"
         :clampDuration="clampDuration"
+        :catalog-batch-generate="generateCatalogBatch"
         @getData="getGenerateData" />
     </div>
   </div>
@@ -47,6 +79,7 @@
 
 <script setup lang="ts">
 import type { Ref } from "vue";
+import { useDebounceFn } from "@vueuse/core";
 import newTrack from "./components/track.vue";
 import imageSelect from "./components/imageSelect.vue";
 import modeMenu from "./components/modeMenu.vue";
@@ -56,11 +89,37 @@ import axios from "@/utils/axios";
 import projectStore from "@/stores/project";
 import promptEditor from "@/components/promptEditor.vue";
 import imageListCacheStore from "@/stores/imageListCache";
+import JobRecovery from "@/features/generation/JobRecovery.vue";
+import H3Form from "@/features/generation/h3/H3Form.vue";
+import H3OfferingComparison from "@/features/generation/h3/H3OfferingComparison.vue";
+import CapabilityForm from "@/features/generation/CapabilityForm.vue";
+import { normalizeCapabilityInput } from "@/features/generation/capabilityInput";
+import { useGenerationJobStore } from "@/features/generation/jobStore";
+import { buildCatalogVideoJobRequest } from "@/features/generation/catalogVideoRequest";
+import { clearPendingIdempotencyKey, getPendingIdempotencyKey, logicalActionScope } from "@/features/generation/idempotency";
+import { runIdempotentBatch } from "@/features/generation/idempotentBatch";
+import {
+  getProviderCatalog,
+  preflightProviderRequest,
+  type CapabilityInput,
+  type CatalogCapability,
+  type CatalogOffering,
+  type ProviderCatalog,
+  type PreflightResult,
+} from "@/features/models/catalog";
+import type { paths } from "@/api/generated/v2";
+import {
+  createProjectSelectionPersistence,
+  projectGenerationSelection,
+  resolvePersistedGenerationSelection,
+  type ProjectGenerationSelection,
+} from "@/features/generation/projectSelection";
 
 const { project } = storeToRefs(projectStore());
 const episodesId = inject<Ref<number>>("episodesId")!;
 const activeTrackIndex = ref(0);
 const cacheStore = imageListCacheStore();
+const generationJobStore = useGenerationJobStore();
 const { getCache, setCache, removeCache, initCacheFromTrackList, warmUpUrls } = cacheStore;
 const { urlMap } = storeToRefs(cacheStore);
 
@@ -81,7 +140,63 @@ const modelParmas = ref<ModelSetting>({
   resolution: "480p",
   duration: 8,
   audio: false,
+  catalogMode: false,
 });
+
+type WorkbenchAssetIngestOperation = paths["/api/v2/media-assets/workbench"]["post"];
+type WorkbenchAssetIngestRequest = WorkbenchAssetIngestOperation["requestBody"]["content"]["application/json"];
+type WorkbenchAssetIngestEnvelope = WorkbenchAssetIngestOperation["responses"][201]["content"]["application/json"];
+
+const providerCatalog = ref<ProviderCatalog | null>(null);
+const catalogPreflight = ref<PreflightResult | null>(null);
+const catalogInput = ref<CapabilityInput>({
+  mode: "text",
+  values: {
+    prompt: "",
+    durationSeconds: 8,
+    resolution: "768P",
+    aspectRatio: "16:9",
+  },
+  assets: [],
+});
+const continuationParentJobId = ref("");
+const mediaDurations = ref<Record<string, number>>({});
+const materializedCatalogJobs = new Set<string>();
+let selectionPersistenceReady = false;
+
+function applyPersistedGenerationSelection(selection: ProjectGenerationSelection) {
+  if (!project.value) return;
+  project.value.videoCatalogMode = selection.catalogMode;
+  project.value.videoCanonicalModelId = selection.catalogMode === "builtin" ? selection.canonicalModelId : null;
+  project.value.videoOfferingId = selection.catalogMode === "builtin" ? selection.offeringId : null;
+  project.value.videoProviderId = selection.catalogMode === "builtin" ? selection.providerId : null;
+  project.value.videoOfferingPreferenceMode = selection.catalogMode === "builtin" ? selection.preferenceMode : null;
+}
+
+const generationSelectionWrites = createProjectSelectionPersistence({
+  async write(projectId, selection) {
+    await axios.post("/project/updateGenerationSelection", { id: projectId, selection });
+  },
+  currentProjectId() {
+    const projectId = Number(project.value?.id);
+    return Number.isSafeInteger(projectId) && projectId > 0 ? projectId : undefined;
+  },
+  onCommitted: applyPersistedGenerationSelection,
+  onError: () => window.$message.error($t("providerPlatform.selectionPersistenceFailed")),
+});
+
+const persistGenerationSelection = useDebounceFn(() => {
+  const projectId = Number(project.value?.id);
+  if (!selectionPersistenceReady || !Number.isSafeInteger(projectId) || projectId <= 0) return;
+  const selection = projectGenerationSelection(modelParmas.value);
+  if (!selection) return;
+  generationSelectionWrites.schedule(projectId, selection);
+}, 250);
+
+watch(
+  [() => modelParmas.value.catalogMode, () => modelParmas.value.canonicalModelId, () => modelParmas.value.model, () => modelParmas.value.providerId],
+  () => void persistGenerationSelection(),
+);
 
 const storyboardList = ref<StoryboardItem[]>([]); // 分镜列表
 
@@ -181,6 +296,146 @@ const currentTrack = computed({
   },
 });
 
+const isCatalogVideo = computed(() => modelParmas.value.catalogMode === true && Boolean(modelParmas.value.canonicalModelId));
+const isH3Catalog = computed(() => isCatalogVideo.value && modelParmas.value.canonicalModelId === "minimax:h3");
+const selectedCatalogOffering = computed<CatalogOffering | undefined>(() =>
+  providerCatalog.value?.offerings.find((offering) => offering.id === modelParmas.value.model),
+);
+const selectedCatalogCapability = computed<CatalogCapability | undefined>(() => {
+  const operation = selectedCatalogOffering.value?.operations.find((candidate) => candidate.operation === "video.generate" && candidate.enabled);
+  return providerCatalog.value?.capabilitySchemas.find((capability) => capability.id === operation?.capabilitySchemaId);
+});
+const selectedCatalogMode = computed(() => selectedCatalogCapability.value?.assetModes?.find((mode) => mode.id === catalogInput.value.mode));
+const selectedCatalogViolations = computed(
+  () => catalogPreflight.value?.offerings.find((offering) => offering.offeringId === selectedCatalogOffering.value?.id)?.violations ?? [],
+);
+const continuationParentJobs = computed(() =>
+  generationJobStore.jobs.filter(
+    (job) =>
+      job.state === "succeeded" &&
+      job.offeringId === selectedCatalogOffering.value?.id &&
+      job.operation === "video.generate" &&
+      job.consumer?.type === "workbench" &&
+      Number(job.consumer.context.projectId) === Number(project.value?.id),
+  ),
+);
+const catalogAssets = computed<CapabilityInput["assets"]>(() => {
+  return buildLocalCatalogAssets(imageList.value);
+});
+
+function buildLocalCatalogAssets(items: UploadItem[]): CapabilityInput["assets"] {
+  if (catalogInput.value.mode === "text") return [];
+
+  return items.flatMap((item, index) => {
+    if (item.id == null || !item.src) return [];
+    const kind = item.fileType;
+    const role = catalogAssetRole(kind, index);
+    const durationSeconds = kind === "image" ? undefined : mediaDurations.value[mediaDurationKey(item)];
+    return [
+      {
+        assetId: `workbench:${item.sources}:${item.id}`,
+        kind,
+        role,
+        ...(durationSeconds === undefined ? {} : { durationSeconds }),
+      },
+    ];
+  });
+}
+const catalogRequestInput = computed<CapabilityInput>(() => ({
+  ...catalogInput.value,
+  values: {
+    ...catalogInput.value.values,
+    prompt: currentTrack.value?.prompt ?? "",
+  },
+  assets: catalogAssets.value,
+}));
+const imageSelectMode = computed<VideoMode>(() => {
+  if (!isCatalogVideo.value) return parseMode(modelParmas.value.mode) ?? "text";
+  if (catalogInput.value.mode === "text" || catalogInput.value.mode === "edit") return "text";
+  if (catalogInput.value.mode === "keyframes") return "startEndRequired";
+  const kinds = new Set(selectedCatalogMode.value?.roles.flatMap((role) => role.kinds) ?? []);
+  const references: ReferenceType[] = [];
+  if (kinds.has("image")) references.push("imageReference");
+  if (kinds.has("video")) references.push("videoReference");
+  if (kinds.has("audio")) references.push("audioReference");
+  return references.length ? references : "text";
+});
+const catalogJobGenerating = computed(() => {
+  if (!isCatalogVideo.value || currentTrack.value?.id == null) return false;
+  return generationJobStore.activeJobs.some(
+    (job) =>
+      job.consumer?.type === "workbench" &&
+      job.consumer.context.trackId === currentTrack.value.id &&
+      job.offeringId === selectedCatalogOffering.value?.id,
+  );
+});
+
+function mediaDurationKey(item: UploadItem): string {
+  return `${item.sources}:${item.id ?? "empty"}:${item.src ?? ""}`;
+}
+
+function catalogAssetRole(kind: UploadItem["fileType"], index: number): string {
+  if (catalogInput.value.mode === "keyframes") return index === 0 ? "first_frame" : "last_frame";
+  if (catalogInput.value.mode === "images") return index === 0 ? "first_frame" : "reference_image";
+  if (catalogInput.value.mode === "extend") return "source_video";
+  if (kind === "image") return "reference_image";
+  if (kind === "video") return "reference_video";
+  return "reference_audio";
+}
+
+function readMediaDuration(src: string, kind: "video" | "audio"): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const element = document.createElement(kind);
+    const timeout = window.setTimeout(() => {
+      element.removeAttribute("src");
+      reject(new Error("media_metadata_timeout"));
+    }, 10_000);
+    const cleanup = () => {
+      window.clearTimeout(timeout);
+      element.removeAttribute("src");
+      element.load();
+    };
+    element.preload = "metadata";
+    element.onloadedmetadata = () => {
+      const duration = element.duration;
+      cleanup();
+      if (!Number.isFinite(duration) || duration <= 0) reject(new Error("media_duration_invalid"));
+      else resolve(Math.round(duration * 1_000) / 1_000);
+    };
+    element.onerror = () => {
+      cleanup();
+      reject(new Error("media_metadata_unavailable"));
+    };
+    element.src = src;
+  });
+}
+
+async function refreshMediaDurations(items: UploadItem[]) {
+  await Promise.all(
+    items.map(async (item) => {
+      if (!item.src || (item.fileType !== "video" && item.fileType !== "audio")) return;
+      const key = mediaDurationKey(item);
+      if (mediaDurations.value[key] !== undefined) return;
+      try {
+        const duration = await readMediaDuration(item.src, item.fileType);
+        mediaDurations.value = { ...mediaDurations.value, [key]: duration };
+      } catch {
+        // Capability preflight reports the missing duration and prevents submission.
+      }
+    }),
+  );
+}
+
+function selectH3Offering(offeringId: string) {
+  const offering = providerCatalog.value?.offerings.find((candidate) => candidate.id === offeringId);
+  if (!offering || offering.canonicalModelId !== "minimax:h3") return;
+  const model = providerCatalog.value?.models.find((candidate) => candidate.id === offering.canonicalModelId);
+  modelParmas.value.model = offering.id;
+  modelParmas.value.canonicalModelId = offering.canonicalModelId;
+  modelParmas.value.providerId = offering.providerId;
+  modelParmas.value.offeringLabel = `${model?.name ?? offering.canonicalModelId} · ${offering.providerId}`;
+}
+
 /** 将时长限制在模型支持的范围内 */
 function clampDuration(trackDuration: number): number {
   const drMap = modeOptions.value?.durationResolutionMap;
@@ -193,6 +448,7 @@ function clampDuration(trackDuration: number): number {
 watch(
   () => modelParmas.value.model,
   (val) => {
+    if (modelParmas.value.catalogMode) return;
     if (!val) {
       modeOptions.value = {
         name: "",
@@ -229,6 +485,93 @@ watch(
       }
     });
   },
+);
+
+watch(
+  [selectedCatalogCapability, () => catalogInput.value.mode],
+  ([capability]) => {
+    if (!capability) return;
+    const normalized = normalizeCapabilityInput(capability, catalogInput.value);
+    if (JSON.stringify(normalized) !== JSON.stringify(catalogInput.value)) catalogInput.value = normalized;
+  },
+  { immediate: true },
+);
+
+let preflightSequence = 0;
+watch(
+  [isCatalogVideo, selectedCatalogOffering, catalogRequestInput, continuationParentJobId],
+  async ([enabled, offering, input]) => {
+    const sequence = ++preflightSequence;
+    if (!enabled || !offering) {
+      catalogPreflight.value = null;
+      return;
+    }
+    try {
+      const result = await preflightProviderRequest({
+        schemaVersion: "2.0.0",
+        canonicalModelId: offering.canonicalModelId,
+        operation: "video.generate",
+        input,
+        ...(selectedCatalogMode.value?.requiresContinuation && continuationParentJobId.value
+          ? { continuation: { parentJobId: continuationParentJobId.value } }
+          : {}),
+        offeringPreference: { mode: "auto", profile: "lowest_cost" },
+        displayCurrency: "CNY",
+      });
+      if (sequence === preflightSequence) catalogPreflight.value = result;
+    } catch {
+      if (sequence === preflightSequence) catalogPreflight.value = null;
+    }
+  },
+  { deep: true, immediate: true },
+);
+
+watch(
+  () => imageList.value.map((item) => mediaDurationKey(item)),
+  () => void refreshMediaDurations(imageList.value),
+  { immediate: true },
+);
+
+watch(
+  [isCatalogVideo, catalogInput],
+  ([enabled, input]) => {
+    if (!enabled) return;
+    modelParmas.value.mode = input.mode ?? "text";
+    modelParmas.value.duration = Number(input.values.durationSeconds ?? 8);
+    modelParmas.value.resolution = String(input.values.resolution ?? "768P");
+  },
+  { deep: true, immediate: true },
+);
+
+watch(
+  [selectedCatalogOffering, () => catalogInput.value.mode],
+  () => {
+    if (!selectedCatalogMode.value?.requiresContinuation) continuationParentJobId.value = "";
+    else if (!continuationParentJobs.value.some((job) => job.id === continuationParentJobId.value)) {
+      continuationParentJobId.value = continuationParentJobs.value[0]?.id ?? "";
+    }
+  },
+  { immediate: true },
+);
+
+watch(
+  () => generationJobStore.jobs.map((job) => `${job.id}:${job.state}:${job.version}`),
+  () => {
+    for (const job of generationJobStore.jobs) {
+      if (job.state !== "succeeded" || job.consumer?.type !== "workbench" || materializedCatalogJobs.has(job.id)) continue;
+      materializedCatalogJobs.add(job.id);
+      void generationJobStore
+        .materializeWorkbench(job.id)
+        .then(() => {
+          if (job.consumer?.context.projectId === project.value?.id) void getGenerateData();
+        })
+        .catch((error: unknown) => {
+          materializedCatalogJobs.delete(job.id);
+          window.$message.error((error as Error)?.message ?? $t("providerPlatform.h3.materializeFailed"));
+        });
+    }
+  },
+  { immediate: true },
 );
 function parseMode(value: string): VideoMode | null {
   if (!value) return null;
@@ -375,10 +718,41 @@ watch(
   { deep: true },
 );
 
-onMounted(() => {
-  modelParmas.value.model = project.value?.videoModel || "";
+onMounted(async () => {
+  const restoreBuiltinSelection =
+    project.value?.videoCatalogMode === "builtin" &&
+    Boolean(project.value.videoCanonicalModelId) &&
+    Boolean(project.value.videoOfferingId) &&
+    Boolean(project.value.videoProviderId);
+  modelParmas.value.catalogMode = restoreBuiltinSelection;
+  modelParmas.value.model = restoreBuiltinSelection ? project.value?.videoOfferingId || "" : project.value?.videoModel || "";
+  modelParmas.value.canonicalModelId = restoreBuiltinSelection ? project.value?.videoCanonicalModelId || undefined : undefined;
+  modelParmas.value.providerId = restoreBuiltinSelection ? project.value?.videoProviderId || undefined : undefined;
   modelParmas.value.mode = project.value?.mode || "";
-  getGenerateData();
+  await Promise.all([
+    getGenerateData(),
+    getProviderCatalog()
+      .then((catalog) => {
+        providerCatalog.value = catalog;
+      })
+      .catch(() => {
+        window.$message.error($t("providerPlatform.loadCatalogError"));
+      }),
+  ]);
+  if (restoreBuiltinSelection && providerCatalog.value) {
+    const restored = resolvePersistedGenerationSelection(project.value, providerCatalog.value);
+    if (!restored) {
+      modelParmas.value.catalogMode = false;
+      modelParmas.value.model = project.value?.videoModel || "";
+      modelParmas.value.canonicalModelId = undefined;
+      modelParmas.value.providerId = undefined;
+    } else {
+      const model = providerCatalog.value.models.find((candidate) => candidate.id === restored.canonicalModelId);
+      modelParmas.value.offeringLabel = `${model?.name ?? restored.canonicalModelId} · ${restored.providerId}`;
+    }
+  }
+  await nextTick();
+  selectionPersistenceReady = true;
   if (hasGenerateVideoIds.value && hasGenerateVideoIds.value.length) {
     startPoll();
   }
@@ -391,6 +765,10 @@ async function generateVideo() {
     onConfirm: async () => {
       dlg.destroy();
       try {
+        if (isCatalogVideo.value) {
+          await generateCatalogVideo();
+          return;
+        }
         const { data } = await axios.post("/production/workbench/generateVideo", {
           projectId: project.value?.id,
           scriptId: episodesId.value,
@@ -432,6 +810,151 @@ async function generateVideo() {
     },
     onCancel: () => dlg.destroy(),
   });
+}
+
+function buildWorkbenchAssetIngestItems(items: UploadItem[]): WorkbenchAssetIngestRequest["items"] {
+  if (catalogInput.value.mode === "text" || catalogInput.value.mode === "edit") return [];
+  return items.flatMap((item, index) => {
+    if (item.id == null || !item.src) return [];
+    const durationSeconds = item.fileType === "image" ? undefined : mediaDurations.value[mediaDurationKey(item)];
+    return [
+      {
+        id: item.id,
+        source: item.sources,
+        kind: item.fileType,
+        role: catalogAssetRole(item.fileType, index),
+        ...(durationSeconds === undefined ? {} : { durationSeconds }),
+      },
+    ];
+  });
+}
+
+async function assertCatalogOfferingEligible(input: CapabilityInput, offering: CatalogOffering): Promise<void> {
+  const result = await preflightProviderRequest({
+    schemaVersion: "2.0.0",
+    canonicalModelId: offering.canonicalModelId,
+    operation: "video.generate",
+    input,
+    ...(selectedCatalogMode.value?.requiresContinuation && continuationParentJobId.value
+      ? { continuation: { parentJobId: continuationParentJobId.value } }
+      : {}),
+    offeringPreference: { mode: "pinned", offeringId: offering.id },
+    displayCurrency: "CNY",
+  });
+  const candidate = result.offerings.find((item) => item.offeringId === offering.id);
+  if (!candidate?.eligible) {
+    throw new Error(candidate?.violations[0]?.message ?? $t("providerPlatform.h3.preflightFailed"));
+  }
+}
+
+async function generateCatalogVideo() {
+  const projectId = Number(project.value?.id);
+  const scriptId = episodesId.value;
+  const track = currentTrack.value;
+  const offering = selectedCatalogOffering.value;
+  if (!Number.isSafeInteger(projectId) || projectId <= 0 || scriptId == null || track?.id == null || !offering) {
+    throw new Error($t("providerPlatform.h3.incompleteContext"));
+  }
+
+  await submitCatalogTrack(track, imageList.value, projectId, scriptId, offering);
+  window.$message.success($t("workbench.generate.generateStarted"));
+}
+
+async function submitCatalogTrack(
+  track: TrackItem,
+  items: UploadItem[],
+  projectId: number,
+  scriptId: number,
+  offering: CatalogOffering,
+  retainKeyOnSuccess = false,
+) {
+  await refreshMediaDurations(items);
+  const localInput: CapabilityInput = {
+    ...catalogInput.value,
+    values: { ...catalogInput.value.values, prompt: track.prompt },
+    assets: buildLocalCatalogAssets(items),
+  };
+  await assertCatalogOfferingEligible(localInput, offering);
+
+  const ingestItems = buildWorkbenchAssetIngestItems(items);
+  const importedAssets = ingestItems.length
+    ? (
+        (await axios.post("/v2/media-assets/workbench", {
+          projectId,
+          items: ingestItems,
+        } satisfies WorkbenchAssetIngestRequest)) as WorkbenchAssetIngestEnvelope
+      ).data.assets
+    : [];
+  const input: CapabilityInput = {
+    ...localInput,
+    assets: importedAssets.map((asset) => ({
+      assetId: asset.assetId,
+      kind: asset.kind,
+      role: asset.role,
+      ...(asset.durationSeconds === undefined ? {} : { durationSeconds: asset.durationSeconds }),
+    })),
+  };
+  await assertCatalogOfferingEligible(input, offering);
+
+  if (selectedCatalogMode.value?.requiresContinuation && !continuationParentJobId.value) {
+    throw new Error($t("providerPlatform.continuationParentRequired"));
+  }
+
+  const actionScope = logicalActionScope("workbench-video", {
+    offeringId: offering.id,
+    input,
+    projectId,
+    scriptId,
+    trackId: track.id,
+    continuationParentJobId: continuationParentJobId.value,
+  });
+  await generationJobStore.submit(
+    buildCatalogVideoJobRequest({
+      offering,
+      capabilityInput: input,
+      projectId,
+      scriptId,
+      trackId: track.id,
+      idempotencyKey: getPendingIdempotencyKey(actionScope),
+      ...(selectedCatalogMode.value?.requiresContinuation ? { continuationParentJobId: continuationParentJobId.value } : {}),
+    }),
+  );
+  if (!retainKeyOnSuccess) clearPendingIdempotencyKey(actionScope);
+  return actionScope;
+}
+
+function trackUploadItems(track: TrackItem): UploadItem[] {
+  if (track.id === currentTrack.value?.id) return imageList.value;
+  return track.medias.flatMap((media) => {
+    if (media.id == null || !media.src || (media.sources !== "assets" && media.sources !== "storyboard")) return [];
+    return [
+      {
+        id: media.id,
+        src: media.src,
+        fileType: media.fileType,
+        sources: media.sources,
+        ...(media.sources === "storyboard" ? { index: media.index ?? 0 } : {}),
+      } as UploadItem,
+    ];
+  });
+}
+
+async function generateCatalogBatch(tracks: TrackItem[]) {
+  if (!isCatalogVideo.value) return;
+  const projectId = Number(project.value?.id);
+  const scriptId = episodesId.value;
+  const offering = selectedCatalogOffering.value;
+  if (!Number.isSafeInteger(projectId) || projectId <= 0 || scriptId == null || !offering) {
+    throw new Error($t("providerPlatform.h3.incompleteContext"));
+  }
+  if (selectedCatalogMode.value?.requiresContinuation) {
+    throw new Error($t("providerPlatform.continuationBatchUnsupported"));
+  }
+  await runIdempotentBatch(
+    tracks,
+    (track) => submitCatalogTrack(track, trackUploadItems(track), projectId, scriptId, offering, true),
+    clearPendingIdempotencyKey,
+  );
 }
 let pollTimer: NodeJS.Timeout | null = null;
 let promptPollTimer: NodeJS.Timeout | null = null;
@@ -545,6 +1068,19 @@ onUnmounted(() => {
   }
   .modelSelect {
   }
+  .catalogControls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(360px, 0.82fr);
+    gap: 12px;
+
+    .continuationField {
+      display: grid;
+      grid-column: 1 / -1;
+      gap: 6px;
+      color: var(--td-text-color-primary);
+      font-size: 13px;
+    }
+  }
   .generate {
     flex: 1;
     min-height: 0;
@@ -588,6 +1124,12 @@ onUnmounted(() => {
     }
   }
   .track {
+  }
+}
+
+@media (max-width: 1100px) {
+  .index .catalogControls {
+    grid-template-columns: 1fr;
   }
 }
 </style>

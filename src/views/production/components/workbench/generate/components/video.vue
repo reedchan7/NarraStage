@@ -87,7 +87,7 @@ const props = defineProps<{
   generating?: boolean;
 }>();
 const currentTrack = defineModel<TrackItem>("currentTrack", {
-  default: () => {},
+  required: true,
 });
 const emit = defineEmits<{
   generate: [];

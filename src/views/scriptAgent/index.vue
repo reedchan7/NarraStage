@@ -24,6 +24,21 @@
             @send="handleSend"
             @stop="handleStop">
             <template #footer-prefix>
+              <AgentAttachmentComposer
+                v-if="modelDetails?.acceptsAttachments"
+                v-model="attachments"
+                :target="modelDetails"
+                :disabled="status === 'pending' || status === 'streaming'" />
+              <t-button
+                v-if="modelDetails?.supportsGrounding"
+                size="small"
+                variant="outline"
+                :theme="grounding ? 'success' : 'default'"
+                :aria-pressed="grounding"
+                :title="$t('chat.grounding.description')"
+                @click="grounding = !grounding">
+                {{ $t("chat.grounding.label") }}
+              </t-button>
               <t-popup trigger="click" placement="top-left">
                 <t-button shape="square" variant="outline" size="small" :disabled="status === 'pending' || status === 'streaming'">
                   <template #icon>
@@ -209,6 +224,9 @@ import { MdEditor } from "md-editor-v3";
 import type { ToolbarNames } from "md-editor-v3";
 import { MdPreview } from "md-editor-v3";
 import settingStore from "@/stores/setting";
+import AgentAttachmentComposer from "@/features/chat/AgentAttachmentComposer.vue";
+import type { AgentModelDetails, ChatAttachment } from "@/features/chat/attachments";
+import { onProviderRuntimeChanged } from "@/features/providers/runtimeInvalidation";
 const { themeSetting } = storeToRefs(settingStore());
 import { Splitpanes, Pane } from "splitpanes";
 import axios from "@/utils/axios";
@@ -227,6 +245,9 @@ const thinkLevelOptions = [
 import productionAgentStore from "@/stores/productionAgent";
 const currentTable = ref(1);
 const inputValue = ref("");
+const attachments = ref<ChatAttachment[]>([]);
+const modelDetails = ref<AgentModelDetails | null>(null);
+const grounding = ref(false);
 const toolbars: ToolbarNames[] = [
   "bold",
   "underline",
@@ -290,8 +311,9 @@ const handleActions = {
 };
 
 function handleSend(text: string) {
-  scriptAgentStore().chat(text);
+  scriptAgentStore().chat(text, attachments.value, grounding.value);
   inputValue.value = "";
+  attachments.value = [];
 }
 function handleStop() {
   scriptAgentStore().stopGenerate();
@@ -432,12 +454,24 @@ function onConfirm(value: string) {
 }
 
 const showThink = ref(false);
-onMounted(async () => {
-  const { data } = await axios.post(`/project/getModelDetails`, { key: "scriptAgent" });
-  if (data && data.think) {
-    showThink.value = true;
+async function loadModelDetails() {
+  try {
+    const { data } = await axios.post(`/project/getModelDetails`, { key: "scriptAgent" });
+    showThink.value = Boolean(data?.think);
+    modelDetails.value = data?.available && (data.acceptsAttachments || data.supportsGrounding) ? data : null;
+    if (!data?.available || !data?.supportsGrounding) grounding.value = false;
+  } catch {
+    showThink.value = false;
+    modelDetails.value = null;
+    grounding.value = false;
   }
+}
+let disposeRuntimeListener: (() => void) | undefined;
+onMounted(() => {
+  disposeRuntimeListener = onProviderRuntimeChanged(loadModelDetails);
+  void loadModelDetails();
 });
+onUnmounted(() => disposeRuntimeListener?.());
 
 type ScriptCardItem = {
   id?: number;

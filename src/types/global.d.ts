@@ -3,6 +3,27 @@
  */
 declare const $t: (key: string, ...args: any[]) => string;
 
+interface ToonflowCredentialRef {
+  providerId: string;
+  slot: string;
+}
+
+interface ToonflowCredentialStatus {
+  configured: boolean;
+  source: "environment" | "electron_safe_storage" | "memory" | "none";
+  writable: boolean;
+  updatedAt?: string;
+}
+
+interface Window {
+  $electron?: boolean;
+  toonflowCredentials?: {
+    status(request: ToonflowCredentialRef): Promise<ToonflowCredentialStatus>;
+    set(request: ToonflowCredentialRef & { value: string }): Promise<ToonflowCredentialStatus>;
+    delete(request: ToonflowCredentialRef): Promise<ToonflowCredentialStatus>;
+  };
+}
+
 /**
  * Vite 环境变量类型定义
  */

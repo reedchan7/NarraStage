@@ -13,6 +13,11 @@ interface Project {
   imageQuality: "1K" | "2K" | "4K" | "";
   mode: string;
   directorManual: string;
+  videoCatalogMode?: "custom" | "builtin" | null;
+  videoCanonicalModelId?: string | null;
+  videoOfferingId?: string | null;
+  videoProviderId?: string | null;
+  videoOfferingPreferenceMode?: "auto" | "pinned" | null;
 }
 
 export default defineStore(

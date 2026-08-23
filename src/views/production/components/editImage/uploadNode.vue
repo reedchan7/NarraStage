@@ -54,7 +54,6 @@ import { Handle, Position, useVueFlow } from "@vue-flow/core";
 import { onBeforeUnmount, ref, watch } from "vue";
 import openAssetsSelector from "@/utils/assetsCheck";
 import type { Storyboard } from "../../utils/flowBuilder";
-import type { DropdownOption } from "tdesign-vue-next/es/dropdown";
 const props = defineProps<{
   id: string;
   data: {
@@ -90,10 +89,11 @@ function removeFn() {
 }
 const emit = defineEmits(["upload", "keep"]);
 
-function clickHandler(data: DropdownOption) {
-  if (data.value == 1) {
+function clickHandler(data: string | number | Record<string, any> | undefined) {
+  const value = typeof data === "object" && data !== null ? data.value : data;
+  if (value == 1) {
     uploadFn();
-  } else if (data.value == 2) {
+  } else if (value == 2) {
     getStoryboardImage();
   }
 }

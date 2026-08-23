@@ -88,7 +88,12 @@
       <div class="dialogContent">
         <t-form v-if="currentItem" label-align="top" :label-width="70">
           <t-form-item :label="$t('settings.agent.selectModel')">
-            <modelSelect v-model="selectValue" v-model:label="selectLabel" type="text" />
+            <t-radio-group v-model="selectionSource" variant="default-filled" size="small" class="sourceSwitch">
+              <t-radio-button value="catalog">{{ $t("providerPlatform.builtinCatalog") }}</t-radio-button>
+              <t-radio-button value="legacy">{{ $t("providerPlatform.customProvider") }}</t-radio-button>
+            </t-radio-group>
+            <modelSelect v-if="selectionSource === 'catalog'" v-model="selectValue" v-model:label="selectLabel" type="text" catalog-mode />
+            <modelSelect v-else v-model="selectValue" v-model:label="selectLabel" type="text" />
           </t-form-item>
           <t-form-item :label="$t('settings.agent.temperature')" v-if="type == '高级'">
             <t-input-number v-model="currentItem.temperature" style="width: 100%" />
@@ -129,7 +134,17 @@
             </t-select>
           </t-form-item>
           <t-form-item :label="$t('settings.agent.selectModel')">
-            <modelSelect v-model="batchGlobalModel" v-model:label="batchGlobalLabel" type="text" />
+            <t-radio-group v-model="batchSelectionSource" variant="default-filled" size="small" class="sourceSwitch">
+              <t-radio-button value="catalog">{{ $t("providerPlatform.builtinCatalog") }}</t-radio-button>
+              <t-radio-button value="legacy">{{ $t("providerPlatform.customProvider") }}</t-radio-button>
+            </t-radio-group>
+            <modelSelect
+              v-if="batchSelectionSource === 'catalog'"
+              v-model="batchGlobalModel"
+              v-model:label="batchGlobalLabel"
+              type="text"
+              catalog-mode />
+            <modelSelect v-else v-model="batchGlobalModel" v-model:label="batchGlobalLabel" type="text" />
           </t-form-item>
           <t-form-item :label="$t('settings.agent.temperature')">
             <t-input-number v-model="batchSettings.temperature" style="width: 100%" />
@@ -160,6 +175,7 @@ import modelSelect from "@/components/modelSelect.vue";
 import { providersLogo, modelProviderRules } from "@/utils/providersLogo";
 import axios from "@/utils/axios";
 import settingStore from "@/stores/setting";
+import { getProviderCatalog } from "@/features/models/catalog";
 const { isElectron } = storeToRefs(settingStore());
 
 interface ModelType {
@@ -181,6 +197,8 @@ const modelDataShow = ref(false);
 const currentItem = ref<ModelType | null>(null);
 const selectValue = ref<string>("");
 const selectLabel = ref<string>("");
+const selectionSource = ref<"catalog" | "legacy">("legacy");
+const builtinOfferingIds = ref(new Set<string>());
 
 function getProviderLogo(manufacturer: string) {
   if (!manufacturer) return null;
@@ -219,6 +237,7 @@ function startConfig(item: ModelType, source: string) {
   currentItem.value = item;
   selectValue.value = item.modelName || "";
   selectLabel.value = item.model || "";
+  selectionSource.value = builtinOfferingIds.value.has(item.modelName) ? "catalog" : "legacy";
   maxTokenMode.value = item.maxOutputTokens === 0 || item.maxOutputTokens == null ? "auto" : "manual";
   modelDataShow.value = true;
   type.value = source;
@@ -307,6 +326,7 @@ const batchModelValues = reactive<any>({});
 const batchModelLabels = reactive<any>({});
 const batchGlobalModel = ref<string>("");
 const batchGlobalLabel = ref<string>("");
+const batchSelectionSource = ref<"catalog" | "legacy">("legacy");
 const batchSettings = ref({ temperature: 1, maxOutputTokens: 0 });
 const batchMaxTokenMode = ref<"auto" | "manual">("auto");
 const batchLoading = ref(false);
@@ -411,6 +431,7 @@ function batchSetting() {
     });
     batchGlobalModel.value = first.modelName ?? "";
     batchGlobalLabel.value = first.model ?? "";
+    batchSelectionSource.value = builtinOfferingIds.value.has(first.modelName) ? "catalog" : "legacy";
   } else {
     batchSettings.value.temperature = 1;
     batchSettings.value.maxOutputTokens = 0;
@@ -421,6 +442,15 @@ function batchSetting() {
 
 onMounted(() => {
   getUseModeVal();
+});
+
+onMounted(async () => {
+  try {
+    const catalog = await getProviderCatalog();
+    builtinOfferingIds.value = new Set(catalog.offerings.map((offering) => offering.id));
+  } catch {
+    builtinOfferingIds.value = new Set();
+  }
 });
 
 //跳转官方网站
@@ -457,6 +487,10 @@ async function jumpToWebsite() {
       }
     }
   }
+}
+
+.sourceSwitch {
+  margin-bottom: 10px;
 }
 
 .modeRadioGroup {
