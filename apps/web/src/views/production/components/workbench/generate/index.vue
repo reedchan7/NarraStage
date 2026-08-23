@@ -107,7 +107,7 @@ import {
   type ProviderCatalog,
   type PreflightResult,
 } from "@/features/models/catalog";
-import type { paths } from "@/api/generated/v2";
+import type { paths } from "/contracts";
 import {
   createProjectSelectionPersistence,
   projectGenerationSelection,

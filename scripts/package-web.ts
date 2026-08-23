@@ -21,10 +21,36 @@ async function command(cwd: string, executable: string, args: string[], env?: No
   return stdout;
 }
 
+export interface RepositoryRevisionScope {
+  includedFiles?: ReadonlySet<string>;
+  includedPrefixes?: readonly string[];
+  excludedFiles?: ReadonlySet<string>;
+  excludedPrefixes?: readonly string[];
+}
+
+export const backendRevisionScope: RepositoryRevisionScope = {
+  includedFiles: new Set([
+    "package.json",
+    "bun.lock",
+    "tsconfig.json",
+    "tsconfig.base.json",
+    "electron-builder.yml",
+    "Dockerfile",
+    "data/contracts/openapi.v2.json",
+  ]),
+  includedPrefixes: ["src/", "tests/", "apps/server/", "apps/desktop/", "scripts/", "data/vendor/"],
+  excludedPrefixes: ["data/serve/", "apps/web/"],
+};
+
+export const webRevisionScope: RepositoryRevisionScope = {
+  includedFiles: new Set(["package.json", "bun.lock", "tsconfig.base.json"]),
+  includedPrefixes: ["apps/web/", "packages/contracts/"],
+  excludedPrefixes: ["apps/web/dist/", "apps/web/coverage/"],
+};
+
 export async function repositoryContentRevision(
   repositoryRoot: string,
-  excluded: ReadonlySet<string>,
-  excludedPrefixes: readonly string[] = [],
+  scope: RepositoryRevisionScope,
 ): Promise<string> {
   const [head, listed] = await Promise.all([
     command(repositoryRoot, "git", ["rev-parse", "HEAD"]),
@@ -39,10 +65,16 @@ export async function repositoryContentRevision(
   const files = listed
     .split("\0")
     .filter(Boolean)
-    .filter(
-      (entry) =>
-        !excluded.has(entry) && !excludedPrefixes.some((prefix) => entry.startsWith(prefix)),
-    )
+    .filter((entry) => {
+      const included =
+        scope.includedFiles?.has(entry) ||
+        scope.includedPrefixes?.some((prefix) => entry.startsWith(prefix));
+      if (!included) return false;
+      return (
+        !scope.excludedFiles?.has(entry) &&
+        !scope.excludedPrefixes?.some((prefix) => entry.startsWith(prefix))
+      );
+    })
     .sort();
   const digest = createHash("sha256");
   for (const file of files) {
@@ -54,11 +86,15 @@ export async function repositoryContentRevision(
   return `${head.trim()}+tree.${digest.digest("hex").slice(0, 16)}`;
 }
 
-export async function packageWeb(webRoot: string): Promise<void> {
+export async function packageWeb(): Promise<void> {
   const backendRoot = path.resolve(import.meta.dir, "..");
+  const webRoot = path.join(backendRoot, "apps/web");
   const openapiPath = path.join(backendRoot, "data/contracts/openapi.v2.json");
-  const generatedClientPath = path.join(webRoot, "src/api/generated/v2.ts");
-  const generatedSourcePath = path.join(webRoot, "src/api/generated/source.json");
+  const generatedClientPath = path.join(backendRoot, "packages/contracts/src/generated/v2.ts");
+  const generatedSourcePath = path.join(
+    backendRoot,
+    "packages/contracts/src/generated/source.json",
+  );
   const [openapi, generatedClient, generatedSource, dependencyLock, backendRevision, webRevision] =
     await Promise.all([
       readFile(openapiPath),
@@ -71,17 +107,9 @@ export async function packageWeb(webRoot: string): Promise<void> {
             generatedClientSha256: string;
           },
       ),
-      readFile(path.join(webRoot, "yarn.lock")),
-      repositoryContentRevision(
-        backendRoot,
-        new Set(["data/contracts/web-build.json", "data/web/index.html"]),
-        ["build/", "data/serve/", "docs/"],
-      ),
-      repositoryContentRevision(
-        webRoot,
-        new Set(["src/types/auto-imports.d.ts", "src/types/components.d.ts"]),
-        ["dist/"],
-      ),
+      readFile(path.join(backendRoot, "bun.lock")),
+      repositoryContentRevision(backendRoot, backendRevisionScope),
+      repositoryContentRevision(backendRoot, webRevisionScope),
     ]);
 
   const openapiSha256 = sha256Text(openapi);
@@ -94,7 +122,7 @@ export async function packageWeb(webRoot: string): Promise<void> {
   }
 
   const supportedContractRange = `^${generatedSource.contractVersion}`;
-  await command(webRoot, "corepack", ["yarn", "build-only"], {
+  await command(webRoot, "bun", ["run", "build-only"], {
     ...globalThis.process.env,
     VITE_TOONFLOW_WEB_REVISION: webRevision,
     VITE_TOONFLOW_CONTRACT_RANGE: supportedContractRange,
@@ -135,7 +163,5 @@ export async function packageWeb(webRoot: string): Promise<void> {
 }
 
 if (import.meta.main) {
-  const webRoot = process.argv[2];
-  if (!webRoot) throw new Error("usage: bun scripts/package-web.ts <Toonflow-web-root>");
-  await packageWeb(path.resolve(webRoot));
+  await packageWeb();
 }

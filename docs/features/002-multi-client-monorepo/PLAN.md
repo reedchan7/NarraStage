@@ -198,6 +198,7 @@
 | ID/date | Level | Expected / found / impact | Resolution and approval |
 |---|---|---|---|
 | D-001 2026-08-24 | PLAN | Baseline handoff said `bun run build` passed; fresh HEAD fails embedded backend source revision. This affects S1/S6 baseline only and confirms sibling-provenance coupling. | Record exact known-red fingerprint; do not refresh legacy bundle before S1; approved scope already replaces the coupling. |
+| D-002 2026-08-24 | Code | The imported Vue compiler (`vue-tsc` 3.3.11) requires the removed TypeScript `./lib/tsc` subpath and cannot run on the required TypeScript 7.0.2. Web Vitest remains 40/40 and Vite production build remains the interim behavior oracle. | Keep TypeScript 7.0.2, record the exact incompatibility, and replace the Vue compiler with native React TypeScript checking in S4; no requirement or final gate changes. |
 
 ## Noticed, not touched
 

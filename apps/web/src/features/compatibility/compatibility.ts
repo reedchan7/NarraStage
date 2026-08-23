@@ -1,11 +1,17 @@
-import type { paths } from "@/api/generated/v2";
+import type { paths } from "/contracts";
 import { webBuildMeta } from "@/api/buildMeta";
 
 export type ApiMeta = paths["/api/meta"]["get"]["responses"][200]["content"]["application/json"];
 
-export type CompatibilityFailureCode = "contract_version" | "openapi_digest" | "web_revision" | "invalid_metadata";
+export type CompatibilityFailureCode =
+  | "contract_version"
+  | "openapi_digest"
+  | "web_revision"
+  | "invalid_metadata";
 
-export type CompatibilityResult = { compatible: true } | { compatible: false; code: CompatibilityFailureCode };
+export type CompatibilityResult =
+  | { compatible: true }
+  | { compatible: false; code: CompatibilityFailureCode };
 
 function parseVersion(value: string): [number, number, number] | undefined {
   const match = /^(\d+)\.(\d+)\.(\d+)$/.exec(value);
@@ -31,7 +37,12 @@ export function evaluateApiCompatibility(
   client = webBuildMeta,
   mode: "embedded" | "standalone" = "embedded",
 ): CompatibilityResult {
-  if (!meta || typeof meta.contractVersion !== "string" || typeof meta.openapiSha256 !== "string" || typeof meta.webRevision !== "string") {
+  if (
+    !meta ||
+    typeof meta.contractVersion !== "string" ||
+    typeof meta.openapiSha256 !== "string" ||
+    typeof meta.webRevision !== "string"
+  ) {
     return { compatible: false, code: "invalid_metadata" };
   }
   if (!satisfiesCaretRange(meta.contractVersion, client.supportedContractRange)) {
@@ -41,7 +52,11 @@ export function evaluateApiCompatibility(
   if (meta.openapiSha256 !== client.openapiSha256) {
     return { compatible: false, code: "openapi_digest" };
   }
-  if (!isDevelopmentRevision(meta.webRevision) && !isDevelopmentRevision(client.webRevision) && meta.webRevision !== client.webRevision) {
+  if (
+    !isDevelopmentRevision(meta.webRevision) &&
+    !isDevelopmentRevision(client.webRevision) &&
+    meta.webRevision !== client.webRevision
+  ) {
     return { compatible: false, code: "web_revision" };
   }
   return { compatible: true };

@@ -1,13 +1,34 @@
-import type { paths } from "@/api/generated/v2";
+import type { paths } from "/contracts";
 import axios from "@/utils/axios";
 import { v7 as uuidv7 } from "uuid";
-import { clearPendingIdempotencyKey, getPendingIdempotencyKey, logicalActionScope } from "@/features/generation/idempotency";
+import {
+  clearPendingIdempotencyKey,
+  getPendingIdempotencyKey,
+  logicalActionScope,
+} from "@/features/generation/idempotency";
 
 export const inlineChatAttachmentLimit = 768 * 1024;
 export const maximumChatAttachmentBytes = 64 * 1024 * 1024;
-export const supportedChatImageTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"] as const;
-export const supportedChatVideoTypes = ["video/mp4", "video/mpeg", "video/quicktime", "video/webm"] as const;
-export const supportedChatAudioTypes = ["audio/wav", "audio/mpeg", "audio/mp4", "audio/ogg", "audio/flac", "audio/webm"] as const;
+export const supportedChatImageTypes = [
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+] as const;
+export const supportedChatVideoTypes = [
+  "video/mp4",
+  "video/mpeg",
+  "video/quicktime",
+  "video/webm",
+] as const;
+export const supportedChatAudioTypes = [
+  "audio/wav",
+  "audio/mpeg",
+  "audio/mp4",
+  "audio/ogg",
+  "audio/flac",
+  "audio/webm",
+] as const;
 export const supportedChatDocumentTypes = ["application/pdf"] as const;
 export const supportedChatMediaTypes = [
   ...supportedChatImageTypes,
@@ -30,7 +51,8 @@ export type ChatAttachment = {
   height?: number;
   detail?: ChatImageDetail;
   source:
-    { type: "inline"; dataBase64: string; byteLength: number } | { type: "provider_file"; providerId: string; fileId: string; expiresAt?: string };
+    | { type: "inline"; dataBase64: string; byteLength: number }
+    | { type: "provider_file"; providerId: string; fileId: string; expiresAt?: string };
 };
 
 export type AgentModelDetails = {
@@ -51,7 +73,8 @@ export type AgentModelDetails = {
 type UploadOperation = paths["/api/v2/files/upload"]["post"];
 type UploadRequest = UploadOperation["requestBody"]["content"]["application/json"];
 type UploadResponse = UploadOperation["responses"][200]["content"]["application/json"];
-type AssetUploadResponse = paths["/api/v2/media-assets/upload"]["put"]["responses"][201]["content"]["application/json"];
+type AssetUploadResponse =
+  paths["/api/v2/media-assets/upload"]["put"]["responses"][201]["content"]["application/json"];
 
 function bytesToBase64(bytes: Uint8Array): string {
   let binary = "";
@@ -73,7 +96,10 @@ export function chatAttachmentDisplayType(mediaType: ChatMediaType) {
   return "pdf" as const;
 }
 
-export async function uploadChatProviderFile(file: File, target: AgentModelDetails): Promise<ChatAttachment["source"]> {
+export async function uploadChatProviderFile(
+  file: File,
+  target: AgentModelDetails,
+): Promise<ChatAttachment["source"]> {
   const assetResponse = (await axios.put("/v2/media-assets/upload", file, {
     headers: {
       "Content-Type": "application/octet-stream",
@@ -116,7 +142,10 @@ export async function prepareChatAttachment(
   if (!isSupportedChatMediaType(file.type) || !target.supportedMediaTypes.includes(file.type)) {
     throw new Error("chat.attachments.format_unsupported");
   }
-  if (file.size <= 0 || file.size > Math.min(maximumChatAttachmentBytes, target.maximumAttachmentBytes)) {
+  if (
+    file.size <= 0 ||
+    file.size > Math.min(maximumChatAttachmentBytes, target.maximumAttachmentBytes)
+  ) {
     throw new Error("chat.attachments.size_exceeded");
   }
   let source: ChatAttachment["source"];
@@ -134,7 +163,9 @@ export async function prepareChatAttachment(
     filename: file.name,
     mediaType: file.type,
     byteLength: file.size,
-    ...(source.type === "inline" && file.type.startsWith("image/") ? { detail: "auto" as const } : {}),
+    ...(source.type === "inline" && file.type.startsWith("image/")
+      ? { detail: "auto" as const }
+      : {}),
     source,
   };
 }

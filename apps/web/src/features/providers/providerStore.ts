@@ -2,10 +2,11 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 import axios from "@/utils/axios";
 import { getProviderCatalog } from "@/features/models/catalog";
-import type { paths } from "@/api/generated/v2";
+import type { paths } from "/contracts";
 import { notifyProviderRuntimeChanged } from "@/features/providers/runtimeInvalidation";
 
-type CredentialEnvelope = paths["/api/v2/providers"]["get"]["responses"][200]["content"]["application/json"];
+type CredentialEnvelope =
+  paths["/api/v2/providers"]["get"]["responses"][200]["content"]["application/json"];
 type CredentialProvider = CredentialEnvelope["data"]["providers"][number];
 
 export interface ProviderCredentialView extends CredentialProvider {
@@ -23,12 +24,17 @@ export const useProviderStore = defineStore("provider-platform", () => {
     loading.value = true;
     errorCode.value = "";
     try {
-      const [credentialResponse, catalog] = await Promise.all([axios.get("/v2/providers") as Promise<CredentialEnvelope>, getProviderCatalog()]);
+      const [credentialResponse, catalog] = await Promise.all([
+        axios.get("/v2/providers") as Promise<CredentialEnvelope>,
+        getProviderCatalog(),
+      ]);
       const names = new Map(catalog.providers.map((provider) => [provider.id, provider.name]));
       providers.value = credentialResponse.data.providers.map((provider) => ({
         ...provider,
         name: names.get(provider.providerId) ?? provider.providerId,
-        health: (provider as CredentialProvider & { health?: ProviderCredentialView["health"] }).health ?? "unknown",
+        health:
+          (provider as CredentialProvider & { health?: ProviderCredentialView["health"] }).health ??
+          "unknown",
       }));
     } catch {
       errorCode.value = "providerPlatform.loadCredentialStatusError";

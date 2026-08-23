@@ -176,7 +176,7 @@ import {
   type ModelOperation,
   type ProviderCatalog,
 } from "@/features/models/catalog";
-import type { paths } from "@/api/generated/v2";
+import type { paths } from "/contracts";
 import projectStore from "@/stores/project";
 const { project } = storeToRefs(projectStore());
 import axios from "@/utils/axios";

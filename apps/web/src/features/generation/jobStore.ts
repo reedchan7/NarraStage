@@ -3,22 +3,34 @@ import { defineStore } from "pinia";
 import { io, type Socket } from "socket.io-client";
 import axios from "@/utils/axios";
 import settingStore from "@/stores/setting";
-import type { paths } from "@/api/generated/v2";
+import type { paths } from "/contracts";
 
-type JobEnvelope = paths["/api/v2/jobs/{id}"]["get"]["responses"][200]["content"]["application/json"];
-type JobListEnvelope = paths["/api/v2/jobs"]["get"]["responses"][200]["content"]["application/json"];
+type JobEnvelope =
+  paths["/api/v2/jobs/{id}"]["get"]["responses"][200]["content"]["application/json"];
+type JobListEnvelope =
+  paths["/api/v2/jobs"]["get"]["responses"][200]["content"]["application/json"];
 type SubmitOperation = paths["/api/v2/jobs"]["post"];
 type SubmitRequest = SubmitOperation["requestBody"]["content"]["application/json"];
-type CancelRequest = paths["/api/v2/jobs/{id}/cancel"]["post"]["requestBody"]["content"]["application/json"];
-type ReconcileRequest = paths["/api/v2/jobs/{id}/reconcile"]["post"]["requestBody"]["content"]["application/json"];
-type ResumeImportEnvelope = paths["/api/v2/jobs/{id}/resume-import"]["post"]["responses"][200]["content"]["application/json"];
-type MaterializeEnvelope = paths["/api/v2/jobs/{id}/materialize-workbench"]["post"]["responses"][200]["content"]["application/json"];
-type MaterializeAssetImageEnvelope = paths["/api/v2/jobs/{id}/materialize-asset-image"]["post"]["responses"][200]["content"]["application/json"];
+type CancelRequest =
+  paths["/api/v2/jobs/{id}/cancel"]["post"]["requestBody"]["content"]["application/json"];
+type ReconcileRequest =
+  paths["/api/v2/jobs/{id}/reconcile"]["post"]["requestBody"]["content"]["application/json"];
+type ResumeImportEnvelope =
+  paths["/api/v2/jobs/{id}/resume-import"]["post"]["responses"][200]["content"]["application/json"];
+type MaterializeEnvelope =
+  paths["/api/v2/jobs/{id}/materialize-workbench"]["post"]["responses"][200]["content"]["application/json"];
+type MaterializeAssetImageEnvelope =
+  paths["/api/v2/jobs/{id}/materialize-asset-image"]["post"]["responses"][200]["content"]["application/json"];
 
 export type GenerationJobView = JobEnvelope["data"];
 export type SubmitGenerationJobRequest = SubmitRequest;
 
-const terminalStates = new Set<GenerationJobView["state"]>(["succeeded", "failed", "cancelled", "abandoned"]);
+const terminalStates = new Set<GenerationJobView["state"]>([
+  "succeeded",
+  "failed",
+  "cancelled",
+  "abandoned",
+]);
 
 export const useGenerationJobStore = defineStore("generation-jobs", () => {
   const jobsById = ref<Record<string, GenerationJobView>>({});
@@ -26,7 +38,9 @@ export const useGenerationJobStore = defineStore("generation-jobs", () => {
   const connected = ref(false);
   let socket: Socket | undefined;
 
-  const jobs = computed(() => Object.values(jobsById.value).sort((left, right) => right.updatedAt - left.updatedAt));
+  const jobs = computed(() =>
+    Object.values(jobsById.value).sort((left, right) => right.updatedAt - left.updatedAt),
+  );
   const activeJobs = computed(() => jobs.value.filter((job) => !terminalStates.has(job.state)));
 
   function merge(job: GenerationJobView) {
@@ -55,7 +69,8 @@ export const useGenerationJobStore = defineStore("generation-jobs", () => {
   }
 
   async function refreshJob(id: string, announcedVersion?: number) {
-    if (announcedVersion !== undefined && (jobsById.value[id]?.version ?? -1) >= announcedVersion) return;
+    if (announcedVersion !== undefined && (jobsById.value[id]?.version ?? -1) >= announcedVersion)
+      return;
     const response = (await axios.get(`/v2/jobs/${id}`)) as JobEnvelope;
     merge(response.data);
   }
@@ -85,12 +100,16 @@ export const useGenerationJobStore = defineStore("generation-jobs", () => {
   }
 
   async function materializeWorkbench(id: string) {
-    const response = (await axios.post(`/v2/jobs/${id}/materialize-workbench`)) as MaterializeEnvelope;
+    const response = (await axios.post(
+      `/v2/jobs/${id}/materialize-workbench`,
+    )) as MaterializeEnvelope;
     return response.data;
   }
 
   async function materializeAssetImage(id: string) {
-    const response = (await axios.post(`/v2/jobs/${id}/materialize-asset-image`)) as MaterializeAssetImageEnvelope;
+    const response = (await axios.post(
+      `/v2/jobs/${id}/materialize-asset-image`,
+    )) as MaterializeAssetImageEnvelope;
     return response.data;
   }
 

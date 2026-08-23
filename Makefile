@@ -11,7 +11,15 @@ DATA_DIR ?= $(CURDIR)/data
 	install \
 	deps-check \
 	hooks \
+	workspace-check \
+	contracts-check \
 	dev \
+	server-test \
+	web-dev \
+	web-check \
+	web-build \
+	web-package \
+	desktop-dev \
 	dev-gui \
 	dev-gui-vite \
 	start \
@@ -51,8 +59,32 @@ deps-check: ## 检查依赖是否有可用更新
 hooks: ## 安装 Lefthook Git hooks
 	$(BUN) run hooks
 
+workspace-check: ## 检查多端工作区、锁文件和 TypeScript 版本策略
+	$(BUN) run workspace:check
+
+contracts-check: ## 检查共享 API 契约是否与服务端一致
+	$(BUN) run contracts:check
+
 dev: ## 启动后端开发服务
 	$(BUN) run dev
+
+server-test: ## 运行服务端测试
+	$(BUN) run test:server
+
+web-dev: ## 启动 Web 客户端开发环境
+	$(BUN) run web:dev
+
+web-check: ## 检查 Web 客户端
+	$(BUN) run web:check
+
+web-build: ## 构建 Web 客户端
+	$(BUN) run web:build
+
+web-package: ## 构建并嵌入仓库内 Web 客户端
+	$(BUN) run web:package
+
+desktop-dev: ## 启动桌面客户端开发环境
+	$(BUN) run dev:gui
 
 dev-gui: ## 启动 Electron 桌面开发环境
 	$(BUN) run dev:gui

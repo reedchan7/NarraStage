@@ -13,12 +13,12 @@ function sha256(value: Uint8Array): string {
 }
 
 const outputPath = process.argv[2];
-if (!outputPath) throw new Error("usage: yarn build:meta <output-path>");
+if (!outputPath) throw new Error("usage: bun run build:meta <output-path>");
 
 const repositoryRoot = path.resolve(import.meta.dirname, "..");
 const [bundle, lockfile] = await Promise.all([
   readFile(path.join(repositoryRoot, "dist/index.html")),
-  readFile(path.join(repositoryRoot, "yarn.lock")),
+  readFile(path.resolve(repositoryRoot, "../..", "bun.lock")),
 ]);
 
 const metadata = {

@@ -15,13 +15,12 @@ describe("release package entry points", () => {
     }
   });
 
-  test("pins the real Web repository and runs its complete quality gate", () => {
+  test("builds repository-local Web source through the aggregate quality gate", () => {
     const workflow = readFileSync(".github/workflows/release.yml", "utf8");
-    expect(workflow).toContain("repository: HBAI-Ltd/Toonflow-web");
-    expect(workflow).toContain("ref: ${{ steps.web-source.outputs.revision }}");
-    expect(workflow).toContain(
-      "corepack yarn type-check && corepack yarn test:run && corepack yarn i18n:check && corepack yarn build-only",
-    );
+    expect(workflow).not.toContain("repository: HBAI-Ltd/Toonflow-web");
+    expect(workflow).not.toContain("corepack yarn");
+    expect(workflow).toContain("bun install --frozen-lockfile");
+    expect(workflow).toContain("bun run check");
     expect(workflow).toContain(
       "bun run web:package && git diff --exit-code -- data/web data/contracts/web-build.json",
     );
