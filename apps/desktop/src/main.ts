@@ -257,7 +257,7 @@ if (ownsSingleInstanceLock)
       const mod = await import(pathToFileURL(servePath).href);
       closeServeFn = mod.closeServe;
       const port = await mod.default({
-        randomPort: true,
+        randomPort: !process.env.VITE_DEV,
         credentialVault,
         credentialMigrationVault: credentialVault,
       });

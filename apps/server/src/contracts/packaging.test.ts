@@ -34,6 +34,18 @@ describe("packaged contract provenance", () => {
     expect(mainSource).toContain('setWindowOpenHandler(() => ({ action: "deny" }))');
     expect(mainSource).toContain('win.webContents.on("will-navigate"');
     expect(mainSource).toContain("event.sender !== mainWindow?.webContents");
+    expect(mainSource).toContain("randomPort: !process.env.VITE_DEV");
+    for (const channel of [
+      "toonflow:window:minimize",
+      "toonflow:window:toggle-maximize",
+      "toonflow:window:close",
+    ]) {
+      expect(mainSource).toMatch(
+        new RegExp(
+          `ipcMain\\.handle\\("${channel}", async \\(event\\) => \\{\\s+trustedRequest\\(event\\);`,
+        ),
+      );
+    }
     expect(JSON.parse(packageSource).scripts.build).toContain("provenance:check");
   });
 });
