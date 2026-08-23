@@ -7,11 +7,18 @@ import useTools from "@/agents/scriptAgent/tools";
 import ResTool from "@/socket/resTool";
 import * as fs from "fs";
 import path from "path";
+import {
+  agentSourceReference,
+  agentUserContent,
+  type ChatAttachment,
+} from "@/agents/chatAttachments";
 
 export interface AgentContext {
   socket: Socket;
   isolationKey: string;
   text: string;
+  attachments?: ChatAttachment[];
+  grounding?: boolean;
   userMessageTime?: number;
   abortSignal?: AbortSignal;
   resTool: ResTool;
@@ -39,7 +46,7 @@ function buildMemPrompt(mem: Awaited<ReturnType<Memory["get"]>>): string {
 }
 
 export async function runDecisionAI(ctx: AgentContext) {
-  const { isolationKey, text, userMessageTime, abortSignal, resTool } = ctx;
+  const { isolationKey, text, attachments = [], userMessageTime, abortSignal, resTool } = ctx;
   const memory = new Memory("scriptAgent", isolationKey);
   await memory.add("user", text, { createTime: userMessageTime });
 
@@ -73,9 +80,10 @@ export async function runDecisionAI(ctx: AgentContext) {
     messages: [
       { role: "system", content: prompt },
       { role: "assistant", content: projectInfo + "\n" + mem },
-      { role: "user", content: text },
+      { role: "user", content: agentUserContent(text, attachments) },
     ],
     abortSignal,
+    providerGrounding: ctx.grounding,
     tools: {
       ...memory.getTools(),
       ...useTools({ resTool: ctx.resTool, msg: ctx.msg }),
@@ -262,6 +270,8 @@ async function consumeFullStream(
   let msg = initialMsg;
   let text = msg.text();
   let thinking: ReturnType<typeof msg.thinking> | null = null;
+  let search: ReturnType<typeof msg.search> | null = null;
+  const sourceIds = new Set<string>();
   let thinkTime = 0;
   let fullResponse = "";
 
@@ -287,14 +297,23 @@ async function consumeFullStream(
       } else if (chunk.type === "text-delta") {
         text.append(chunk.text);
         fullResponse += chunk.text;
+      } else if (chunk.type === "source") {
+        const source = agentSourceReference(chunk);
+        if (source && !sourceIds.has(source.id)) {
+          sourceIds.add(source.id);
+          search ??= msg.search("搜索结果");
+          search.addReference(source.reference);
+        }
       } else if (chunk.type === "error") {
         throw chunk.error;
       }
     }
     text.complete();
+    search?.complete();
     msg.complete();
   } catch (err: any) {
     thinking?.complete();
+    search?.error();
     const errMsg = err?.message ?? String(err);
     text.append(errMsg);
     text.error();

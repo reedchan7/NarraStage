@@ -31,12 +31,14 @@ export default router.post(
     if (!data) return res.status(400).send(error("登录失败"));
 
     if (data!.password == password && data!.name == username) {
+      const role = (data as typeof data & { role?: string }).role ?? "user";
       const tokenData = await u.db("o_setting").where("key", "tokenKey").first();
       if (!tokenData) return res.status(400).send(error("未找到tokenKey"));
       const token = setToken(
         {
           id: data!.id,
           name: data!.name,
+          role,
         },
         "180Days",
         tokenData?.value as string,
@@ -44,7 +46,9 @@ export default router.post(
 
       return res
         .status(200)
-        .send(success({ token: "Bearer " + token, name: data!.name, id: data!.id }, "登录成功"));
+        .send(
+          success({ token: "Bearer " + token, name: data!.name, id: data!.id, role }, "登录成功"),
+        );
     } else {
       return res.status(400).send(error("用户名或密码错误"));
     }

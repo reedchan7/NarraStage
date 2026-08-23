@@ -3,29 +3,32 @@ import u from "@/utils";
 import { Namespace, Socket } from "socket.io";
 import * as agent from "@/agents/productionAgent/index";
 import ResTool from "@/socket/resTool";
+import { agentChatInputSchema, assertAgentProviderFilesOwned } from "@/agents/chatAttachments";
+import { principalIdFromClaims } from "@/security/principal";
 
-async function verifyToken(rawToken: string): Promise<Boolean> {
+async function verifyToken(rawToken: string): Promise<unknown | undefined> {
   const setting = await u.db("o_setting").where("key", "tokenKey").select("value").first();
-  if (!setting) return false;
+  if (!setting) return undefined;
   const { value: tokenKey } = setting;
-  if (!rawToken) return false;
+  if (!rawToken) return undefined;
   const token = rawToken.replace("Bearer ", "");
   try {
-    jwt.verify(token, tokenKey as string);
-    return true;
+    return jwt.verify(token, tokenKey as string);
   } catch (err) {
-    return false;
+    return undefined;
   }
 }
 
 export default (nsp: Namespace) => {
   nsp.on("connection", async (socket: Socket) => {
     const token = socket.handshake.auth.token;
-    if (!token || !(await verifyToken(token))) {
+    const claims = token ? await verifyToken(token) : undefined;
+    if (!claims) {
       console.log("[productionAgent] 连接失败，token无效");
       socket.disconnect();
       return;
     }
+    const principalId = principalIdFromClaims(claims);
     let isolationKey = socket.handshake.auth.isolationKey;
     if (!isolationKey) {
       console.log("[productionAgent] 连接失败，缺少 isolationKey");
@@ -59,8 +62,16 @@ export default (nsp: Namespace) => {
       },
     );
 
-    socket.on("chat", async (data: { content: string }) => {
-      const { content } = data;
+    socket.on("chat", async (data: unknown) => {
+      const parsed = agentChatInputSchema.safeParse(data);
+      if (!parsed.success) {
+        socket.emit("error", {
+          code: "agent.chat_input_invalid",
+          message: "消息或附件不符合输入约束",
+        });
+        return;
+      }
+      const { content, attachments = [], grounding } = parsed.data;
       abortController?.abort();
       abortController = new AbortController();
       const currentController = abortController;
@@ -70,6 +81,8 @@ export default (nsp: Namespace) => {
         socket,
         isolationKey,
         text: content,
+        attachments,
+        grounding,
         userMessageTime: new Date(msg.datetime).getTime() - 1,
         abortSignal: currentController.signal,
         resTool,
@@ -78,6 +91,7 @@ export default (nsp: Namespace) => {
       };
 
       try {
+        await assertAgentProviderFilesOwned(attachments, principalId);
         await agent.runDecisionAI(ctx);
       } catch (err: any) {
         if (err.name !== "AbortError" && !currentController.signal.aborted) {

@@ -17,9 +17,13 @@ function fileNameToRoutePath(fileName: string): string {
 
 type RouteModulePair = { routePath: string; varName: string; entry: string };
 
-export default async function generateRouter(): Promise<void> {
+export function isRouteEntry(entry: string): boolean {
+  return !/\.(?:test|spec)\.ts$/.test(entry);
+}
+
+export default async function generateRouter(options: { check?: boolean } = {}): Promise<void> {
   // glob 得到 entries
-  let entries: string[] = await fg(["src/routes/**/*.ts"]);
+  let entries: string[] = (await fg(["src/routes/**/*.ts"])).filter(isRouteEntry);
   // 排序
   entries = entries.sort((a, b) => a.localeCompare(b));
 
@@ -28,8 +32,7 @@ export default async function generateRouter(): Promise<void> {
 
   entries.forEach((entry: string, i: number) => {
     const varName = `route${i + 1}`;
-    let importPath = path.relative("src", entry).replace(/\\/g, "/");
-    if (!importPath.startsWith(".")) importPath = "./" + importPath;
+    let importPath = "@/" + path.relative("src", entry).replace(/\\/g, "/");
     importPath = importPath.replace(/\.ts$/, "");
     importLines.push(`import ${varName} from "${importPath}";`);
     const routeKey = path.relative("src/routes", entry).replace(/\\/g, "/");
@@ -41,7 +44,7 @@ export default async function generateRouter(): Promise<void> {
   );
   const hash = crypto.createHash("md5").update(routerData).digest("hex");
 
-  let content = `// @routes-hash ${hash}\nimport { Express } from "express";\n\n`;
+  let content = `// @routes-hash ${hash}\nimport type { Express } from "express";\n\n`;
   content += `${importLines.join("\n")}\n\n`;
   content += `export default async (app: Express) => {\n`;
   for (const { routePath, varName } of routeModulePairs) {
@@ -52,13 +55,14 @@ export default async function generateRouter(): Promise<void> {
   let needWrite = true;
   try {
     const current = await readFile("src/router.ts", "utf8");
-    const match = current.match(/^\/\/\s*@routes-hash\s*([a-z0-9]+)\n/);
-    const currentHash = match ? match[1] : null;
-    if (currentHash === hash) {
-      needWrite = false;
-    }
+    if (current === content) needWrite = false;
   } catch {
     needWrite = true;
   }
+  if (needWrite && options.check) throw new Error("generated router is stale");
   if (needWrite) await writeFile("src/router.ts", content, "utf8");
+}
+
+if (import.meta.main) {
+  await generateRouter({ check: process.argv.includes("--check") });
 }

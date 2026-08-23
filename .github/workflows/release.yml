@@ -22,6 +22,21 @@ jobs:
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
+        with:
+          path: Toonflow-app
+
+      - name: 解析 Web 源码版本
+        id: web-source
+        shell: bash
+        run: |
+          node -e 'const { appendFileSync } = require("node:fs"); const manifest = require("./Toonflow-app/data/contracts/web-build.json"); const [revision] = manifest.webRevision.split("+tree."); if (!/^[a-f0-9]{40}$/.test(revision)) throw new Error("build.web_revision_invalid"); appendFileSync(process.env.GITHUB_OUTPUT, `revision=${revision}\n`);'
+
+      - name: 检出 Web 源码
+        uses: actions/checkout@v4
+        with:
+          repository: HBAI-Ltd/Toonflow-web
+          ref: ${{ steps.web-source.outputs.revision }}
+          path: Toonflow-web
 
       - name: 配置 Bun
         uses: oven-sh/setup-bun@v2
@@ -30,9 +45,29 @@ jobs:
 
       - name: 安装依赖
         run: bun install --frozen-lockfile
+        working-directory: Toonflow-app
+
+      - name: 安装 Web 依赖
+        run: corepack yarn install --frozen-lockfile
+        working-directory: Toonflow-web
 
       - name: 运行质量检查
         run: bun run check
+        working-directory: Toonflow-app
+
+      - name: 运行 Web 质量检查
+        run: corepack yarn type-check && corepack yarn test:run && corepack yarn i18n:check && corepack yarn build-only
+        working-directory: Toonflow-web
+
+      - name: 验证 Web 确定性封装
+        run: bun run web:package && git diff --exit-code -- data/web data/contracts/web-build.json
+        working-directory: Toonflow-app
+
+      - name: 验证发布证据与打包来源
+        run: bun run release:check
+        working-directory: Toonflow-app
+        env:
+          TOONFLOW_WEB_ROOT: ../Toonflow-web
 
   # ==================== Windows 构建 ====================
   build-Windows:
@@ -52,6 +87,21 @@ jobs:
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
+        with:
+          path: Toonflow-app
+
+      - name: 解析 Web 源码版本
+        id: web-source
+        shell: bash
+        run: |
+          node -e 'const { appendFileSync } = require("node:fs"); const manifest = require("./Toonflow-app/data/contracts/web-build.json"); const [revision] = manifest.webRevision.split("+tree."); if (!/^[a-f0-9]{40}$/.test(revision)) throw new Error("build.web_revision_invalid"); appendFileSync(process.env.GITHUB_OUTPUT, `revision=${revision}\n`);'
+
+      - name: 检出 Web 源码
+        uses: actions/checkout@v4
+        with:
+          repository: HBAI-Ltd/Toonflow-web
+          ref: ${{ steps.web-source.outputs.revision }}
+          path: Toonflow-web
 
       - name: 配置 Bun
         uses: oven-sh/setup-bun@v2
@@ -60,17 +110,20 @@ jobs:
 
       - name: 安装依赖
         run: bun install --frozen-lockfile
+        working-directory: Toonflow-app
 
       - name: 打包 Windows 安装程序
         run: bun run dist:win --${{ matrix.arch }}
+        working-directory: Toonflow-app
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TOONFLOW_WEB_ROOT: ../Toonflow-web
 
       - name: 上传构建产物
         uses: actions/upload-artifact@v4
         with:
           name: windows-${{ matrix.arch }}
-          path: dist/*.exe
+          path: Toonflow-app/dist/*.exe
           retention-days: 7
 
   # ==================== macOS 构建 ====================
@@ -93,6 +146,21 @@ jobs:
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
+        with:
+          path: Toonflow-app
+
+      - name: 解析 Web 源码版本
+        id: web-source
+        shell: bash
+        run: |
+          node -e 'const { appendFileSync } = require("node:fs"); const manifest = require("./Toonflow-app/data/contracts/web-build.json"); const [revision] = manifest.webRevision.split("+tree."); if (!/^[a-f0-9]{40}$/.test(revision)) throw new Error("build.web_revision_invalid"); appendFileSync(process.env.GITHUB_OUTPUT, `revision=${revision}\n`);'
+
+      - name: 检出 Web 源码
+        uses: actions/checkout@v4
+        with:
+          repository: HBAI-Ltd/Toonflow-web
+          ref: ${{ steps.web-source.outputs.revision }}
+          path: Toonflow-web
 
       - name: 配置 Bun
         uses: oven-sh/setup-bun@v2
@@ -101,24 +169,28 @@ jobs:
 
       - name: 安装依赖
         run: bun install --frozen-lockfile
+        working-directory: Toonflow-app
         env:
           npm_config_arch: ${{ matrix.arch }}
 
       - name: 安装目标平台 sharp
         if: matrix.arch == 'x64'
+        working-directory: Toonflow-app
         run: |
           bun add --no-save --ignore-scripts --force @img/sharp-darwin-x64 @img/sharp-libvips-darwin-x64
 
       - name: 打包 macOS 安装程序
         run: bun run dist:mac --${{ matrix.arch }}
+        working-directory: Toonflow-app
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TOONFLOW_WEB_ROOT: ../Toonflow-web
 
       - name: 上传构建产物
         uses: actions/upload-artifact@v4
         with:
           name: macos-${{ matrix.arch }}
-          path: dist/*.dmg
+          path: Toonflow-app/dist/*.dmg
           retention-days: 7
 
   # ==================== Linux 构建 ====================
@@ -139,6 +211,21 @@ jobs:
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
+        with:
+          path: Toonflow-app
+
+      - name: 解析 Web 源码版本
+        id: web-source
+        shell: bash
+        run: |
+          node -e 'const { appendFileSync } = require("node:fs"); const manifest = require("./Toonflow-app/data/contracts/web-build.json"); const [revision] = manifest.webRevision.split("+tree."); if (!/^[a-f0-9]{40}$/.test(revision)) throw new Error("build.web_revision_invalid"); appendFileSync(process.env.GITHUB_OUTPUT, `revision=${revision}\n`);'
+
+      - name: 检出 Web 源码
+        uses: actions/checkout@v4
+        with:
+          repository: HBAI-Ltd/Toonflow-web
+          ref: ${{ steps.web-source.outputs.revision }}
+          path: Toonflow-web
 
       - name: 配置 Bun
         uses: oven-sh/setup-bun@v2
@@ -147,24 +234,28 @@ jobs:
 
       - name: 安装依赖
         run: bun install --frozen-lockfile
+        working-directory: Toonflow-app
         env:
           npm_config_arch: ${{ matrix.arch }}
 
       - name: 安装目标平台 sharp
         if: matrix.arch == 'arm64'
+        working-directory: Toonflow-app
         run: |
           bun add --no-save --ignore-scripts --force @img/sharp-linux-arm64 @img/sharp-libvips-linux-arm64
 
       - name: 打包 Linux 安装程序
         run: bun run dist:linux --${{ matrix.arch }}
+        working-directory: Toonflow-app
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TOONFLOW_WEB_ROOT: ../Toonflow-web
 
       - name: 上传构建产物
         uses: actions/upload-artifact@v4
         with:
           name: linux-${{ matrix.arch }}
-          path: dist/*.AppImage
+          path: Toonflow-app/dist/*.AppImage
           retention-days: 7
 
   # ==================== 发布 ====================

@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "backendRevision": "56f88fb6034cea88266f3cd324a8a176a77ea5a9+tree.d8cd9177db8f1721",
+  "webRevision": "00aa348a78b3309763b0b451b924f3b5447d2921+tree.c4f5c62b8b602881",
+  "contractVersion": "2.0.0",
+  "openapiSha256": "9c9a002e2c1f79dd632eca072e4b34a83b99258d309a9f6315755bcf30ab62f1",
+  "supportedContractRange": "^2.0.0",
+  "generatedClientSha256": "4eef3e3bf2e6e7932c04adcbf117777d7d464a38ba6a862c2906806006791e78",
+  "dependencyLockSha256": "ef2d43cb0dedd5081fb6fb52342e559ff259eead6d6a7bdd408023dca13de408",
+  "webBundleSha256": "e07bcfc00420809a188c9e9ef04d2136c7d7e8fbda07b45a795dc679bebcd62b"
+}

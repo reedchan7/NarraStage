@@ -17,6 +17,36 @@ import socketInit from "@/socket/index";
 import { isEletron } from "@/utils/getPath";
 import { ensureThumbnail } from "@/utils/image";
 import type { ThumbnailSize } from "@/utils/image";
+import { isPublicApiPath } from "@/security/publicRoutes";
+import { databaseReady, db } from "@/utils/db";
+import { runProviderPlatformMigrations } from "@/lib/migrations";
+import { configureCredentialVault, getCredentialVault } from "@/security/credentials/runtime";
+import type { CredentialVault } from "@/security/credentials/types";
+import { migrateLegacyCredentials } from "@/security/credentials/legacyCredentialMigration";
+import { builtinCatalog } from "@/providers/catalog/builtinCatalog";
+import { resolveLocalApiPolicy } from "@/security/localApiPolicy";
+import type { Knex } from "knex";
+import {
+  configureGenerationRuntime,
+  startGenerationWorker,
+  stopGenerationWorker,
+} from "@/generation/runtime";
+import { configureProviderRuntime } from "@/providers/runtime";
+import { configureLanguageExecutionRuntime } from "@/providers/languageExecutionService";
+import { configureOfferingAvailabilityRuntime } from "@/providers/availability/offeringAvailability";
+import { AssetGateway } from "@/assets/assetGateway";
+import { configureMediaAssetRuntime } from "@/assets/runtime";
+import { OwnedMediaAssetResolver } from "@/assets/mediaAssetRepository";
+import { configureProviderFileLedger } from "@/providers/files/providerFileLedger";
+import {
+  configureProviderHealthRuntime,
+  ProviderHealthMonitor,
+} from "@/providers/availability/providerHealth";
+import {
+  configureProviderConnectionProbeRuntime,
+  ProviderConnectionProbe,
+} from "@/providers/availability/connectionProbe";
+import { productEvidenceDocumentSchema } from "@/release/evidence";
 
 const app = express();
 const server = http.createServer(app);
@@ -45,19 +75,126 @@ async function checkPermissions() {
   }
 }
 
-export default async function startServe(randomPort: Boolean = false) {
+export interface StartServeOptions {
+  randomPort?: boolean;
+  credentialVault?: CredentialVault;
+  credentialMigrationVault?: CredentialVault;
+}
+
+async function legacyCredentialDescriptors() {
+  const declaredSlots = new Map(
+    builtinCatalog.providers.map((provider) => [
+      provider.id,
+      provider.credentialSlots.map((descriptor) => descriptor.slot),
+    ]),
+  );
+  const rows = await db("o_vendorConfig").select("id");
+  return rows.flatMap((row) => {
+    if (!row.id) return [];
+    const slots = new Set<string>(declaredSlots.get(row.id) ?? []);
+    try {
+      const vendor = u.vendor.getVendor(row.id) as {
+        inputs?: Array<{ key?: unknown; type?: unknown }>;
+      };
+      for (const input of vendor.inputs ?? []) {
+        if (input.type === "password" && typeof input.key === "string") slots.add(input.key);
+      }
+    } catch {
+      if (slots.size === 0) return [];
+    }
+    return slots.size > 0 ? [{ providerId: row.id, slots: [...slots] }] : [];
+  });
+}
+
+export default async function startServe(input: boolean | StartServeOptions = false) {
+  const options = typeof input === "boolean" ? { randomPort: input } : input;
   await checkPermissions();
+  await databaseReady;
+
+  const credentialVault = options.credentialVault ?? getCredentialVault();
+  configureCredentialVault(credentialVault);
+  await runProviderPlatformMigrations(db as unknown as Knex);
+  const providerAssetDirectory = u.getPath("provider-assets");
+  const mediaAssetRepository = configureMediaAssetRuntime(
+    db as unknown as Knex,
+    providerAssetDirectory,
+  );
+  const ownedAssetResolver = new OwnedMediaAssetResolver(mediaAssetRepository);
+  const providerRegistry = configureProviderRuntime(credentialVault, {
+    assetResolver: ownedAssetResolver,
+    fileAssetResolver: ownedAssetResolver,
+  });
+  configureProviderFileLedger(db as unknown as Knex);
+  const providerHealth = configureProviderHealthRuntime(new ProviderHealthMonitor());
+  configureProviderConnectionProbeRuntime(
+    new ProviderConnectionProbe({ credentialVault, healthMonitor: providerHealth }),
+  );
+  const productEvidence = productEvidenceDocumentSchema.parse(
+    JSON.parse(fs.readFileSync(u.getPath("contracts/provider-release-evidence.json"), "utf8")),
+  );
+  const offeringAvailability = configureOfferingAvailabilityRuntime(
+    builtinCatalog,
+    providerRegistry,
+    credentialVault,
+    {
+      providerHealth: (offeringId) => providerHealth.get(offeringId),
+      productEvidence: (offeringId) =>
+        productEvidence.records.find((record) => record.offeringId === offeringId),
+    },
+  );
+  configureLanguageExecutionRuntime(providerRegistry, builtinCatalog, offeringAvailability);
+  const generationRuntime = configureGenerationRuntime(db as unknown as Knex, undefined, {
+    registry: providerRegistry,
+    availability: offeringAvailability,
+    assetGateway: new AssetGateway({
+      rootDirectory: providerAssetDirectory,
+      credentialVault,
+    }),
+    mediaAssetRepository,
+  });
+  await migrateLegacyCredentials(
+    db as unknown as Knex,
+    options.credentialMigrationVault ?? credentialVault,
+    await legacyCredentialDescriptors(),
+  );
+  await startGenerationWorker();
 
   await u.writeVersion();
-  const io = new Server(server, { cors: { origin: "*" } });
-  socketInit(io);
+  const localApiPolicy = resolveLocalApiPolicy({
+    runtime: isEletron() ? "desktop" : "standalone",
+    nodeEnv: process.env.NODE_ENV ?? "prod",
+    env: process.env,
+  });
+  const io = new Server(server, {
+    cors: {
+      credentials: false,
+      origin(origin, callback) {
+        callback(null, localApiPolicy.isOriginAllowed(origin));
+      },
+    },
+  });
+  socketInit(io, generationRuntime.changes);
 
   if (process.env.NODE_ENV == "dev") await buildRoute();
 
   expressWs(app);
 
   app.use(logger("dev"));
-  app.use(cors({ origin: "*" }));
+  app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    if (!localApiPolicy.isOriginAllowed(origin)) {
+      return res.status(403).json({ message: "Origin not allowed" });
+    }
+    next();
+  });
+  app.use(
+    cors({
+      credentials: false,
+      origin(origin, callback) {
+        callback(null, localApiPolicy.isOriginAllowed(origin));
+      },
+    }),
+  );
   app.use(express.json({ limit: "100mb" }));
   app.use(express.urlencoded({ extended: true, limit: "100mb" }));
 
@@ -158,8 +295,7 @@ export default async function startServe(randomPort: Boolean = false) {
     // 从 header 或 query 参数获取 token
     const rawToken = req.headers.authorization || (req.query.token as string) || "";
     const token = rawToken.replace("Bearer ", "");
-    // 白名单路径
-    if (req.path === "/api/login/login") return next();
+    if (isPublicApiPath(req.path, req.method)) return next();
 
     if (!token) return res.status(401).send({ message: "未提供token" });
     try {
@@ -187,9 +323,9 @@ export default async function startServe(randomPort: Boolean = false) {
     res.status(err.status || 500).send(err);
   });
 
-  const port = randomPort ? 0 : 10588;
+  const port = options.randomPort ? 0 : 10588;
   return await new Promise((resolve) => {
-    server.listen(port, async () => {
+    server.listen(port, localApiPolicy.host, async () => {
       const address = server.address();
       const realPort = typeof address === "string" ? address : address?.port;
       console.log(`[服务启动成功]: http://localhost:${realPort}`);
@@ -200,17 +336,20 @@ export default async function startServe(randomPort: Boolean = false) {
 
 // 支持await关闭
 export function closeServe(): Promise<void> {
-  return new Promise((resolve, reject) => {
-    if (server) {
-      server.close((err?: Error) => {
-        if (err) return reject(err);
-        console.log("[服务已关闭]");
-        resolve();
-      });
-    } else {
-      resolve();
-    }
-  });
+  return stopGenerationWorker().then(
+    () =>
+      new Promise((resolve, reject) => {
+        if (server) {
+          server.close((err?: Error) => {
+            if (err) return reject(err);
+            console.log("[服务已关闭]");
+            resolve();
+          });
+        } else {
+          resolve();
+        }
+      }),
+  );
 }
 
 const isElectron = typeof process.versions?.electron !== "undefined";

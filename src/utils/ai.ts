@@ -5,10 +5,14 @@ import {
   stepCountIs,
   extractReasoningMiddleware,
 } from "ai";
+import type { ToolSet } from "ai";
 import { devToolsMiddleware } from "@ai-sdk/devtools";
 import axios from "axios";
 import { transform } from "sucrase";
 import u from "@/utils";
+import { getCredentialVault } from "@/security/credentials/runtime";
+import { builtinCatalog } from "@/providers/catalog/builtinCatalog";
+import { getProviderRegistry } from "@/providers/runtime";
 
 type AiType =
   | "scriptAgent"
@@ -49,6 +53,96 @@ const AiTypeValues: AiType[] = [
   "productionAgent:storyboardTableAgent",
   "universalAi",
 ];
+
+type AiSdkInput = Omit<Parameters<typeof generateText>[0], "model">;
+type ToonflowAiSdkInput = AiSdkInput & { providerGrounding?: boolean };
+
+function requiredInputFeature(mediaType: string) {
+  if (mediaType.startsWith("image/")) return "image_input" as const;
+  if (mediaType.startsWith("video/")) return "video_input" as const;
+  if (mediaType.startsWith("audio/")) return "audio_input" as const;
+  if (mediaType === "application/pdf") return "pdf_input" as const;
+  throw new Error(`Agent 附件类型不受支持：${mediaType}`);
+}
+
+function validateOfferingFiles(
+  input: AiSdkInput,
+  offering: (typeof builtinCatalog.offerings)[number],
+) {
+  const operation = offering.operations.find(
+    (candidate) => candidate.operation === "language.generate" && candidate.enabled,
+  );
+  const features = new Set(operation?.features ?? []);
+  for (const message of input.messages ?? []) {
+    if (message.role !== "user" || !Array.isArray(message.content)) continue;
+    for (const part of message.content) {
+      if (part.type !== "file") continue;
+      const requiredFeature = requiredInputFeature(part.mediaType);
+      if (!features.has(requiredFeature)) {
+        throw new Error(`模型 ${offering.id} 不支持 ${part.mediaType} 附件`);
+      }
+      const data = part.data;
+      const isReference =
+        typeof data === "object" && data !== null && "type" in data && data.type === "reference";
+      if (!isReference) continue;
+      if (!features.has("provider_files")) {
+        throw new Error(`模型 ${offering.id} 不支持 Provider Files`);
+      }
+      const providerIds = Object.keys(data.reference);
+      if (providerIds.length !== 1 || providerIds[0] !== offering.providerId) {
+        throw new Error(`Provider Files 与模型供应商不匹配：${offering.id}`);
+      }
+    }
+  }
+}
+
+function mergeProviderOptions(
+  input: Record<string, Record<string, unknown>> | undefined,
+  resolved: Record<string, Record<string, unknown>> | undefined,
+) {
+  if (!input && !resolved) return undefined;
+  const merged: Record<string, Record<string, unknown>> = { ...input };
+  for (const [providerId, options] of Object.entries(resolved ?? {})) {
+    merged[providerId] = { ...merged[providerId], ...options };
+  }
+  return merged;
+}
+
+function mergeTools(input: ToolSet | undefined, providerTools: ToolSet | undefined) {
+  for (const name of Object.keys(providerTools ?? {})) {
+    if (input?.[name]) throw new Error(`工具名称与供应商工具冲突：${name}`);
+  }
+  const tools = { ...providerTools, ...input };
+  return Object.keys(tools).length ? tools : undefined;
+}
+
+function inlineImageDetails(input: AiSdkInput) {
+  const details: Array<"auto" | "low" | "high" | "original" | undefined> = [];
+  for (const message of input.messages ?? []) {
+    if (message.role !== "user" || !Array.isArray(message.content)) continue;
+    for (const part of message.content) {
+      if (part.type !== "file" || !part.mediaType.startsWith("image")) continue;
+      const data = part.data;
+      const isReference =
+        typeof data === "object" && data !== null && "type" in data && data.type === "reference";
+      if (isReference) continue;
+      const detail = part.providerOptions?.toonflow?.imageDetail;
+      details.push(
+        detail === "auto" || detail === "low" || detail === "high" || detail === "original"
+          ? detail
+          : undefined,
+      );
+    }
+  }
+  return details;
+}
+
+function thinkingForCompatibility(think: boolean | undefined, thinkLevel: 0 | 1 | 2 | 3) {
+  if (think === undefined) return undefined;
+  if (!think) return { mode: "disabled" as const };
+  const effort = ([undefined, "low", "high", "max"] as const)[thinkLevel];
+  return { mode: "enabled" as const, ...(effort ? { effort } : {}) };
+}
 async function resolveModelName(
   value: AiType | `${string}:${string}`,
 ): Promise<`${string}:${string}`> {
@@ -140,6 +234,11 @@ async function getVendorTemplateFn(fnName: FnName, modelName: `${string}:${strin
   const running = u.vm(jsCode);
   if (running.vendor) {
     Object.assign(running.vendor.inputValues, JSON.parse(vendorConfigData.inputValues ?? "{}"));
+    for (const input of running.vendor.inputs ?? []) {
+      if (input.type !== "password" || typeof input.key !== "string") continue;
+      const secret = await getCredentialVault().get({ providerId: id, slot: input.key });
+      if (secret) running.vendor.inputValues[input.key] = secret;
+    }
     running.vendor.models = modelList;
   }
   const fn = running[fnName];
@@ -203,39 +302,87 @@ class AiText {
     this.think = think;
     this.thinkLevel = thinkLevel;
   }
-  private async resolveModel(middleware?: any | any[]) {
+  private async resolveModel(input: ToonflowAiSdkInput, middleware?: any | any[]) {
     const switchAiDevTool = await u.db("o_setting").where("key", "switchAiDevTool").first();
     const modelName = await resolveModelName(this.AiType);
-    const sdkFn = await getVendorTemplateFn("textRequest", modelName);
-    const baseModel = await sdkFn(this.think, this.thinkLevel);
+    const offering = builtinCatalog.offerings.find((candidate) => candidate.id === modelName);
+    let baseModel;
+    let providerOptions: Record<string, Record<string, unknown>> | undefined;
+    let providerTools: ToolSet | undefined;
+    if (offering) {
+      if (
+        offering.support.implementation !== "implemented" ||
+        !offering.operations.some(
+          (operation) => operation.operation === "language.generate" && operation.enabled,
+        )
+      ) {
+        throw new Error(`内置模型尚不可用于 Agent：${modelName}`);
+      }
+      validateOfferingFiles(input, offering);
+      const bridge = getProviderRegistry().getLanguageModelBridge(offering.providerId);
+      if (!bridge) throw new Error(`内置模型缺少 Agent 兼容桥：${modelName}`);
+      const resolved = await bridge.resolve({
+        offeringId: offering.id,
+        imageDetails: inlineImageDetails(input),
+        thinking: thinkingForCompatibility(this.think, this.thinkLevel),
+        grounding: input.providerGrounding,
+      });
+      baseModel = resolved.model;
+      providerOptions = resolved.providerOptions;
+      providerTools = resolved.providerTools;
+    } else {
+      const sdkFn = await getVendorTemplateFn("textRequest", modelName);
+      baseModel = await sdkFn(this.think, this.thinkLevel);
+    }
     const mws = [
       ...(switchAiDevTool?.value === "1" ? [devToolsMiddleware()] : []),
       ...(middleware ? (Array.isArray(middleware) ? middleware : [middleware]) : []),
     ];
-    return mws.length > 0
-      ? wrapLanguageModel({ model: baseModel, middleware: mws.length === 1 ? mws[0] : mws })
-      : baseModel;
+    const model =
+      mws.length > 0
+        ? wrapLanguageModel({ model: baseModel, middleware: mws.length === 1 ? mws[0] : mws })
+        : baseModel;
+    return { model, providerOptions, providerTools };
   }
-  async invoke(input: Omit<Parameters<typeof generateText>[0], "model">) {
+  async invoke(input: ToonflowAiSdkInput) {
     const config = await getModelConfig(this.AiType);
+    const resolved = await this.resolveModel(input);
+    const { providerGrounding: _providerGrounding, ...sdkInput } = input;
+    const tools = mergeTools(sdkInput.tools, resolved.providerTools);
+    const providerOptions = mergeProviderOptions(
+      sdkInput.providerOptions,
+      resolved.providerOptions,
+    );
 
     return generateText({
-      ...(input.tools && { stopWhen: stepCountIs(Object.keys(input.tools).length * 50) }),
-      ...input,
-      model: await this.resolveModel(),
+      ...sdkInput,
+      ...(tools && { stopWhen: stepCountIs(Object.keys(tools).length * 50), tools }),
+      model: resolved.model,
+      ...(providerOptions ? { providerOptions } : {}),
       ...(config?.temperature && { temperature: config.temperature }),
       ...(config?.maxOutputTokens && { maxOutputTokens: config.maxOutputTokens }),
     } as Parameters<typeof generateText>[0]);
   }
-  async stream(input: Omit<Parameters<typeof streamText>[0], "model">) {
+  async stream(
+    input: Omit<Parameters<typeof streamText>[0], "model"> & { providerGrounding?: boolean },
+  ) {
     const config = await getModelConfig(this.AiType);
+    const resolved = await this.resolveModel(
+      input as AiSdkInput,
+      extractReasoningMiddleware({ tagName: "reasoning_content", separator: "\n" }),
+    );
+    const { providerGrounding: _providerGrounding, ...sdkInput } = input;
+    const tools = mergeTools(sdkInput.tools, resolved.providerTools);
+    const providerOptions = mergeProviderOptions(
+      sdkInput.providerOptions,
+      resolved.providerOptions,
+    );
 
     return streamText({
-      ...(input.tools && { stopWhen: stepCountIs(Object.keys(input.tools).length * 50) }),
-      ...input,
-      model: await this.resolveModel(
-        extractReasoningMiddleware({ tagName: "reasoning_content", separator: "\n" }),
-      ),
+      ...sdkInput,
+      ...(tools && { stopWhen: stepCountIs(Object.keys(tools).length * 50), tools }),
+      model: resolved.model,
+      ...(providerOptions ? { providerOptions } : {}),
       ...(config?.temperature && { temperature: config.temperature }),
       ...(config?.maxOutputTokens && { maxOutputTokens: config.maxOutputTokens }),
     } as Parameters<typeof streamText>[0]);

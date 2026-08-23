@@ -1,6 +1,7 @@
 import express from "express";
 import { success } from "@/lib/responseFormat";
 import u from "@/utils";
+import { sanitizeLegacyVendorInputResponse } from "@/security/credentials/legacyInputPolicy";
 const router = express.Router();
 
 export default router.post("/", async (req, res) => {
@@ -16,7 +17,10 @@ export default router.post("/", async (req, res) => {
         }
         return {
           ...item,
-          inputValues: JSON.parse(item.inputValues ?? "{}"),
+          inputValues: sanitizeLegacyVendorInputResponse(
+            vendor.inputs,
+            JSON.parse(item.inputValues ?? "{}"),
+          ),
           models: await u.vendor.getModelList(item.id!),
           code: u.vendor.getCode(item.id!),
           description: vendor.description ?? "",

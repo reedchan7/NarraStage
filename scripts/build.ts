@@ -46,15 +46,31 @@ const mainBuildConfig: Bun.BuildConfig = {
   external: externalDependencies,
 };
 
+const preloadBuildConfig: Bun.BuildConfig = {
+  entrypoints: ["scripts/preload.ts"],
+  minify: false,
+  format: "cjs",
+  outdir: "build",
+  naming: "preload.cjs",
+  target: "node",
+  sourcemap: false,
+  external: ["electron"],
+};
+
 export async function build(): Promise<void> {
   const pkg = await Bun.file("package.json").json();
   const version = JSON.stringify(pkg.version);
   appBuildConfig.define = { __APP_VERSION__: version };
   mainBuildConfig.define = { __APP_VERSION__: version };
+  preloadBuildConfig.define = { __APP_VERSION__: version };
 
   console.log("🔨 开始构建...\n");
 
-  const results = await Promise.all([Bun.build(appBuildConfig), Bun.build(mainBuildConfig)]);
+  const results = await Promise.all([
+    Bun.build(appBuildConfig),
+    Bun.build(mainBuildConfig),
+    Bun.build(preloadBuildConfig),
+  ]);
   const failedResults = results.filter((result) => !result.success);
 
   if (failedResults.length > 0) {
@@ -68,6 +84,7 @@ export async function build(): Promise<void> {
 
   console.log("✅ 后端服务构建完成: data/serve/app.js");
   console.log("✅ Electron主进程构建完成: build/main.js");
+  console.log("✅ Electron preload构建完成: build/preload.cjs");
   console.log("\n🎉 所有构建任务完成!\n");
 }
 

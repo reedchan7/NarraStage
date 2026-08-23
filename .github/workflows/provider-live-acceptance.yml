@@ -1,0 +1,105 @@
+name: Provider live acceptance
+
+on:
+  workflow_dispatch:
+    inputs:
+      offeringId:
+        description: Exact offering to test
+        required: true
+        type: choice
+        options:
+          - deepseek:v4-pro:official
+          - deepseek:v4-flash:official
+          - deepseek:v4-flash-vision-exp:official
+          - minimax:h3:fal
+          - google:gemini-3.7-flash:official
+          - google:nano-banana-2-lite:official
+          - google:nano-banana-2:official
+          - google:nano-banana-pro:official
+          - google:gemini-omni-flash:official
+          - google:veo-3.1:official
+          - google:veo-3.1-fast:official
+          - google:veo-3.1-lite:official
+      caseMaxUsd:
+        description: Conservative maximum USD charge assigned to each frozen case
+        required: true
+        type: string
+      totalMaxUsd:
+        description: Explicit maximum USD authorization for the complete sequential run
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: provider-live-acceptance-${{ inputs.offeringId }}
+  cancel-in-progress: false
+
+jobs:
+  execute:
+    name: Execute frozen provider suite
+    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: ubuntu-latest
+    environment: provider-acceptance
+    timeout-minutes: 180
+    env:
+      TOONFLOW_LIVE_TESTS: "1"
+      TOONFLOW_LIVE_TEST_MAX_USD: ${{ inputs.totalMaxUsd }}
+      TOONFLOW_DEPLOYMENT_REGION: global
+      TOONFLOW_EXECUTOR_ID: github-provider-acceptance-v1
+      TOONFLOW_EXECUTOR_WORKFLOW: provider-live-acceptance
+      TOONFLOW_EXECUTOR_ENVIRONMENT: provider-acceptance
+      DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+      FAL_KEY: ${{ secrets.FAL_KEY }}
+      GOOGLE_GENERATIVE_AI_API_KEY: ${{ secrets.GOOGLE_GENERATIVE_AI_API_KEY }}
+
+    steps:
+      - name: Check out the attested revision
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: canary
+
+      - name: Install locked dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Derive immutable run paths
+        id: run
+        shell: bash
+        run: |
+          slug="$(printf '%s' '${{ inputs.offeringId }}' | tr ':/' '--')"
+          run_id="github-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${slug}"
+          printf 'run_id=%s\n' "$run_id" >> "$GITHUB_OUTPUT"
+          printf 'artifact_dir=%s\n' "$RUNNER_TEMP/toonflow-provider-artifacts" >> "$GITHUB_OUTPUT"
+          printf 'report=%s\n' "$RUNNER_TEMP/toonflow-live-reports/$run_id.json" >> "$GITHUB_OUTPUT"
+
+      - name: Preview exact cases and budget
+        run: >-
+          bun run live:test --
+          --dry-run
+          --offering '${{ inputs.offeringId }}'
+          --case-max-usd '${{ inputs.caseMaxUsd }}'
+
+      - name: Execute real provider adapters and sign the report
+        env:
+          TOONFLOW_EXECUTOR_PRIVATE_KEY_PEM: ${{ secrets.TOONFLOW_EXECUTOR_PRIVATE_KEY_PEM }}
+        run: >-
+          bun run live:test --
+          --offering '${{ inputs.offeringId }}'
+          --case-max-usd '${{ inputs.caseMaxUsd }}'
+          --run-id '${{ steps.run.outputs.run_id }}'
+          --artifact-dir '${{ steps.run.outputs.artifact_dir }}'
+          --output '${{ steps.run.outputs.report }}'
+
+      - name: Upload signed report and digest-bound review artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: provider-acceptance-${{ steps.run.outputs.run_id }}
+          path: |
+            ${{ steps.run.outputs.report }}
+            ${{ steps.run.outputs.artifact_dir }}/${{ steps.run.outputs.run_id }}
+          if-no-files-found: error
+          retention-days: 14
