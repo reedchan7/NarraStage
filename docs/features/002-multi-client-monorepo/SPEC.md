@@ -1,6 +1,6 @@
 # Feature 002 — Multi-client React monorepo modernization
 
-- Status: In implementation
+- Status: Implemented and locally verified
 - Assurance: deep
 - Spec version: 1 · Created: 2026-08-24 · Owner: reedchan7
 - Base revision: e2a2547028dc6eaf70cb70e714368df48f06d617
@@ -159,6 +159,13 @@ ToonFlow's backend, provider platform, Electron main process, generated Web bund
 - Scripted/manual probes: current Browser baseline, migrated standalone Browser navigation, deterministic conversation/image/video flows, provider settings, Electron dev launch, unpacked macOS launch, and clean shutdown.
 - Deliberately not tested: real Windows/Linux GUI launch locally — owner: CI; risk is bounded by workflow validation and target-platform build jobs. Paid provider output quality and signed release evidence remain governed by Feature 001 and cannot be inferred from deterministic adapters.
 
+## Implementation result
+
+- The delivered workspace contains `apps/server`, `apps/web`, `apps/desktop`, and `packages/contracts` under one Bun lockfile. Vue and Express source/dependencies are prohibited by an automated gate; React 19.2.8, Hono 4.13.3, and TypeScript 7.0.2 are the frozen implementation versions. The aggregate gate also regenerates and diff-checks the tracked Web and production server artifacts.
+- The React client exposes authenticated projects, scripts, assets, conversation, image/video generation, durable jobs, provider settings, and seven locales. Generation forms execute the server capability schema, retain exact project offering pins, upload principal-owned media, and reject an incompatible API contract before submission.
+- The unpacked macOS Electron candidate starts the bundled Node/Hono server and React renderer on an isolated loopback port. Its 2.0.0-to-2.1.0 probe replaces immutable runtime code while retaining the SQLite database, custom vendor source and row, edited skills, and owned media.
+- Local deterministic evidence proves conversation plus image/video workflow mechanics without external spend. It is not evidence of paid-provider output quality, signed release readiness, or Windows/Linux GUI execution.
+
 ## Assumptions
 
 - Native mobile is a future client consuming `packages/contracts`, not an executable deliverable now — source: the ask names multi-end structure but only explicitly requires current frontend/backend/client behavior; reverse when a native mobile acceptance flow is requested.
@@ -185,3 +192,5 @@ ToonFlow's backend, provider platform, Electron main process, generated Web bund
 | 2026-08-24 | 1 | Q: pause for framework/topology/scope approval? → A: user authorized autonomous decisions and instructed completion without further approval pauses. | reedchan7 |
 | 2026-08-24 | 1 | Selected one Bun workspace, Hono, React 19.2/Vite 8, TypeScript 7.0.2, and staged compatibility-first migration. | reedchan7 via delegated decision authority |
 | 2026-08-24 | 1 | Approved version 1 · normative digest a575655241d1c870260dbb3ac44a930ae28fb41a8dcf71d4045700f00c7f384b for implementation | reedchan7 via delegated decision authority |
+| 2026-08-24 | 1 | Implementation completed locally with aggregate, Browser, deterministic product, and unpacked macOS package evidence; platform CI and paid-provider release evidence remain explicitly separate. | reedchan7 via delegated decision authority |
+| 2026-08-24 | 1 | Four independent implementation reviews completed; all 11 blocking findings from the first three rounds were fixed and the final frozen-candidate review passed. | reedchan7 via delegated decision authority |

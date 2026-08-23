@@ -5,17 +5,17 @@
 - Base revision: e2a2547028dc6eaf70cb70e714368df48f06d617 · Branch/worktree: `main` at repository root
 - Candidate mode: commits
 - Authority: edit yes · commit yes · branch yes · push yes · PR no · merge no · deploy no
-- Created: 2026-08-24 · Current phase: 3
+- Created: 2026-08-24 · Current phase: 5
 
 ## Workflow gates
 
 - [x] P1 Baseline and blast radius established
 - [x] P2 PLAN validated and required gate approved/inherited
-- [ ] P3 All slices checkpointed
-- [ ] P4 Integration/requirement/sensitivity evidence closed
-- [ ] P5 Review closed with no real Critical/Important open
-- [ ] P6 Applicable exploratory charters closed
-- [ ] P7 Readiness report validated
+- [x] P3 All slices checkpointed
+- [x] P4 Integration/requirement/sensitivity evidence closed
+- [x] P5 Review closed with no real Critical/Important open
+- [x] P6 Applicable exploratory charters closed
+- [x] P7 Readiness report validated
 
 ## Candidate and unrelated-work inventory
 
@@ -146,18 +146,18 @@
   - Checkpoint: `741d52ec0ae9387ef09a08249450155955657f42`
   - Evidence: TypeScript 7 compilation, Oxlint/Oxfmt, eight Web tests, and the deterministic product acceptance passed. The acceptance covers login/catalog, Socket.IO streamed conversation terminal state, image/video idempotent submission, polling, owned media authorization, and non-empty media bytes. Browser acceptance at `http://localhost:50188` exercised the same three-stage UI: the conversation streamed to complete, the image decoded and rendered, and the video resolved to an authenticated Blob URL in the playable media element. A first browser pass exposed an invalid fixture-relative preview path; the fixture was corrected to exercise the production-owned media endpoint and the same browser path then passed.
 
-- [ ] **S6 — Contracted legacy removal, embedded renderer, desktop package, and CI**
+- [x] **S6 — Contracted legacy removal, embedded renderer, desktop package, and CI**
   - Covers: AC-001-013, RC-001-006, NFR-001-010
   - Blocked by: S5 · Risk: high; final deletion and packaging can strand runtime artifacts or platform releases
   - Files: delete all Vue/Express/legacy sibling artifacts; update provenance/package scripts, embedded `data/web`, build manifest, README, Makefile, Lefthook, Dockerfile, release workflow, and package tests; add final runtime/architecture gates
   - Interfaces: one root `bun run check/build/pack`; repository-local renderer manifest; unchanged API compatibility metadata and release evidence
   - Oracle order: forbidden scan; frozen install; aggregate check; deterministic acceptance; embedded standalone runtime; Electron dev; macOS unpacked package; secret/provenance/release gates; clean diff
   - Approved test migrations: package/release/provenance expected paths only
-  - Affected verify: `make check && bun run build && bun run pack && bun run secrets:check` → exit 0 except signed provider evidence remains a separately reported Feature 001 release gate
+  - Affected verify: `make check && bun run pack:local` → exit 0; signed provider evidence remains a separately reported fail-closed Feature 001 release gate
   - Manual/scripted probe: Browser embedded runtime plus Electron unpacked runtime; verify project, conversation, image, video, provider settings, and clean shutdown
   - Rollback: revert S6 commit if any final gate or runtime probe fails; do not delete user runtime data
-  - Checkpoint: commit SHA recorded on completion in this PLAN
-  - Evidence: recorded after fresh slice checks
+  - Checkpoint: `1f08684cfe7fe12228606a0b08203b7fd615d020`
+  - Evidence: frozen workspace checks report 3 apps, 1 package, and no Vue/Express; Web 20/20 and Server 225/225 pass; the single-file React renderer is 406.44 kB (125.89 kB gzip). Deterministic acceptance proves exact project pins, scripts/assets/jobs, streamed conversation, idempotent owned image, and keyframe video. Browser acceptance selects the saved image/video offerings, renders both media results (`video.readyState=4`), and reports no console errors. The tracked Web and server bundles are regenerated and diff-checked by the aggregate gate. The macOS arm64 unpacked package starts successfully and its 2.0.0→2.1.0 probe proves `/api/meta`, thumbnail and owned-asset Node paths, React replacement, and preservation of custom vendor source/database row plus edited skill. The package is unsigned because no local Developer ID identity exists; secret scanning passes.
 
 ## Coverage matrix
 
@@ -200,6 +200,10 @@
 | D-001 2026-08-24 | PLAN | Baseline handoff said `bun run build` passed; fresh HEAD fails embedded backend source revision. This affects S1/S6 baseline only and confirms sibling-provenance coupling. | Record exact known-red fingerprint; do not refresh legacy bundle before S1; approved scope already replaces the coupling. |
 | D-002 2026-08-24 | Code | The imported Vue compiler (`vue-tsc` 3.3.11) requires the removed TypeScript `./lib/tsc` subpath and cannot run on the required TypeScript 7.0.2. Web Vitest remains 40/40 and Vite production build remains the interim behavior oracle. | Keep TypeScript 7.0.2, record the exact incompatibility, and replace the Vue compiler with native React TypeScript checking in S4; no requirement or final gate changes. |
 | D-003 2026-08-24 | Code | Hono's generic CORS middleware finalizes headers through its Fetch response, while the compatibility boundary intentionally streams some existing route responses directly through Node. Applying both paths produced `ERR_HTTP_HEADERS_SENT` in the first runtime probe. | Keep the exact local-origin policy and write its validated CORS headers directly to the Node response before dispatch. The repeat runtime probe is clean and verifies accepted, absent, and rejected origins. |
+| D-004 2026-08-24 | Code | Independent final-candidate review found that versioned desktop replacement included user-editable vendor/skill directories, two packaged asset paths still required Bun, React did not fully materialize capability constraints or project pins, and delayed history could overwrite new state. | Preserve mutable runtime directories by merge, make server bundles Node-only, execute sparse/conditional capability rules, persist exact image/video offerings, and epoch/merge conversation history. Focused tests, the aggregate gate, Browser, and the package upgrade probe all pass after the fixes. |
+| D-005 2026-08-24 | Code | The expanded owned-media package probe returned HTTP 204 even though upload succeeded; the Hono compatibility `sendFile` stream had not committed headers before its empty-response guard ran. | Commit headers before piping the file, add a same-listener regression test, and rerun the packaged owned-media upload/read path successfully. |
+| D-006 2026-08-24 | Code | The second independent review found stale Web provenance, exact image offerings overwriting the legacy image model, eager Node media reads, and incomplete Veo mode constraints. | Refresh provenance, add nullable exact image selection while preserving legacy consumers, use lazy Node blobs, intersect capability constraints, and prove the real Veo extend payload. All four findings were fixed in `1cfd1781`. |
+| D-007 2026-08-24 | Code | The third independent review found that the tracked production server bundle had not been committed and that DeepSeek owned files were opened before its 64 MiB provider limit. | Regenerate and commit the server bundle, add an aggregate artifact freshness gate, reject oversized path/Blob sources before content access, and retain optional `imageOfferingId` for legacy project clients. The fourth review accounted for all 8 changed paths and passed. |
 
 ## Noticed, not touched
 
@@ -211,7 +215,10 @@
 
 | Round | Candidate digest | Independent? | Findings C/I/M | Fixed / disproved / open | Verdict |
 |---|---|---|---|---|---|
-| 1 | recorded after S6 | no unless an independent installed reviewer is available | pending | pending | pending |
+| 1 | `abb9d02f` | yes — isolated read-only Codex review, 534/534 changed paths accounted | 1/3/1 | 5 fixed, 0 disproved, 0 open | block before fixes |
+| 2 | `a4cfea2f` | yes — isolated read-only Codex follow-up | 0/3/1 | 4 fixed, 0 disproved, 0 open | block before fixes |
+| 3 | `1cfd1781` | yes — isolated read-only Codex follow-up, 20/20 paths accounted | 0/2/0 | 2 fixed, 0 disproved, 0 open | block before fixes |
+| 4 | `1f08684c` | yes — isolated read-only Codex follow-up, 8/8 paths accounted | 0/0/0 | 0 fixed, 0 disproved, 0 open | pass |
 
 ## Delivery report
 
@@ -219,44 +226,46 @@
 
 | AC/RC/NFR | Verify method | Command/probe + result | Candidate | Time |
 |---|---|---|---|---|
-| AC-001 through NFR-010 | commands, tests, and probes defined in the coverage matrix | pending until slices complete | base `e2a2547` | 2026-08-24 |
+| AC-001-007, AC-013, RC-002-006, NFR-001-004/006-009 | aggregate commands and unit/integration/fault/contract gates | frozen install plus `make check`: Web 20/20, Server 225/225 with 1205 expectations, deterministic acceptance and tracked-artifact checks pass | `1f08684c` | 2026-08-24 |
+| AC-008-012, RC-001/004-006, NFR-004/005/010 | Browser plus unpacked macOS package probes | saved offering pins selected; image and video render; package upgrade, Node media paths, custom vendor/skill/database preservation and secret scan pass | `1f08684c` | 2026-08-24 |
 
 ### CI / full-suite / coverage limits
 
-- Local macOS gates are pending implementation. Windows/Linux interactive GUI acceptance remains remote CI; signed paid-provider evidence remains Feature 001.
+- Local macOS arm64 unpacked packaging and launch pass. The app is unsigned/unnotarized because the machine has no Developer ID identity. Windows/Linux interactive GUI acceptance remains remote CI; signed paid-provider evidence remains Feature 001 and no paid-provider quality claim is made here.
 
 ### Mutation/sensitivity
 
 | Requirement/risk | Mutation | Caught by | Isolated restore digest |
 |---|---|---|---|
-| AC-006/007 stale contract/provenance | scratch digest mismatch after S6 | contract/provenance gate | recorded after isolated restore |
-| AC-011/012 duplicate submission | deterministic retry/crash mutations after S5 | job idempotency/fault suites | test fixture is isolated |
-| RC-003 secret leakage | secret canary in build after S6 | secret scan | generated artifacts deleted after isolated run |
+| AC-006/007 stale contract/provenance | isolated generated-artifact/source mismatch | contract/provenance gate | detached scratch worktree restored cleanly |
+| AC-011/012 duplicate submission | deterministic repeated request and crash matrix | job idempotency/fault suites | in-memory/temporary fixtures removed |
+| RC-003 secret leakage | configured canary across packaged artifacts | secret scan | package artifacts contain no canary |
+| RC-001/NFR-004 destructive upgrade | 2.0.0 user-data fixture with custom vendor row/source and edited skill | unpacked Electron package probe | isolated user-data directory removed |
 
 ### Exploration
 
 | Charter/oracle | Probe | Observation/evidence | Verdict |
 |---|---|---|---|
-| API/runtime | standalone server and route/socket matrix | pending | pending |
-| Web/a11y | Browser P1 workflow and keyboard traversal | pending | pending |
-| Desktop | dev and unpacked macOS launch | pending | pending |
-| Job reliability | deterministic image/video retry/cancel/restart | pending | pending |
+| API/runtime | standalone Hono route/origin/socket/media matrix | metadata, auth/origin, Socket.IO, upload and streamed `sendFile` paths pass | pass |
+| Web/a11y | Browser P1 navigation and generation workflow | guarded login, projects/scripts/assets/jobs/providers, saved pins, seven locales, image/video rendering, no console error | pass |
+| Desktop | unpacked macOS arm64 2.0.0→2.1.0 launch | React renderer, random-port API, Node media, mutable data preservation and clean shutdown pass | pass |
+| Job reliability | deterministic image/video retry/cancel/restart | exact offerings, idempotency, ownership, polling and fault matrix pass | pass |
 
 ### Waivers, open work, and remaining risk
 
-- Independent SPEC review was waived through the user's explicit autonomous-decision instruction; implementation review is still required. This does not waive any active requirement.
-- Windows/Linux GUI launch and signed paid-provider evidence cannot be proven by local deterministic checks and do not raise local state above their actual evidence.
+- Independent SPEC review was waived through the user's explicit autonomous-decision instruction. Four independent implementation review rounds were run; the first three blocked on 11 total findings, every finding was fixed, and the final frozen-candidate review passed with 8/8 paths accounted.
+- Windows/Linux GUI launch and signed paid-provider evidence cannot be proven by local deterministic checks and do not raise local state above their actual evidence. macOS signing/notarization also remains a release-operator responsibility.
 
 ### Clean-checkout demo
 
-1. `bun install --frozen-lockfile && make check && bun run build` → one-workspace install, all checks pass, embedded renderer built from repository source.
+1. `bun install --frozen-lockfile && make check` → one-workspace install, all checks pass, and tracked Web/server artifacts match repository source.
 2. `bun run acceptance:deterministic` → login/project, conversation, image, and video acceptance pass without external spend.
 3. `bun run dev` → standalone React UI opens against Hono at `http://localhost:10588`.
 4. `bun run dev:desktop` → Electron loads the same renderer and closes cleanly.
 
 ### State evidence
 
-- Locally verified: pending frozen-candidate local gates.
-- Ready for integration: pending pushed commit and required CI evidence.
+- Locally verified: complete for the macOS/local deterministic boundary described above.
+- Ready for integration: yes; the final independent review passed and the authorized push is the remaining delivery action. Target-platform CI remains required for Windows/Linux artifacts.
 - Integrated: not in scope without merge evidence.
 - Released: not in scope without deployment and signed provider evidence.
