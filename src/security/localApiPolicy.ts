@@ -1,6 +1,7 @@
 export interface LocalApiPolicy {
   host: string;
   allowedOrigins: ReadonlySet<string>;
+  registerListeningPort(port: number): void;
   isOriginAllowed(origin: string | undefined): boolean;
 }
 
@@ -33,6 +34,22 @@ export function resolveLocalApiPolicy(input: LocalApiPolicyInput): LocalApiPolic
   return {
     host,
     allowedOrigins,
+    registerListeningPort(port) {
+      if (!Number.isInteger(port) || port < 1 || port > 65535) {
+        throw new Error("local_api.invalid_listening_port");
+      }
+      if (!loopbackHosts.has(host)) return;
+
+      const originHosts =
+        host === "::1"
+          ? ["[::1]", "localhost"]
+          : host === "127.0.0.1"
+            ? ["127.0.0.1", "localhost"]
+            : ["localhost", "127.0.0.1", "[::1]"];
+      for (const originHost of originHosts) {
+        allowedOrigins.add(`http://${originHost}:${port}`);
+      }
+    },
     isOriginAllowed(origin) {
       return origin === undefined || allowedOrigins.has(origin);
     },

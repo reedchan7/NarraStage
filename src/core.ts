@@ -50,7 +50,7 @@ export default async function generateRouter(options: { check?: boolean } = {}):
   for (const { routePath, varName } of routeModulePairs) {
     content += `  app.use("/api${routePath}", ${varName});\n`;
   }
-  content += `}\n`;
+  content += `};\n`;
 
   let needWrite = true;
   try {

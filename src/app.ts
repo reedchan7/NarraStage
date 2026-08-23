@@ -328,6 +328,7 @@ export default async function startServe(input: boolean | StartServeOptions = fa
     server.listen(port, localApiPolicy.host, async () => {
       const address = server.address();
       const realPort = typeof address === "string" ? address : address?.port;
+      if (typeof realPort === "number") localApiPolicy.registerListeningPort(realPort);
       console.log(`[服务启动成功]: http://localhost:${realPort}`);
       resolve(realPort);
     });

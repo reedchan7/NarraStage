@@ -331482,6 +331482,17 @@ function resolveLocalApiPolicy(input) {
   return {
     host,
     allowedOrigins,
+    registerListeningPort(port) {
+      if (!Number.isInteger(port) || port < 1 || port > 65535) {
+        throw new Error("local_api.invalid_listening_port");
+      }
+      if (!loopbackHosts.has(host))
+        return;
+      const originHosts = host === "::1" ? ["[::1]", "localhost"] : host === "127.0.0.1" ? ["127.0.0.1", "localhost"] : ["localhost", "127.0.0.1", "[::1]"];
+      for (const originHost of originHosts) {
+        allowedOrigins.add(`http://${originHost}:${port}`);
+      }
+    },
     isOriginAllowed(origin2) {
       return origin2 === undefined || allowedOrigins.has(origin2);
     }
@@ -332245,6 +332256,8 @@ async function startServe(input = false) {
     server.listen(port, localApiPolicy.host, async () => {
       const address = server.address();
       const realPort = typeof address === "string" ? address : address?.port;
+      if (typeof realPort === "number")
+        localApiPolicy.registerListeningPort(realPort);
       console.log(`[服务启动成功]: http://localhost:${realPort}`);
       resolve3(realPort);
     });
