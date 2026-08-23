@@ -81,7 +81,7 @@
 
 ## Slices
 
-- [ ] **S1 — Repository-local workspace and contract source**
+- [x] **S1 — Repository-local workspace and contract source**
   - Covers: AC-001, AC-002, AC-004, AC-006, NFR-010
   - Blocked by: none · Risk: medium; history import and lockfile convergence can hide sibling-path coupling
   - Files: import sibling repository at `apps/web`; create app/package manifests and `packages/contracts`; modify root `package.json`, `bun.lock`, `tsconfig.json`, `Makefile`, architecture checks, OpenAPI generation, and release workflow
@@ -91,8 +91,8 @@
   - Affected verify: `bun install && bun run workspace:check && bun run contracts:check` → exit 0
   - Manual/scripted probe: `make help` lists server, Web, desktop, aggregate build/test commands
   - Rollback: revert S1 commit if any source or package command still requires `../Toonflow-web`
-  - Checkpoint: commit SHA recorded on completion in this PLAN
-  - Evidence: recorded after fresh slice checks
+  - Checkpoint: `0ea559af07f5ad8c4d0f477681cc6a44b0b71780`
+  - Evidence: frozen root install, workspace policy, contract generation/typecheck, repository-local Web package, and provenance check passed; server 212/212 and imported Web 40/40 tests passed; Vite built 11,300 modules into a deterministic single-file renderer; `make help` exposes all app commands.
 
 - [ ] **S2 — Explicit server and desktop application ownership**
   - Covers: AC-002, AC-004, AC-008, RC-001, RC-006, NFR-004/010
