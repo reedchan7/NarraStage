@@ -1,16 +1,8 @@
 <img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=200&section=header&text=Toonflow&fontSize=90&fontColor=ffffff&animation=fadeIn&fontAlignY=50" width="100%"/>
 
 <p>
-  <a href="https://github.com/HBAI-Ltd/Toonflow-app">
+  <a href="https://github.com/reedchan7/Toonflow-app">
     <img src="https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=github&logoColor=white" alt="GitHub" />
-  </a>
-  &nbsp;|&nbsp;
-  <a href="https://gitee.com/HBAI-Ltd/Toonflow-app">
-    <img src="https://img.shields.io/badge/Gitee-C71D23?style=flat-square&logo=gitee&logoColor=white" alt="Gitee" />
-  </a>
-  &nbsp;|&nbsp;
-  <a href="https://gitcode.com/HBAI-Ltd/Toonflow-app">
-    <img src="./atomgitLogo.svg" alt="Atomgit" style="height:20px"/>
   </a>
 </p>
 
@@ -39,36 +31,30 @@
   </p>
 
   <p align="center">
-    <a href="https://github.com/HBAI-Ltd/Toonflow-app/stargazers">
-      <img src="https://img.shields.io/github/stars/HBAI-Ltd/Toonflow-app?style=for-the-badge&logo=github" alt="Stars Badge" />
+    <a href="https://github.com/reedchan7/Toonflow-app/stargazers">
+      <img src="https://img.shields.io/github/stars/reedchan7/Toonflow-app?style=for-the-badge&logo=github" alt="Stars Badge" />
     </a>
     <a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank">
       <img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=for-the-badge" alt="Apache-2.0 License Badge" />
     </a>
-    <a href="https://github.com/HBAI-Ltd/Toonflow-app/releases">
-      <img alt="release" src="https://img.shields.io/github/v/release/HBAI-Ltd/Toonflow-app?style=for-the-badge" />
+    <a href="https://github.com/reedchan7/Toonflow-app/releases">
+      <img alt="release" src="https://img.shields.io/github/v/release/reedchan7/Toonflow-app?style=for-the-badge" />
     </a>
   </p>
   <p align="center">
-    <a href="https://github.com/HBAI-Ltd/Toonflow-app/network/members">
-      <img src="https://img.shields.io/github/forks/HBAI-Ltd/Toonflow-app?style=for-the-badge&logo=github&color=orange" alt="Forks Badge" />
-    </a>
-    <a href="https://atomgit.com/HBAI-Ltd/Toonflow-app">
-      <img src="https://img.shields.io/badge/AtomGit-G--Star%20No.540-FF6B35?style=for-the-badge&logo=git&logoColor=white" alt="AtomGit G-Star No.540" />
-    </a>
-    <a href="https://discord.gg/HEjKmpNpAZ">
-      <img src="https://img.shields.io/badge/Discord-Community-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord" />
+    <a href="https://github.com/reedchan7/Toonflow-app/network/members">
+      <img src="https://img.shields.io/github/forks/reedchan7/Toonflow-app?style=for-the-badge&logo=github&color=orange" alt="Forks Badge" />
     </a>
   </p>
   <p align="center">
-    <a href="https://github.com/HBAI-Ltd/Toonflow-app/issues">
-      <img src="https://img.shields.io/github/issues/HBAI-Ltd/Toonflow-app?style=for-the-badge&color=F48D73" alt="Issues" />
+    <a href="https://github.com/reedchan7/Toonflow-app/issues">
+      <img src="https://img.shields.io/github/issues/reedchan7/Toonflow-app?style=for-the-badge&color=F48D73" alt="Issues" />
     </a>
-    <a href="https://github.com/HBAI-Ltd/Toonflow-app/graphs/contributors">
-      <img src="https://img.shields.io/github/contributors/HBAI-Ltd/Toonflow-app?style=for-the-badge&color=2088FF" alt="Contributors" />
+    <a href="https://github.com/reedchan7/Toonflow-app/graphs/contributors">
+      <img src="https://img.shields.io/github/contributors/reedchan7/Toonflow-app?style=for-the-badge&color=2088FF" alt="Contributors" />
     </a>
-    <a href="https://github.com/HBAI-Ltd/Toonflow-app/commits">
-      <img src="https://img.shields.io/github/last-commit/HBAI-Ltd/Toonflow-app?style=for-the-badge&color=blueviolet" alt="Last Commit" />
+    <a href="https://github.com/reedchan7/Toonflow-app/commits">
+      <img src="https://img.shields.io/github/last-commit/reedchan7/Toonflow-app?style=for-the-badge&color=blueviolet" alt="Last Commit" />
     </a>
   </p>
   <p align="center">
@@ -79,23 +65,6 @@
   </p>
   
   > 🚀 **オールインワンのショートドラマエンジン**：テキストからキャラクター、絵コンテから動画まで、ゼロハードルで全工程をAI化、制作効率10倍以上！
-</div>
-
-<div align="center">
-  <table>
-    <tr>
-      <td width="50%" align="center">
-        <a href="./g-star.png" target="_blank">
-          <img src="./g-star.png" alt="AtomGit G-Star 認証証明書" width="100%"/>
-        </a>
-      </td>
-      <td width="50%" align="center">
-        <a href="./gvp.jpg" target="_blank">
-          <img src="./gvp.jpg" alt="Gitee GVP Certificate" width="100%"/>
-        </a>
-      </td>
-    </tr>
-  </table>
 </div>
 
 ---
@@ -250,16 +219,14 @@ https://github.com/user-attachments/assets/2d9fddac-dfdf-4640-b030-b09d7f7287e9
 
 | オペレーティングシステム | GitHub                                                       | 説明                   |
 | :------: | :----------------------------------------------------------- | :--------------------- |
-| Windows  | [Release](https://github.com/HBAI-Ltd/Toonflow-app/releases) | 公式リリースインストーラ |
-|  Linux   | [Release](https://github.com/HBAI-Ltd/Toonflow-app/releases) | 公式リリースインストーラ |
-|  macOS   | [Release](https://github.com/HBAI-Ltd/Toonflow-app/releases) | 公式リリースインストーラ |
+| Windows  | [Release](https://github.com/reedchan7/Toonflow-app/releases) | 公式リリースインストーラ |
+|  Linux   | [Release](https://github.com/reedchan7/Toonflow-app/releases) | 公式リリースインストーラ |
+|  macOS   | [Release](https://github.com/reedchan7/Toonflow-app/releases) | 公式リリースインストーラ |
 
 > [!CAUTION]
 > MacOS システムの場合は、設定→プライバシーとセキュリティ でセキュリティ設定を行ってください。証明書の問題で正常に開けない場合があります。
 >
 > 参考：知乎ドキュメント：[https://www.zhihu.com/question/433389276](https://www.zhihu.com/question/433389276)
-
-> Gitee OS 環境の制限および Release ファイルのアップロードサイズ制限のため、Gitee Release のダウンロードリンクは現在提供しておりません。
 
 ### 2. サービスの起動
 
@@ -285,7 +252,7 @@ https://github.com/user-attachments/assets/2d9fddac-dfdf-4640-b030-b09d7f7287e9
 
 ```shell
 # プロジェクトをクローン（既にある場合はスキップ）
-git clone https://github.com/HBAI-Ltd/Toonflow-app.git
+git clone https://github.com/reedchan7/Toonflow-app.git
 cd Toonflow-app
 
 # Makefile でローカルビルド＆起動
@@ -345,20 +312,10 @@ bun add --global pm2
 
 ```bash
 cd /opt
-git clone https://github.com/HBAI-Ltd/Toonflow-app.git
+git clone https://github.com/reedchan7/Toonflow-app.git
 cd Toonflow-app
-bun install
-bun run build
-```
-
-**Gitee からクローン（国内ユーザー向け）：**
-
-```bash
-cd /opt
-git clone https://gitee.com/HBAI-Ltd/Toonflow-app.git
-cd Toonflow-app
-bun install
-bun run build
+make install
+make build
 ```
 
 ##### 3. PM2 の設定
@@ -411,66 +368,9 @@ pm2 monit             # モニタリングパネル
 > アカウント：`admin`  
 > パスワード：`admin123`
 
-##### 6. フロントエンドのデプロイ
-
-フロントエンドを個別にデプロイまたはカスタマイズする場合は、フロントエンドリポジトリを参照してください：
-
-- **GitHub**：[Toonflow-web](https://github.com/HBAI-Ltd/Toonflow-web)
-- **Gitee**：[Toonflow-web](https://gitee.com/HBAI-Ltd/Toonflow-web)
-
-> 💡 **説明**：本リポジトリにはコンパイル済みのフロントエンドリソースが組み込まれているため、一般ユーザーはフロントエンドを個別にデプロイする必要はありません。フロントエンドリポジトリは二次開発を行う開発者向けです。
-
-### クラウドプラットフォームデプロイ
-
-> 🎉 **公式新規認定コンピューティングパートナープラットフォーム —— 智星雲（AI Galaxy）**
->
-> **[智星雲（AI Galaxy）](https://www.ai-galaxy.com/)** は **Toonflow 公式認定の商用イメージプロバイダー**で、Toonflow AI ショートドラマ制作用の完全なイメージを合法的に搭載・配布・商用サポートしています。**すぐに使える、手動デプロイ不要**です。
->
-> - 🌐 公式サイト：[https://www.ai-galaxy.com](https://www.ai-galaxy.com)
-> - 📖 イメージデプロイ図解チュートリアル：[クリックして見る](https://mp.weixin.qq.com/s/lq9X1ovQ1_TKeXMOLgicKg?scene=1)
-
-<details>
-<summary>📄 クリックしてテキスト版チュートリアルを展開</summary>
-
-#### 一、GPUレンタル段階のチュートリアル
-
-1. 智星雲 - コンピューティングマーケット - 4090 / 4090 Plus で「今すぐレンタル」をクリックし、レンタル詳細ページに入ります。
-   > 💡 動画のレンダリング中にインスタンスが期限切れになるのを防ぐため、「時間単位の自動更新」モードを有効にすることをお勧めします。
-2. イメージ選択：`windows10LTSCwin10_Toonflow` - インスタンスを作成。
-3. インスタンスの起動を30秒〜60秒待ち、接続方法を確認 - RDPログインファイルをダウンロード - パスワードをコピー - ダウンロードしたクラウド接続ファイルをダブルクリック。
-4. コピーしたパスワードを貼り付けてログインし、クラウドデスクトップに接続します。
-   > 💡 マウスをクラウドデスクトップの上端にしばらく置くと、デスクトップ切り替え操作バーが表示されます。「──」をクリックして自分のパソコンのデスクトップに切り替えるか、「□」をクリックして自分のパソコンのデスクトップに縮小配置し、操作ウィンドウとして使用できます。
-
-#### 二、Toonflowの設定、ComfyUIの起動段階のチュートリアル
-
-1. まずAgentが呼び出すモデルを設定します：デスクトップのToonflowを開く - モデルサービス - OpenAI標準インターフェース - APIキーとリクエストアドレスを入力。
-   デフォルトアカウント：`admin`　パスワード：`admin123`（ログイン後にパスワードを変更することをお勧めします）
-   > 💡 ここでは智星雲のAI大規模モデルTokenサービスを直接使用します。公式インターフェースで、安定・安全、最大6割引き（小説を脳本に変換した場合、約0.64元かかりました）。
-   - 智星雲モデル呼び出しTokenリクエストアドレス：`https://token.ai-galaxy.com/v1`
-   - 智星雲Tokenチャージ手順：Tokenマーケット - アカウント概要 - チャージ - 智星雲アカウント残高またはコンピューティングクーポンをTokenアカウントにチャージします。
-   - チャージ完了後、「Key管理」に入り - 新規API管理、名前は`Toonflow`など任意で構いません、確定してAPIキーをコピーします。
-2. 手順1に戻り、生成されたAPIキーとリクエストアドレスをToonflowのモデルサービスに貼り付け、入力後に空白部分をクリックすると、システムが「プロバイダー設定が更新されました」と表示します。
-   「手動追加」をクリックし、智星雲 - Tokenマーケットページに戻り、完全なモデル名をコピーします。
-   > 💡 1つのKeyで智星雲上のすべてのモデルを呼び出せます。使いたいものを選んでください。`deepseek-v4-pro`がおすすめです。
-   モデル名を完全にコピーしてToonflowに貼り付け、確認してモデル設定を完了します。
-3. 設定完了後、以下の2点を確認してください：
-   - モデルサービス内の3つのモデル呼び出しスイッチがオンになっているか
-   - Agent設定内で呼び出されているモデルが設定したものと一致しているか（一致しない場合はクリックして修正）
-4. ComfyUIを起動：クラウドデスクトップ - 絵世ランチャー - ワンクリック起動。
-5. 起動には約1〜2分かかります。起動完了後はページを開いたままにしておいてください。
-
-</details>
-
 ---
 
 # 🔧 開発フローガイド
-
-> [!CAUTION]
-> 🚧 **PR 提出ルール** 🚧
->
-> ⛔ `master` ブランチへのPRは受け付けていません。✅  `develop` ブランチにPRを提出してください。
->
-> 開発者の皆様のToonflowへの共同参加を歓迎します。参加ご希望の方は、交流グループ内で主催者ACTまでご連絡ください。
 
 ## 🛠️ 技術スタック
 
@@ -483,7 +383,7 @@ pm2 monit             # モニタリングパネル
 | AI統合       | Vercel AI SDK（OpenAI / Anthropic / Google / DeepSeek / 智谱 / MiniMax / 通义千问 / xAI） |
 | ローカル推論 | @huggingface/transformers（ONNX）                                                         |
 | リアルタイム通信 | Socket.IO                                                                             |
-| デスクトップクライアント | Electron 40                                                                       |
+| デスクトップクライアント | Electron 43                                                                       |
 | 画像処理     | Sharp                                                                                     |
 | コンテナ化   | Docker                                                                                    |
 
@@ -499,14 +399,7 @@ pm2 monit             # モニタリングパネル
    **GitHub からクローン：**
 
    ```bash
-   git clone https://github.com/HBAI-Ltd/Toonflow-app.git
-   cd Toonflow-app
-   ```
-
-   **Gitee からクローン（国内ユーザー向け）：**
-
-   ```bash
-   git clone https://gitee.com/HBAI-Ltd/Toonflow-app.git
+   git clone https://github.com/reedchan7/Toonflow-app.git
    cd Toonflow-app
    ```
 
@@ -515,7 +408,7 @@ pm2 monit             # モニタリングパネル
    プロジェクトルートで以下のコマンドを実行して依存関係をインストールしてください：
 
    ```bash
-   bun install
+   make install
    ```
 
 3. **開発環境の起動**
@@ -525,7 +418,7 @@ pm2 monit             # モニタリングパネル
    - **方法1：バックエンドサービスのみ起動**
 
      ```bash
-     bun run dev
+     make dev
      ```
 
      > ⚠️ このコマンドはバックエンドAPIサービスのみ起動（ポート10588）し、**フロントエンドページは含みません**。`http://localhost:10588` に直接アクセスするとAPIインターフェースのみ呼び出せ、完全なWebインターフェースは表示されません。フロントエンドページも使用する場合は、フロントエンドプロジェクトを別途起動するか、下記のGUIモードを使用してください。
@@ -533,7 +426,7 @@ pm2 monit             # モニタリングパネル
    - **方法2：Electron デスクトップクライアントの起動**
 
      ```bash
-     bun run dev:gui
+     make dev-gui
      ```
 
      > このコマンドはバックエンドサービスとElectronデスクトップウィンドウを同時に起動します。組み込みのフロントエンドページが含まれており、追加設定なしで即座に使用できます。全機能を完全に体験したい開発者に適しています。
@@ -541,35 +434,35 @@ pm2 monit             # モニタリングパネル
    - **方法3：本番モードでの起動**
 
      ```bash
-     bun run start
+     make start
      ```
 
-     > 本番モードでコンパイル済みのサービスを直接実行します（事前に `bun run build` が必要です）。
+     > 本番モードでコンパイル済みのサービスを直接実行します（事前に `make build` が必要です）。
 
 4. **プロジェクトのパッケージング**
 
    - TypeScriptファイルのコンパイルと生成：
 
      ```bash
-     bun run build
+     make build
      ```
 
    - Windows プラットフォーム用実行可能プログラムのパッケージング：
 
      ```bash
-     bun run dist:win
+     make dist-win
      ```
 
    - Mac プラットフォーム用実行可能プログラムのパッケージング：
 
      ```bash
-     bun run dist:mac
+     make dist-mac
      ```
 
    - Linux プラットフォーム用実行可能プログラムのパッケージング：
 
      ```bash
-     bun run dist:linux
+     make dist-linux
      ```
 
 5. **コード品質チェック**
@@ -577,7 +470,7 @@ pm2 monit             # モニタリングパネル
    - グローバルな構文と規約のチェック：
 
      ```bash
-     bun run check
+     make check
      ```
 
 6. **AI デバッグパネル（オプション）**
@@ -585,17 +478,8 @@ pm2 monit             # モニタリングパネル
    AI SDKの可視化デバッグツールを起動し、AI呼び出しをデバッグしやすくします：
 
    ```bash
-   bun run debug:ai
+   make debug-ai
    ```
-
-## フロントエンド開発
-
-フロントエンドインターフェースを変更する場合は、フロントエンドリポジトリで開発を行ってください：
-
-- **GitHub**：[Toonflow-web](https://github.com/HBAI-Ltd/Toonflow-web)
-- **Gitee**：[Toonflow-web](https://gitee.com/HBAI-Ltd/Toonflow-web)
-
-フロントエンドをビルド後、`dist` ディレクトリの内容を本プロジェクトの `data/web` ディレクトリにコピーすれば統合完了です。
 
 ## プロジェクト構造
 
@@ -656,143 +540,24 @@ pm2 monit             # モニタリングパネル
 
 ---
 
-# 🔗 関連リポジトリ
+# 🔗 リポジトリとメンテナンス
 
-| リポジトリ       | 説明                               | GitHub                                             | Gitee                                            |
-| ---------------- | ---------------------------------- | -------------------------------------------------- | ------------------------------------------------ |
-| **Toonflow-app** | 完全なクライアント（本リポジトリ、一般ユーザー向け） | [GitHub](https://github.com/HBAI-Ltd/Toonflow-app) | [Gitee](https://gitee.com/HBAI-Ltd/Toonflow-app) |
-| **Toonflow-web** | フロントエンドソース（フロントエンド開発者向け）       | [GitHub](https://github.com/HBAI-Ltd/Toonflow-web) | [Gitee](https://gitee.com/HBAI-Ltd/Toonflow-web) |
+- 現在のリポジトリ：[reedchan7/Toonflow-app](https://github.com/reedchan7/Toonflow-app)
+- 問題報告：[GitHub Issues](https://github.com/reedchan7/Toonflow-app/issues)
+- アップストリーム：[HBAI-Ltd/Toonflow-app](https://github.com/HBAI-Ltd/Toonflow-app)
 
-> 💡 **ヒント**：Toonflow をただ使いたいだけの場合は、本リポジトリのクライアントをダウンロードしてください。フロントエンドリポジトリは二次開発やフロントエンドのカスタマイズを行う開発者向けです。
-
----
-
-# 👨‍👩‍👧‍👦 WeChat 交流グループ
-
-グループ追加用アシスタント：
-
-<img src="./QR.png" alt="Toonflow QR" height="400"/>
-
-アイコンをクリックして Discord に参加することもできます：
-
-[![Join our Discord](https://cdn.prod.website-files.com/6257adef93867e50d84d30e2/67d00cf7266d2c75571aebde_Example.svg)](https://discord.gg/HEjKmpNpAZ)
-
-または招待リンク： [https://discord.gg/HEjKmpNpAZ](https://discord.gg/HEjKmpNpAZ)
-
----
-
-# 💌 お問い合わせ
-
-📧 メール：[ltlctools@outlook.com](mailto:ltlctools@outlook.com?subject=Toonflow問い合わせ)
+このリポジトリは Toonflow の独立メンテナンス fork です。ダウンロード、問題報告、コントリビューションには現在のリポジトリを使用してください。
 
 ---
 
 # 📜 ライセンス
 
-Toonflow は Apache-2.0 ライセンスのもとでオープンソース公開されており、補足的な商用利用規約が付帯しています。
-
-ライセンス詳細：https://www.apache.org/licenses/LICENSE-2.0
-
-## 補足契約
-
-- 本ソフトウェアを製品として **2つ以上の独立した第三者** に配布する場合は、HBAI-Ltd の **書面による商用ライセンス** を取得する必要があります。
-- **5法人以下** が共同運営で内部利用し、外部にサービスを提供しない場合は内部利用とみなし、**ライセンスは不要** です。
-- Toonflow の識別表示や著作権情報を削除または変更してはなりません。
-
-## 永久無料のケース
-
-- ✅ Toonflow を使ってコンテンツを制作し、プラットフォームから収益を得る
-- ✅ 二次開発して自分のチーム内で使用する
-- ✅ 5法人以下が共同運営で内部利用する
-- ✅ 個人の学習、研究、非商用利用
-
-## 商用ライセンス価格
-
-| 段階 | 年間売上 | 年会費 |
-|------|---------|--------|
-| 🌱 支援期 | < ¥10万 | **申請すれば無料ライセンス** |
-| 🚀 創業期 | ¥10–50万 | ¥5,000/年 |
-| 📈 成長期 | ¥50–150万 | ¥20,000/年 |
-| 🏢 規模期 | ¥150–500万 | ¥80,000/年 |
-| 🌐 エンタープライズ | > ¥500万 | 要相談 |
-
-> **不遡及条項**：v1.0.8 リリース前に AGPL-3.0 に基づいて使用していたユーザーは、引き続き AGPL-3.0 に従うものとし、本契約の変更の影響を受けません。
-
-完全な契約は [LICENSE](./LICENSE) ファイルを参照してください。
+本プロジェクトは追加の商用条件なしで [Apache License 2.0](../LICENSE) の下で提供されます。サードパーティ依存関係とライセンスは [NOTICES.txt](../NOTICES.txt) を参照してください。
 
 ---
-
-# ⭐️ スター履歴
-
-[![Star History Rank](https://api.star-history.com/badge?repo=HBAI-Ltd/Toonflow-app)](https://www.star-history.com/#HBAI-Ltd/Toonflow-app)
-
-[![Star History Chart](https://api.star-history.com/svg?repos=HBAI-Ltd/Toonflow-app&type=timeline&legend=top-left)](https://www.star-history.com/#HBAI-Ltd/Toonflow-app&type=timeline&legend=top-left)
-
----
-
 
 # 🙏 謝辞
 
-以下のオープンソースプロジェクトが Toonflow に強力なサポートを提供しています：
-
-- [Express](https://expressjs.com/) - 高速でオープンな Node.js Web フレームワーク
-- [AI SDK](https://ai-sdk.dev/) - TypeScript 向け AI ツールキット
-- [Better-SQLite3](https://github.com/WiseLibs/better-sqlite3) - 高性能 SQLite3 バインディングライブラリ
-- [Sharp](https://sharp.pixelplumbing.com/) - 高性能 Node.js 画像処理ライブラリ
-- [Axios](https://axios-http.com/) - Promise ベースの HTTP クライアント
-- [Zod](https://zod.dev/) - TypeScript ファーストのスキーマバリデーションライブラリ
-- [Socket.IO](https://socket.io/) - リアルタイム双方向イベント通信エンジン
-- [Electron](https://www.electronjs.org/) - クロスプラットフォームデスクトップアプリ開発フレームワーク
-- [Hugging Face Transformers](https://huggingface.co/docs/transformers.js) - ローカル ML 推論ライブラリ
-
-以下の組織・団体・個人が Toonflow をサポートしています：
-
-<table>
-  <thead>
-    <tr>
-      <th align="center">ロゴ</th>
-      <th align="center">名称</th>
-      <th align="center">サポート方法</th>
-      <th>概要</th>
-      <th align="center">公式サイト</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td align="center"><img src="./sponsored/sophnet.png" alt="算能雲 ロゴ" width="48"></td>
-      <td align="center"><b>算能雲</b></td>
-      <td align="center">💻 計算リソーススポンサー</td>
-      <td>より速く、より安定し、より経済的なワンストップモデル推論APIサービスの提供を目指す</td>
-      <td align="center"><a href="https://www.sophnet.com/">公式サイト</a></td>
-    </tr>
-    <tr>
-      <td align="center"><img src="./sponsored/atlascloud.png" alt="Atlas Cloud ロゴ" width="48"></td>
-      <td align="center"><b>Atlas Cloud</b></td>
-      <td align="center">💻 計算リソーススポンサー</td>
-      <td>世界初の全モーダル推論プラットフォーム。対話、画像、動画、音声—すべて統一API。300以上のモデル、OpenAI互換。</td>
-      <td align="center"><a href="https://www.atlascloud.ai/">公式サイト</a></td>
-    </tr>
-    <tr>
-      <td align="center"><img src="./sponsored/hunyuan.webp" alt="Tencent Hunyuan 3D ロゴ" width="48"></td>
-      <td align="center"><b>Tencent Hunyuan 3D</b></td>
-      <td align="center">🌐 ワールドモデル技術サポート</td>
-      <td>Tencent Hunyuan 3D AI 創作エンジンは、Hunyuan 3D 生成大モデル v2.5 をベースにした、業界初のワンストップ3DコンテンツAI創作プラットフォーム。テキストからの3D生成、画像からの3D生成、3Dアニメーション生成、テクスチャ生成などをサポートし、スケッチからの3D生成、3Dキャラクター生成、ローポリゴンモデル生成に強み。</td>
-      <td align="center"><a href="https://3d.hunyuan.tencent.com/">公式サイト</a></td>
-    </tr>
-    <tr>
-      <td align="center"><img src="./sponsored/ai-galaxy.png" alt="智星雲 ロゴ" width="48"></td>
-      <td align="center"><b>智星雲（AI Galaxy）</b></td>
-      <td align="center">💻 コンピューティング支援 <br/> 🖼️ イメージ支援</td>
-      <td>中国国内で著名な専門コンピューティングサービスブランドで、安価で安定したコンピューティングパワーを提供。清華・北京大学・復旦・浙江大学など千を超える985/211大学の研究室、中国科学院、5000社以上のAI企業にサービスを提供。</td>
-      <td align="center"><a href="https://www.ai-galaxy.com">公式サイト</a></td>
-    </tr>
-  </tbody>
-</table>
-
-完全なサードパーティ依存関係リストは `NOTICES.txt` を参照してください。
-
-##### copyright © 北京愛阿科技有限公司
-
-
+[Toonflow アップストリームプロジェクト](https://github.com/HBAI-Ltd/Toonflow-app) と、すべてのオープンソース作者およびコントリビューターに感謝します。
 
 <img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=100&section=footer" width="100%"/>

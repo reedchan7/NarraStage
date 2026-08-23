@@ -258973,7 +258973,7 @@ var init_writeVersion = __esm(() => {
   init_getPath();
   APP_VERSION = (() => {
     if (true) {
-      return "1.1.8";
+      return "2.0.0";
     }
     const pkgPath = path10.resolve(process.cwd(), "package.json");
     const pkg = JSON.parse(fs7.readFileSync(pkgPath, "utf8"));
@@ -271954,7 +271954,7 @@ var init_checkUpdate = __esm(() => {
   router118 = import_express118.default.Router();
   APP_VERSION2 = (() => {
     if (true) {
-      return "1.1.8";
+      return "2.0.0";
     }
     const pkgPath = path25.resolve(process.cwd(), "package.json");
     const pkg = JSON.parse(fs24.readFileSync(pkgPath, "utf8"));

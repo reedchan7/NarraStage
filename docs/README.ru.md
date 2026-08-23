@@ -1,16 +1,8 @@
 <img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=200&section=header&text=Toonflow&fontSize=90&fontColor=ffffff&animation=fadeIn&fontAlignY=50" width="100%"/>
 
 <p>
-  <a href="https://github.com/HBAI-Ltd/Toonflow-app">
+  <a href="https://github.com/reedchan7/Toonflow-app">
     <img src="https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=github&logoColor=white" alt="GitHub" />
-  </a>
-  &nbsp;|&nbsp;
-  <a href="https://gitee.com/HBAI-Ltd/Toonflow-app">
-    <img src="https://img.shields.io/badge/Gitee-C71D23?style=flat-square&logo=gitee&logoColor=white" alt="Gitee" />
-  </a>
-  &nbsp;|&nbsp;
-  <a href="https://gitcode.com/HBAI-Ltd/Toonflow-app">
-    <img src="./atomgitLogo.svg" alt="Atomgit" style="height:20px"/>
   </a>
 </p>
 
@@ -39,36 +31,30 @@
   </p>
 
   <p align="center">
-    <a href="https://github.com/HBAI-Ltd/Toonflow-app/stargazers">
-      <img src="https://img.shields.io/github/stars/HBAI-Ltd/Toonflow-app?style=for-the-badge&logo=github" alt="Stars Badge" />
+    <a href="https://github.com/reedchan7/Toonflow-app/stargazers">
+      <img src="https://img.shields.io/github/stars/reedchan7/Toonflow-app?style=for-the-badge&logo=github" alt="Stars Badge" />
     </a>
     <a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank">
       <img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=for-the-badge" alt="Apache-2.0 License Badge" />
     </a>
-    <a href="https://github.com/HBAI-Ltd/Toonflow-app/releases">
-      <img alt="release" src="https://img.shields.io/github/v/release/HBAI-Ltd/Toonflow-app?style=for-the-badge" />
+    <a href="https://github.com/reedchan7/Toonflow-app/releases">
+      <img alt="release" src="https://img.shields.io/github/v/release/reedchan7/Toonflow-app?style=for-the-badge" />
     </a>
   </p>
   <p align="center">
-    <a href="https://github.com/HBAI-Ltd/Toonflow-app/network/members">
-      <img src="https://img.shields.io/github/forks/HBAI-Ltd/Toonflow-app?style=for-the-badge&logo=github&color=orange" alt="Forks Badge" />
-    </a>
-    <a href="https://atomgit.com/HBAI-Ltd/Toonflow-app">
-      <img src="https://img.shields.io/badge/AtomGit-G--Star%20No.540-FF6B35?style=for-the-badge&logo=git&logoColor=white" alt="AtomGit G-Star No.540" />
-    </a>
-    <a href="https://discord.gg/HEjKmpNpAZ">
-      <img src="https://img.shields.io/badge/Discord-Community-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord" />
+    <a href="https://github.com/reedchan7/Toonflow-app/network/members">
+      <img src="https://img.shields.io/github/forks/reedchan7/Toonflow-app?style=for-the-badge&logo=github&color=orange" alt="Forks Badge" />
     </a>
   </p>
   <p align="center">
-    <a href="https://github.com/HBAI-Ltd/Toonflow-app/issues">
-      <img src="https://img.shields.io/github/issues/HBAI-Ltd/Toonflow-app?style=for-the-badge&color=F48D73" alt="Issues" />
+    <a href="https://github.com/reedchan7/Toonflow-app/issues">
+      <img src="https://img.shields.io/github/issues/reedchan7/Toonflow-app?style=for-the-badge&color=F48D73" alt="Issues" />
     </a>
-    <a href="https://github.com/HBAI-Ltd/Toonflow-app/graphs/contributors">
-      <img src="https://img.shields.io/github/contributors/HBAI-Ltd/Toonflow-app?style=for-the-badge&color=2088FF" alt="Contributors" />
+    <a href="https://github.com/reedchan7/Toonflow-app/graphs/contributors">
+      <img src="https://img.shields.io/github/contributors/reedchan7/Toonflow-app?style=for-the-badge&color=2088FF" alt="Contributors" />
     </a>
-    <a href="https://github.com/HBAI-Ltd/Toonflow-app/commits">
-      <img src="https://img.shields.io/github/last-commit/HBAI-Ltd/Toonflow-app?style=for-the-badge&color=blueviolet" alt="Last Commit" />
+    <a href="https://github.com/reedchan7/Toonflow-app/commits">
+      <img src="https://img.shields.io/github/last-commit/reedchan7/Toonflow-app?style=for-the-badge&color=blueviolet" alt="Last Commit" />
     </a>
   </p>
   <p align="center">
@@ -79,23 +65,6 @@
   </p>
   
   > 🚀 **Комплексная платформа для создания сериалов**: от текста до персонажей, от раскадровки до видео — полный AI-конвейер с нулевым порогом входа, повышающий эффективность творчества в 10+ раз!
-</div>
-
-<div align="center">
-  <table>
-    <tr>
-      <td width="50%" align="center">
-        <a href="./g-star.png" target="_blank">
-          <img src="./g-star.png" alt="Сертификат AtomGit G-Star" width="100%"/>
-        </a>
-      </td>
-      <td width="50%" align="center">
-        <a href="./gvp.jpg" target="_blank">
-          <img src="./gvp.jpg" alt="Gitee GVP Certificate" width="100%"/>
-        </a>
-      </td>
-    </tr>
-  </table>
 </div>
 
 ---
@@ -250,16 +219,14 @@ https://github.com/user-attachments/assets/2d9fddac-dfdf-4640-b030-b09d7f7287e9
 
 | Операционная система | GitHub                                                       | Примечание                  |
 | :------------------: | :----------------------------------------------------------- | :-------------------------- |
-|       Windows        | [Release](https://github.com/HBAI-Ltd/Toonflow-app/releases) | Официальный установочный пакет |
-|        Linux         | [Release](https://github.com/HBAI-Ltd/Toonflow-app/releases) | Официальный установочный пакет |
-|        macOS         | [Release](https://github.com/HBAI-Ltd/Toonflow-app/releases) | Официальный установочный пакет |
+|       Windows        | [Release](https://github.com/reedchan7/Toonflow-app/releases) | Официальный установочный пакет |
+|        Linux         | [Release](https://github.com/reedchan7/Toonflow-app/releases) | Официальный установочный пакет |
+|        macOS         | [Release](https://github.com/reedchan7/Toonflow-app/releases) | Официальный установочный пакет |
 
 > [!CAUTION]
 > Пользователям MacOS необходимо перейти в Настройки → Конфиденциальность и безопасность, чтобы настроить безопасность, иначе приложение может не открыться из-за проблем с сертификатом.
 >
 > Справочная статья на Zhihu: [https://www.zhihu.com/question/433389276](https://www.zhihu.com/question/433389276)
-
-> Из-за ограничений среды Gitee OS и ограничений на размер загружаемых файлов Release, ссылки для скачивания с Gitee Release временно не предоставляются.
 
 ### 2. Запуск сервиса
 
@@ -285,7 +252,7 @@ https://github.com/user-attachments/assets/2d9fddac-dfdf-4640-b030-b09d7f7287e9
 
 ```shell
 # Клонируйте проект (пропустите, если уже есть)
-git clone https://github.com/HBAI-Ltd/Toonflow-app.git
+git clone https://github.com/reedchan7/Toonflow-app.git
 cd Toonflow-app
 
 # Локальная сборка и запуск через Makefile
@@ -345,20 +312,10 @@ bun add --global pm2
 
 ```bash
 cd /opt
-git clone https://github.com/HBAI-Ltd/Toonflow-app.git
+git clone https://github.com/reedchan7/Toonflow-app.git
 cd Toonflow-app
-bun install
-bun run build
-```
-
-**Клонирование с Gitee (рекомендуется для Китая):**
-
-```bash
-cd /opt
-git clone https://gitee.com/HBAI-Ltd/Toonflow-app.git
-cd Toonflow-app
-bun install
-bun run build
+make install
+make build
 ```
 
 ##### 3. Настройка PM2
@@ -411,66 +368,9 @@ pm2 monit             # Панель мониторинга
 > Логин: `admin`  
 > Пароль: `admin123`
 
-##### 6. Развёртывание фронтенда
-
-Для отдельного развёртывания или кастомизации фронтенда обратитесь к репозиторию фронтенда:
-
-- **GitHub**: [Toonflow-web](https://github.com/HBAI-Ltd/Toonflow-web)
-- **Gitee**: [Toonflow-web](https://gitee.com/HBAI-Ltd/Toonflow-web)
-
-> 💡 **Примечание**: Данный репозиторий уже содержит скомпилированные фронтенд-ресурсы. Обычным пользователям не требуется отдельно развёртывать фронтенд. Репозиторий фронтенда предназначен только для разработчиков, которым нужна доработка.
-
-### Развёртывание на облачной платформе
-
-> 🎉 **Новый официально сертифицированный партнёр по вычислительным ресурсам — AI Galaxy (智星云)**
->
-> **[AI Galaxy](https://www.ai-galaxy.com/)** — это **официально авторизованный поставщик коммерческих образов Toonflow**, предоставляющий полностью готовый образ для коммерческого использования, включающий весь набор инструментов Toonflow для производства коротких AI-драм — **готов к использованию из коробки, ручное развёртывание не требуется**.
->
-> - 🌐 Сайт: [https://www.ai-galaxy.com](https://www.ai-galaxy.com)
-> - 📖 Официальное руководство по развёртыванию образа: [Смотреть здесь](https://mp.weixin.qq.com/s/lq9X1ovQ1_TKeXMOLgicKg?scene=1)
-
-<details>
-<summary>📄 Нажмите, чтобы развернуть текстовую версию руководства</summary>
-
-#### I. Этап аренды GPU
-
-1. На AI Galaxy - Рынок вычислительных ресурсов - RTX 4090 / 4090 Plus, нажмите «Арендовать сейчас», чтобы перейти на страницу деталей аренды.
-   > 💡 Рекомендуется включить режим «почасового автопродления», чтобы избежать истечения срока действия инстанса во время рендеринга видео.
-2. Выбор образа: `windows10LTSCwin10_Toonflow` - Создать инстанс.
-3. Подождите запуска инстанса (30–60 секунд), затем проверьте способ подключения — скачайте файл входа RDP, скопируйте пароль и дважды щёлкните по загруженному файлу подключения.
-4. Вставьте скопированный пароль и войдите, чтобы подключиться к облачному рабочему столу.
-   > 💡 Наведите курсор на верхнюю часть облачного рабочего стола и задержите на мгновение — появится панель переключения рабочего стола. Нажмите «──», чтобы переключиться на свой локальный рабочий стол, или «□», чтобы свернуть его в окно на своём рабочем столе.
-
-#### II. Этап настройки Toonflow и запуска ComfyUI
-
-1. Сначала настройте модель, используемую Agent: откройте Toonflow на рабочем столе - Сервисы моделей - интерфейс, совместимый с OpenAI - введите API-ключ и адрес запроса.
-   Логин по умолчанию: `admin`  Пароль: `admin123` (рекомендуется сменить пароль после входа)
-   > 💡 Здесь напрямую используется сервис Token для больших языковых моделей AI Galaxy — официальный интерфейс, стабильный и безопасный, со скидкой до 40% (конвертация романа в сценарий обошлась примерно в ¥0.64).
-   - Адрес запроса Token для вызова моделей AI Galaxy: `https://token.ai-galaxy.com/v1`
-   - Шаги пополнения Token на AI Galaxy: Рынок Token - Обзор аккаунта - Пополнить - пополните баланс AI Galaxy или ваучеры вычислительных ресурсов на счёт Token.
-   - После пополнения перейдите в «Управление ключами» - Новый API, назовите его `Toonflow` или как угодно, подтвердите и скопируйте API-ключ.
-2. Вернитесь к шагу 1, вставьте сгенерированный API-ключ и адрес запроса в Сервисы моделей Toonflow, затем щёлкните в пустом месте — система покажет «Конфигурация провайдера обновлена».
-   Нажмите «Добавить вручную», вернитесь на страницу Рынка Token AI Galaxy и скопируйте полное имя модели.
-   > 💡 Один ключ позволяет вызывать все модели на AI Galaxy — просто выберите нужную; рекомендуется `deepseek-v4-pro`.
-   Вставьте полное имя модели в Toonflow и подтвердите, чтобы завершить настройку модели.
-3. После настройки проверьте два момента:
-   - Включены ли все три переключателя моделей в Сервисах моделей
-   - Соответствует ли модель, настроенная в конфигурации Agent, вашей настройке (при несоответствии нажмите, чтобы исправить)
-4. Запустите ComfyUI: Облачный рабочий стол - Launcher ComfyUI - Запуск в один клик.
-5. Запуск занимает около 1–2 минут; после запуска оставьте страницу открытой.
-
-</details>
-
 ---
 
 # 🔧 Руководство по процессу разработки
-
-> [!CAUTION]
-> 🚧 **Правила отправки PR** 🚧
->
-> ⛔ Ветка `master` не принимает PR ｜ ✅ Пожалуйста, отправляйте PR в ветку `develop`
->
-> Приветствуется совместное участие разработчиков в создании Toonflow. Если вы заинтересованы, свяжитесь с руководителем ACT в группе общения.
 
 ## 🛠️ Технологический стек
 
@@ -483,7 +383,7 @@ pm2 monit             # Панель мониторинга
 | AI-интеграция      | Vercel AI SDK (OpenAI / Anthropic / Google / DeepSeek / Zhipu / MiniMax / Tongyi / xAI)  |
 | Локальный инференс | @huggingface/transformers (ONNX)                                                         |
 | Реалтайм-связь     | Socket.IO                                                                                |
-| Десктопный клиент  | Electron 40                                                                              |
+| Десктопный клиент  | Electron 43                                                                              |
 | Обработка изображений | Sharp                                                                                 |
 | Контейнеризация    | Docker                                                                                   |
 
@@ -499,14 +399,7 @@ pm2 monit             # Панель мониторинга
    **Клонирование с GitHub:**
 
    ```bash
-   git clone https://github.com/HBAI-Ltd/Toonflow-app.git
-   cd Toonflow-app
-   ```
-
-   **Клонирование с Gitee (рекомендуется для Китая):**
-
-   ```bash
-   git clone https://gitee.com/HBAI-Ltd/Toonflow-app.git
+   git clone https://github.com/reedchan7/Toonflow-app.git
    cd Toonflow-app
    ```
 
@@ -515,7 +408,7 @@ pm2 monit             # Панель мониторинга
    Выполните следующую команду в корневой директории проекта для установки зависимостей:
 
    ```bash
-   bun install
+   make install
    ```
 
 3. **Запуск среды разработки**
@@ -525,7 +418,7 @@ pm2 monit             # Панель мониторинга
    - **Способ 1: Запуск только бэкенда**
 
      ```bash
-     bun run dev
+     make dev
      ```
 
      > ⚠️ Эта команда запускает только бэкенд-сервис API (порт 10588), **не включая фронтенд**. При прямом обращении к `http://localhost:10588` будут доступны только API, но не полный веб-интерфейс. Для одновременного использования фронтенда запустите его отдельно или используйте режим GUI ниже.
@@ -533,7 +426,7 @@ pm2 monit             # Панель мониторинга
    - **Способ 2: Запуск Electron-клиента**
 
      ```bash
-     bun run dev:gui
+     make dev-gui
      ```
 
      > Эта команда одновременно запускает бэкенд и окно Electron Desktop со встроенным фронтендом — готовое решение «из коробки», не требующее дополнительных настроек. Подходит для разработчиков, желающих опробовать все функции.
@@ -541,35 +434,35 @@ pm2 monit             # Панель мониторинга
    - **Способ 3: Запуск в production-режиме**
 
      ```bash
-     bun run start
+     make start
      ```
 
-     > Запуск предварительно скомпилированного сервиса в production-режиме (требуется предварительно выполнить `bun run build`).
+     > Запуск предварительно скомпилированного сервиса в production-режиме (требуется предварительно выполнить `make build`).
 
 4. **Сборка проекта**
 
    - Компиляция TypeScript-файлов:
 
      ```bash
-     bun run build
+     make build
      ```
 
    - Сборка исполняемого файла для Windows:
 
      ```bash
-     bun run dist:win
+     make dist-win
      ```
 
    - Сборка исполняемого файла для macOS:
 
      ```bash
-     bun run dist:mac
+     make dist-mac
      ```
 
    - Сборка исполняемого файла для Linux:
 
      ```bash
-     bun run dist:linux
+     make dist-linux
      ```
 
 5. **Проверка качества кода**
@@ -577,7 +470,7 @@ pm2 monit             # Панель мониторинга
    - Глобальная проверка синтаксиса и соответствия стандартам:
 
      ```bash
-     bun run check
+     make check
      ```
 
 6. **Отладочная панель AI (опционально)**
@@ -585,17 +478,8 @@ pm2 monit             # Панель мониторинга
    Запуск визуального инструмента отладки AI SDK для удобства отладки AI-вызовов:
 
    ```bash
-   bun run debug:ai
+   make debug-ai
    ```
-
-## Разработка фронтенда
-
-Для изменения фронтенда перейдите в соответствующий репозиторий:
-
-- **GitHub**: [Toonflow-web](https://github.com/HBAI-Ltd/Toonflow-web)
-- **Gitee**: [Toonflow-web](https://gitee.com/HBAI-Ltd/Toonflow-web)
-
-После сборки фронтенда скопируйте содержимое директории `dist` в директорию `data/web` данного проекта.
 
 ## Структура проекта
 
@@ -656,141 +540,24 @@ pm2 monit             # Панель мониторинга
 
 ---
 
-# 🔗 Связанные репозитории
+# 🔗 Репозиторий и сопровождение
 
-| Репозиторий      | Описание                                        | GitHub                                             | Gitee                                            |
-| ---------------- | ----------------------------------------------- | -------------------------------------------------- | ------------------------------------------------ |
-| **Toonflow-app** | Полный клиент (данный репозиторий, рекомендуется обычным пользователям) | [GitHub](https://github.com/HBAI-Ltd/Toonflow-app) | [Gitee](https://gitee.com/HBAI-Ltd/Toonflow-app) |
-| **Toonflow-web** | Исходный код фронтенда (для фронтенд-разработчиков) | [GitHub](https://github.com/HBAI-Ltd/Toonflow-web) | [Gitee](https://gitee.com/HBAI-Ltd/Toonflow-web) |
+- Текущий репозиторий: [reedchan7/Toonflow-app](https://github.com/reedchan7/Toonflow-app)
+- Ошибки и предложения: [GitHub Issues](https://github.com/reedchan7/Toonflow-app/issues)
+- Исходный проект: [HBAI-Ltd/Toonflow-app](https://github.com/HBAI-Ltd/Toonflow-app)
 
-> 💡 **Подсказка**: Если вы просто хотите использовать Toonflow, скачайте клиент из этого репозитория. Репозиторий фронтенда предназначен только для разработчиков, которым требуется доработка или кастомизация интерфейса.
-
----
-
-# 👨‍👩‍👧‍👦 Группа в WeChat
-
-Помощник для добавления в группу:
-
-<img src="./QR.png" alt="Toonflow QR" height="400"/>
-
-Вы также можете присоединиться к Discord, нажав на иконку:
-
-[![Join our Discord](https://cdn.prod.website-files.com/6257adef93867e50d84d30e2/67d00cf7266d2c75571aebde_Example.svg)](https://discord.gg/HEjKmpNpAZ)
-
-Или перейдя по ссылке-приглашению: [https://discord.gg/HEjKmpNpAZ](https://discord.gg/HEjKmpNpAZ)
-
----
-
-# 💌 Контакты
-
-📧 Эл. почта: [ltlctools@outlook.com](mailto:ltlctools@outlook.com?subject=Toonflow咨询)
+Этот репозиторий является независимо поддерживаемым форком Toonflow. Для загрузок, сообщений об ошибках и вкладов используйте текущий репозиторий.
 
 ---
 
 # 📜 Лицензия
 
-Toonflow распространяется с открытым исходным кодом по лицензии Apache-2.0 с дополнительным коммерческим соглашением.
-
-Подробности лицензии: https://www.apache.org/licenses/LICENSE-2.0
-
-## Дополнительное соглашение
-
-- Если данное программное обеспечение распространяется в виде продукта **двум и более независимым третьим сторонам**, необходимо получить **письменное коммерческое разрешение** от HBAI-Ltd.
-- **Совместное внутреннее использование ≤ 5 юридическими лицами** без предоставления услуг внешним сторонам считается внутренним использованием и **не требует разрешения**.
-- Запрещается удалять или изменять идентификационные знаки и информацию об авторских правах Toonflow.
-
-## Сценарии постоянного бесплатного использования
-
-- ✅ Создание контента с помощью Toonflow и получение дохода от платформы
-- ✅ Доработка для внутреннего использования в своей команде
-- ✅ Совместное внутреннее использование ≤ 5 юридическими лицами
-- ✅ Личное обучение, исследования, некоммерческое использование
-
-## Цены на коммерческое лицензирование
-
-| Этап           | Годовой объём продаж | Годовая плата  |
-| -------------- | -------------------- | -------------- |
-| 🌱 Поддержка   | < ¥100 000           | **Бесплатная лицензия по запросу** |
-| 🚀 Старт       | ¥100 000 – 500 000   | ¥5 000/год     |
-| 📈 Рост        | ¥500 000 – 1 500 000 | ¥20 000/год    |
-| 🏢 Масштабирование | ¥1 500 000 – 5 000 000 | ¥80 000/год    |
-| 🌐 Корпоративный | > ¥5 000 000       | Обсуждается    |
-
-> **Положение о неретроактивности**: Пользователи, использовавшие программное обеспечение на условиях AGPL-3.0 до выхода версии v1.0.8, продолжают действовать в соответствии с AGPL-3.0 и не подпадают под действие изменений данного соглашения.
-
-Полный текст соглашения см. в файле [LICENSE](./LICENSE).
+Проект распространяется по [Apache License 2.0](../LICENSE) без дополнительных коммерческих условий. Сторонние зависимости и их лицензии перечислены в [NOTICES.txt](../NOTICES.txt).
 
 ---
-
-# ⭐️ Звёзды
-
-[![Star History Rank](https://api.star-history.com/badge?repo=HBAI-Ltd/Toonflow-app)](https://www.star-history.com/#HBAI-Ltd/Toonflow-app)
-
-[![Star History Chart](https://api.star-history.com/svg?repos=HBAI-Ltd/Toonflow-app&type=timeline&legend=top-left)](https://www.star-history.com/#HBAI-Ltd/Toonflow-app&type=timeline&legend=top-left)
-
----
-
 
 # 🙏 Благодарности
 
-Благодарим следующие проекты с открытым исходным кодом за мощную поддержку Toonflow:
-
-- [Express](https://expressjs.com/) — Быстрый, свободный и минималистичный веб-фреймворк для Node.js
-- [AI SDK](https://ai-sdk.dev/) — AI-инструментарий для TypeScript
-- [Better-SQLite3](https://github.com/WiseLibs/better-sqlite3) — Высокопроизводительная библиотека привязки SQLite3
-- [Sharp](https://sharp.pixelplumbing.com/) — Высокопроизводительная библиотека обработки изображений для Node.js
-- [Axios](https://axios-http.com/) — HTTP-клиент на основе Promise
-- [Zod](https://zod.dev/) — TypeScript-ориентированная библиотека валидации схем
-- [Socket.IO](https://socket.io/) — Двунаправленный движок реалтайм-коммуникаций
-- [Electron](https://www.electronjs.org/) — Кроссплатформенный фреймворк для разработки десктопных приложений
-- [Hugging Face Transformers](https://huggingface.co/docs/transformers.js) — Локальная библиотека ML-инференса
-
-Благодарим следующие организации и лица за поддержку Toonflow:
-
-<table>
-  <thead>
-    <tr>
-      <th align="center">Логотип</th>
-      <th align="center">Название</th>
-      <th align="center">Форма поддержки</th>
-      <th>Описание</th>
-      <th align="center">Веб-сайт</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td align="center"><img src="./sponsored/sophnet.png" alt="SuanNeng Cloud Logo" width="48"></td>
-      <td align="center"><b>SuanNeng Cloud</b></td>
-      <td align="center">💻 Спонсорство вычислительных мощностей</td>
-      <td>Стремится создать более быструю, стабильную и экономичную универсальную платформу API-сервисов для инференса моделей.</td>
-      <td align="center"><a href="https://www.sophnet.com/">Веб-сайт</a></td>
-    </tr>
-    <tr>
-      <td align="center"><img src="./sponsored/atlascloud.png" alt="Atlas Cloud Logo" width="48"></td>
-      <td align="center"><b>Atlas Cloud</b></td>
-      <td align="center">💻 Спонсорство вычислительных мощностей</td>
-      <td>Первая в мире универсальная мультимодальная платформа инференса. Диалог, изображения, видео, аудио — всё через единый API. Более 300 моделей, совместимость с OpenAI.</td>
-      <td align="center"><a href="https://www.atlascloud.ai/">Веб-сайт</a></td>
-    </tr>
-    <tr>
-      <td align="center"><img src="./sponsored/hunyuan.webp" alt="Tencent Hunyuan 3D Logo" width="48"></td>
-      <td align="center"><b>Tencent Hunyuan 3D</b></td>
-      <td align="center">🌐 Техническая поддержка мировых моделей</td>
-      <td>AI-движок создания 3D-контента на основе большой модели генерации 3D Tencent Hunyuan версии 2.5 — первая в отрасли универсальная AI-платформа для создания 3D. Поддерживает генерацию 3D из текста и изображений, 3D-анимацию, генерацию текстур и многое другое, включая генерацию 3D из набросков, создание 3D-персонажей и преимущества в создании low-poly моделей.</td>
-      <td align="center"><a href="https://3d.hunyuan.tencent.com/">Веб-сайт</a></td>
-    </tr>
-    <tr>
-      <td align="center"><img src="./sponsored/ai-galaxy.png" alt="AI Galaxy Logo" width="48"></td>
-      <td align="center"><b>AI Galaxy (智星云)</b></td>
-      <td align="center">💻 Поддержка вычислений <br/> 🖼️ Поддержка образов</td>
-      <td>Известный в Китае профессиональный бренд вычислительных услуг, предоставляющий доступные и стабильные вычислительные мощности. Обслуживает лаборатории более тысячи ведущих университетов (Цинхуа, Пекинский, Фуданьский, Чжэцзянский и др.), Китайскую академию наук и более 5000 AI-компаний.</td>
-      <td align="center"><a href="https://www.ai-galaxy.com">Сайт</a></td>
-    </tr>
-  </tbody>
-</table>
-
-Полный список сторонних зависимостей см. в файле `NOTICES.txt`
-
-##### copyright © Beijing Ai'a Technology Co., Ltd.
+Благодарим [исходный проект Toonflow](https://github.com/HBAI-Ltd/Toonflow-app), а также всех авторов и участников проектов с открытым исходным кодом.
 
 <img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=100&section=footer" width="100%"/>
