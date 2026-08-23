@@ -5,6 +5,7 @@ pre-commit:
   commands:
     format:
       glob: "*.{js,jsx,ts,tsx,json,jsonc,yaml,yml,md,css,scss,html}"
+      exclude: "{data,docs,build,dist}/**/*"
       run: bunx oxfmt --write {staged_files}
       stage_fixed: true
     lint:
