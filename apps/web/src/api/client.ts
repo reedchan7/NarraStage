@@ -25,6 +25,7 @@ export interface Project {
   createTime?: number;
   directorManual?: string | null;
   imageModel?: string | null;
+  imageOfferingId?: string | null;
   imageQuality?: string | null;
   mode?: string | null;
   videoModel?: string | null;
@@ -44,6 +45,7 @@ export interface CreateProjectInput {
   directorManual: string;
   videoRatio: string;
   imageModel: string;
+  imageOfferingId: string;
   videoModel: string;
   imageQuality: string;
   mode: string;

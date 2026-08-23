@@ -32,13 +32,16 @@ try {
     await fetch(`${baseUrl}/api/v2/catalog`, { headers }),
   );
   invariant(catalog.data.offerings.length === 2, "catalog_contract");
-  const projects = await json<Envelope<Array<{ imageModel?: string; videoOfferingId?: string }>>>(
+  const projects = await json<
+    Envelope<Array<{ imageModel?: string; imageOfferingId?: string; videoOfferingId?: string }>>
+  >(
     await fetch(`${baseUrl}/api/project/getProject`, {
       method: "POST",
       headers,
     }),
   );
-  invariant(projects.data[0]?.imageModel === "deterministic:image", "image_offering_pin");
+  invariant(projects.data[0]?.imageModel === "grsai:nano-banana-2", "legacy_image_model");
+  invariant(projects.data[0]?.imageOfferingId === "deterministic:image", "image_offering_pin");
   invariant(projects.data[0]?.videoOfferingId === "deterministic:video", "video_offering_pin");
 
   async function runJob(

@@ -21,6 +21,7 @@ import {
 import {
   buildGenerationRequest,
   assetModeViolation,
+  capabilityAllowedValues,
   effectiveCapabilityFields,
   extractMediaArtifact,
   isTerminalJob,
@@ -123,7 +124,7 @@ function CapabilityFieldControl(props: {
     );
   }
   if (field.kind === "enum") {
-    const options = field.enumValues ?? field.allowedValues?.map(String) ?? [];
+    const options = capabilityAllowedValues(field)?.map(String) ?? [];
     return (
       <label>
         <span>{field.label}</span>
@@ -141,7 +142,7 @@ function CapabilityFieldControl(props: {
     );
   }
   if (field.kind === "integer") {
-    const discreteValues = field.allowedValues?.filter(
+    const discreteValues = capabilityAllowedValues(field)?.filter(
       (candidate): candidate is number => typeof candidate === "number",
     );
     if (discreteValues?.length) {

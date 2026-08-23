@@ -3,21 +3,10 @@ import { z } from "zod";
 import legacyHttp from "@/http/compat";
 import { success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
-import { builtinCatalog } from "@/providers/catalog/builtinCatalog";
+import { isImageOffering } from "@/providers/catalog/imageGenerationSelection";
 import u from "@/utils";
 
 const router = legacyHttp.Router();
-
-export function isImageOffering(offeringId: string): boolean {
-  return builtinCatalog.offerings.some(
-    (offering) =>
-      offering.id === offeringId &&
-      offering.support.implementation === "implemented" &&
-      offering.operations.some(
-        (operation) => operation.operation === "image.generate" && operation.enabled,
-      ),
-  );
-}
 
 export async function persistProjectImageOffering(
   database: Knex,
@@ -28,7 +17,7 @@ export async function persistProjectImageOffering(
   if (!isImageOffering(offeringId)) throw new Error("project.image_offering_invalid");
   const updated = await database("o_project")
     .where({ id: projectId, userId })
-    .update({ imageModel: offeringId });
+    .update({ imageOfferingId: offeringId });
   return updated > 0;
 }
 

@@ -9,22 +9,37 @@ import type {
 } from "@/api/client";
 
 export type CapabilityValue = string | number | boolean | undefined;
+type DefinedCapabilityValue = Exclude<CapabilityValue, undefined>;
+
+function intersectCapabilityValues(
+  left: readonly DefinedCapabilityValue[] | undefined,
+  right: readonly DefinedCapabilityValue[] | undefined,
+): DefinedCapabilityValue[] | undefined {
+  if (!left) return right ? [...right] : undefined;
+  if (!right) return [...left];
+  return left.filter((candidate) => right.includes(candidate));
+}
+
+export function capabilityAllowedValues(
+  field: CapabilityField,
+): DefinedCapabilityValue[] | undefined {
+  return intersectCapabilityValues(field.enumValues, field.allowedValues);
+}
 
 export function configuredProjectOffering(
   project: Project | undefined,
   operation: GenerationOperation,
 ): string | undefined {
   if (!project) return undefined;
+  if (operation === "image.generate") return project.imageOfferingId ?? undefined;
   if (operation === "video.generate" && project.videoOfferingId) {
     return project.videoOfferingId;
   }
-  return operation === "image.generate"
-    ? (project.imageModel ?? undefined)
-    : (project.videoModel ?? undefined);
+  return project.videoModel ?? undefined;
 }
 
 export function initialCapabilityValue(field: CapabilityField): CapabilityValue {
-  const allowed = field.enumValues ?? field.allowedValues;
+  const allowed = capabilityAllowedValues(field);
   if (field.path === "aspectRatio" && allowed?.includes("16:9")) return "16:9";
   if (!field.required) return undefined;
   if (field.kind === "enum") return allowed?.[0];
@@ -38,11 +53,12 @@ export function capabilityFieldForMode(
   mode: CapabilityAssetMode | undefined,
 ): CapabilityField {
   const rule = mode?.fieldRules?.find((candidate) => candidate.path === field.path);
+  const ruleAllowed = intersectCapabilityValues(rule?.enumValues, rule?.allowedValues);
+  const allowed = intersectCapabilityValues(capabilityAllowedValues(field), ruleAllowed);
   return {
     ...field,
     ...(rule?.required === undefined ? {} : { required: rule.required }),
-    ...(rule?.enumValues ? { enumValues: rule.enumValues } : {}),
-    ...(rule?.allowedValues ? { allowedValues: rule.allowedValues } : {}),
+    ...(ruleAllowed ? { enumValues: undefined, allowedValues: allowed } : {}),
   };
 }
 
@@ -59,11 +75,19 @@ export function effectiveCapabilityFields(
 ): CapabilityField[] {
   const constraints = activeValueConstraints(schema, values);
   return schema.fields.map((field) => {
-    const effective = capabilityFieldForMode(field, mode);
-    const constrained = constraints
-      .flatMap((constraint) => constraint.require)
-      .find((requirement) => requirement.path === field.path);
-    return constrained ? { ...effective, allowedValues: constrained.allowedValues } : effective;
+    let effective = capabilityFieldForMode(field, mode);
+    for (const requirement of constraints.flatMap((constraint) => constraint.require)) {
+      if (requirement.path !== field.path) continue;
+      effective = {
+        ...effective,
+        enumValues: undefined,
+        allowedValues: intersectCapabilityValues(
+          capabilityAllowedValues(effective),
+          requirement.allowedValues,
+        ),
+      };
+    }
+    return effective;
   });
 }
 
@@ -78,7 +102,7 @@ export function normalizeCapabilityValues(
     normalized = Object.fromEntries(
       fields.map((field) => {
         const current = normalized[field.path];
-        const allowed = field.enumValues ?? field.allowedValues;
+        const allowed = capabilityAllowedValues(field);
         return [
           field.path,
           current !== undefined && (!allowed || allowed.includes(current))

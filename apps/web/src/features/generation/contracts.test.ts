@@ -55,7 +55,8 @@ describe("generation request contract", () => {
       artStyle: null,
       videoRatio: "16:9",
       projectType: "animation",
-      imageModel: "google:nano-banana-2-lite:official",
+      imageModel: "grsai:nano-banana-2",
+      imageOfferingId: "google:nano-banana-2-lite:official",
       videoModel: "toonflow:Kling-Video-O1",
       videoOfferingId: "minimax:h3:official",
     };
@@ -169,6 +170,17 @@ describe("generation request contract", () => {
           maximumTotalAssets: 3,
           fieldRules: [{ path: "durationSeconds", allowedValues: [8] }],
         },
+        {
+          id: "extend",
+          label: "Extend",
+          roles: [{ role: "source_video", kinds: ["video"], minimum: 1, maximum: 1 }],
+          minimumTotalAssets: 1,
+          maximumTotalAssets: 1,
+          fieldRules: [
+            { path: "durationSeconds", allowedValues: [8] },
+            { path: "resolution", allowedValues: ["720P"] },
+          ],
+        },
       ],
       valueConstraints: [
         {
@@ -190,6 +202,11 @@ describe("generation request contract", () => {
     expect(highResolution.durationSeconds).toBe(8);
     const reference = normalizeCapabilityValues(videoSchema, videoSchema.assetModes![1], defaults);
     expect(reference.durationSeconds).toBe(8);
+    const extend = normalizeCapabilityValues(videoSchema, videoSchema.assetModes![2], {
+      ...defaults,
+      resolution: "1080P",
+    });
+    expect(extend).toMatchObject({ durationSeconds: 8, resolution: "720P" });
 
     const request = buildGenerationRequest({
       projectId: 7,

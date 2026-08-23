@@ -1,9 +1,7 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import knex, { type Knex } from "knex";
-import {
-  isImageOffering,
-  persistProjectImageOffering,
-} from "@/routes/project/updateImageGenerationSelection";
+import { isImageOffering } from "@/providers/catalog/imageGenerationSelection";
+import { persistProjectImageOffering } from "@/routes/project/updateImageGenerationSelection";
 
 let database: Knex | undefined;
 
@@ -23,6 +21,7 @@ describe("project image offering persistence", () => {
       table.integer("id").primary();
       table.integer("userId").notNullable();
       table.string("imageModel");
+      table.string("imageOfferingId");
     });
     await database("o_project").insert({ id: 7, userId: 42, imageModel: "legacy:image" });
 
@@ -31,7 +30,8 @@ describe("project image offering persistence", () => {
     expect(await persistProjectImageOffering(database, 7, 99, offeringId)).toBe(false);
     expect(await persistProjectImageOffering(database, 7, 42, offeringId)).toBe(true);
     expect(await database("o_project").where({ id: 7 }).first()).toMatchObject({
-      imageModel: offeringId,
+      imageModel: "legacy:image",
+      imageOfferingId: offeringId,
     });
     await expect(
       persistProjectImageOffering(database, 7, 42, "toonflow:legacy-image"),

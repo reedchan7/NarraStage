@@ -1,5 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import { projectImageQualitySchema, projectModelIdSchema } from "@/routes/project/addProject";
+import {
+  projectImageOfferingIdSchema,
+  projectImageQualitySchema,
+  projectModelIdSchema,
+} from "@/routes/project/addProject";
 import { generationSelectionColumns } from "@/providers/catalog/generationSelection";
 
 describe("project creation defaults", () => {
@@ -18,9 +22,11 @@ describe("project creation defaults", () => {
   });
 
   test("accepts the React defaults as an exact image offering and structured video pin", () => {
-    expect(projectModelIdSchema.parse("google:nano-banana-2-lite:official")).toBe(
+    expect(projectImageOfferingIdSchema.parse("google:nano-banana-2-lite:official")).toBe(
       "google:nano-banana-2-lite:official",
     );
+    expect(() => projectImageOfferingIdSchema.parse("toonflow:legacy-image")).toThrow();
+    expect(projectModelIdSchema.parse("grsai:nano-banana-2")).toBe("grsai:nano-banana-2");
     expect(
       generationSelectionColumns({
         catalogMode: "builtin",

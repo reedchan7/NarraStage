@@ -94,6 +94,9 @@ describe("owned media asset repository", () => {
       mimeType: "image/png",
       source: { kind: "blob" },
     });
+    expect(resolved.source.kind === "blob" && (await resolved.source.blob.arrayBuffer())).toEqual(
+      png.buffer.slice(png.byteOffset, png.byteOffset + png.byteLength),
+    );
     await database.destroy();
   });
 

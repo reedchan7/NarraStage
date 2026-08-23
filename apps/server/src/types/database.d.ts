@@ -219,6 +219,7 @@ export interface o_project {
   directorManual?: string | null;
   id?: number | null;
   imageModel?: string | null;
+  imageOfferingId?: string | null;
   imageQuality?: string | null;
   intro?: string | null;
   mode?: string | null;

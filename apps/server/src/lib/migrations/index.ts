@@ -6,6 +6,7 @@ import { generationContinuationsMigration } from "@/lib/migrations/0004_generati
 import { generationAssetOutputsMigration } from "@/lib/migrations/0005_generation_asset_outputs";
 import { providerPlatformHardeningMigration } from "@/lib/migrations/0006_provider_platform_hardening";
 import { providerFileOwnershipMigration } from "@/lib/migrations/0007_provider_file_ownership";
+import { imageGenerationSelectionMigration } from "@/lib/migrations/0008_image_generation_selection";
 import { runMigrationLedger } from "@/lib/migrations/ledger";
 
 const migrations = [
@@ -16,6 +17,7 @@ const migrations = [
   generationAssetOutputsMigration,
   providerPlatformHardeningMigration,
   providerFileOwnershipMigration,
+  imageGenerationSelectionMigration,
 ] as const;
 
 export async function runProviderPlatformMigrations(database: Knex): Promise<void> {

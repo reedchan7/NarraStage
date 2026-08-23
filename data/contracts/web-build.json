@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
-  "backendRevision": "content-ef342e3c7fc07881291ee797994b7c7c60025b53+tree.ef342e3c7fc07881",
-  "webRevision": "content-bc995d818b3dc2b69000f2d581c3b40e7e497a3c+tree.bc995d818b3dc2b6",
+  "backendRevision": "content-aa01ebb9543dad24261b4200bf5bad7548dd731d+tree.aa01ebb9543dad24",
+  "webRevision": "content-61097f11a06e0737383c9c72af350dc5c3bb1f19+tree.61097f11a06e0737",
   "contractVersion": "2.0.0",
   "openapiSha256": "9c9a002e2c1f79dd632eca072e4b34a83b99258d309a9f6315755bcf30ab62f1",
   "supportedContractRange": "^2.0.0",
   "generatedClientSha256": "250581671307236fdabb924aaa5b23d1871104eaaca6b550033112b69ad63241",
   "dependencyLockSha256": "c8d4a0218ac7bdae71940c116f731c2b7d1b05f5e33d613aa15c05b239d0eb79",
-  "webBundleSha256": "fe0399be416a7e3331fc6c398116335c7affa825079c3344b361298dd23de153"
+  "webBundleSha256": "b1e2592260c010535dc87deb2e71bdce4ccd714948c13fc733e4f5419848a863"
 }

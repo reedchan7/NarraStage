@@ -7,9 +7,14 @@ import {
   generationSelectionColumns,
   generationSelectionSchema,
 } from "@/providers/catalog/generationSelection";
+import { isImageOffering } from "@/providers/catalog/imageGenerationSelection";
 const router = legacyHttp.Router();
 export const projectModelIdSchema = z.string().regex(/^[a-z0-9_-]+:.+$/i);
 export const projectImageQualitySchema = z.enum(["1K", "2K", "4K"]);
+export const projectImageOfferingIdSchema = z
+  .string()
+  .min(1)
+  .refine(isImageOffering, "project.image_offering_invalid");
 
 // 新增项目
 export default router.post(
@@ -23,6 +28,7 @@ export default router.post(
     directorManual: z.string(),
     videoRatio: z.string(),
     imageModel: projectModelIdSchema,
+    imageOfferingId: projectImageOfferingIdSchema,
     videoModel: projectModelIdSchema,
     imageQuality: projectImageQualitySchema,
     mode: z.string(),
@@ -38,6 +44,7 @@ export default router.post(
       artStyle,
       videoRatio,
       imageModel,
+      imageOfferingId,
       videoModel,
       imageQuality,
       mode,
@@ -56,6 +63,7 @@ export default router.post(
       directorManual,
       userId: 1,
       imageModel,
+      imageOfferingId,
       videoModel,
       createTime: Date.now(),
       imageQuality,
