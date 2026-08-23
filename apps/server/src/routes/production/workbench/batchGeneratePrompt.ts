@@ -1,4 +1,4 @@
-import express from "express";
+import legacyHttp from "@/http/compat";
 import u from "@/utils";
 import pLimit from "p-limit";
 import { z } from "zod";
@@ -6,7 +6,7 @@ import { success, error } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
 import fs from "fs/promises";
 import path from "path";
-const router = express.Router();
+const router = legacyHttp.Router();
 
 export default router.post(
   "/",

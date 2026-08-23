@@ -46,9 +46,9 @@ export default async function generateRouter(options: { check?: boolean } = {}):
   );
   const hash = crypto.createHash("md5").update(routerData).digest("hex");
 
-  let content = `// @routes-hash ${hash}\nimport type { Express } from "express";\n\n`;
+  let content = `// @routes-hash ${hash}\nimport type { LegacyHttpApplication } from "@/http/compat";\n\n`;
   content += `${importLines.join("\n")}\n\n`;
-  content += `export default async (app: Express) => {\n`;
+  content += `export default async (app: LegacyHttpApplication) => {\n`;
   for (const { routePath, varName } of routeModulePairs) {
     content += `  app.use("/api${routePath}", ${varName});\n`;
   }

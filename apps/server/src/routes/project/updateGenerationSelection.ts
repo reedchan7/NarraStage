@@ -1,4 +1,4 @@
-import express from "express";
+import legacyHttp from "@/http/compat";
 import { z } from "zod";
 import u from "@/utils";
 import { success } from "@/lib/responseFormat";
@@ -9,7 +9,7 @@ import {
 } from "@/providers/catalog/generationSelection";
 import type { Knex } from "knex";
 
-const router = express.Router();
+const router = legacyHttp.Router();
 
 export async function persistProjectGenerationSelection(
   database: Knex,

@@ -1,10 +1,10 @@
-import express from "express";
+import legacyHttp from "@/http/compat";
 import u from "@/utils";
 import { success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
 import { z } from "zod";
 import { v4 as uuid } from "uuid";
-const router = express.Router();
+const router = legacyHttp.Router();
 
 // 根据 base64 头部获取文件扩展名
 function getExtFromBase64(base64Data: string): string {

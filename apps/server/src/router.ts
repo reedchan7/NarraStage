@@ -1,5 +1,5 @@
 // @routes-hash 3d2bf363cc664f532ddb8628141e29cd
-import type { Express } from "express";
+import type { LegacyHttpApplication } from "@/http/compat";
 
 import route1 from "@/routes/agents/clearMemory";
 import route2 from "@/routes/agents/getMemory";
@@ -190,7 +190,7 @@ import route186 from "@/routes/v2/preflight";
 import route187 from "@/routes/v2/providers";
 import route188 from "@/routes/v2/support";
 
-export default async (app: Express) => {
+export default async (app: LegacyHttpApplication) => {
   app.use("/api/agents/clearMemory", route1);
   app.use("/api/agents/getMemory", route2);
   app.use("/api/artStyle/addArtStyle", route3);

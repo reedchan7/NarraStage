@@ -1,9 +1,9 @@
-import express from "express";
+import legacyHttp from "@/http/compat";
 import { getMediaAssetRepository } from "@/assets/runtime";
 import { success } from "@/lib/responseFormat";
 import { principalIdFromClaims } from "@/security/principal";
 
-const router = express.Router();
+const router = legacyHttp.Router();
 const maximumUploadBytes = 2 * 1024 * 1024 * 1024;
 
 router.put("/", async (req, res) => {
@@ -34,7 +34,7 @@ router.put("/", async (req, res) => {
       declaredMediaType: mediaType,
       byteLength: contentLength,
       filename,
-      principalId: principalIdFromClaims((req as express.Request & { user?: unknown }).user),
+      principalId: principalIdFromClaims(req.user),
       maximumBytes: maximumUploadBytes,
     });
     return res.status(201).json(

@@ -1,9 +1,9 @@
-import express from "express";
+import legacyHttp from "@/http/compat";
 import u from "@/utils";
 import { z } from "zod";
 import { error, success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
-const router = express.Router();
+const router = legacyHttp.Router();
 interface Storyboard {
   id: number;
   track: string;

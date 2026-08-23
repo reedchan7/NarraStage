@@ -1,10 +1,10 @@
-import express from "express";
+import legacyHttp from "@/http/compat";
 import { success, error } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
 import fg from "fast-glob";
 import u from "@/utils";
 
-const router = express.Router();
+const router = legacyHttp.Router();
 
 export default router.post("/", async (req, res) => {
   const skillsRoot = u.getPath(["skills"]);

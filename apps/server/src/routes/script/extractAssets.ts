@@ -1,4 +1,4 @@
-import express from "express";
+import legacyHttp from "@/http/compat";
 import u from "@/utils";
 import { z } from "zod";
 import { error, success } from "@/lib/responseFormat";
@@ -7,7 +7,7 @@ import { useSkill } from "@/utils/agent/skillsTools";
 import { tool, jsonSchema } from "ai";
 import type { o_script } from "@/types/database";
 
-const router = express.Router();
+const router = legacyHttp.Router();
 
 /** 新资产：AI 首次识别到的资产，需要完整信息 */
 const NewAssetSchema = z.object({

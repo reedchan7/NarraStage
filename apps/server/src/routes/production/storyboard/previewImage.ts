@@ -1,10 +1,10 @@
-import express from "express";
+import legacyHttp from "@/http/compat";
 import u from "@/utils";
 import { z } from "zod";
 import sharp from "sharp";
 import { success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
-const router = express.Router();
+const router = legacyHttp.Router();
 
 type OverlayOptions = Parameters<ReturnType<typeof sharp>["composite"]>[0][number];
 

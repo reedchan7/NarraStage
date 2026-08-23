@@ -1,11 +1,11 @@
-import express from "express";
+import legacyHttp from "@/http/compat";
 import { success } from "@/lib/responseFormat";
 import { builtinCatalog } from "@/providers/catalog/builtinCatalog";
 import { supportResultSchema } from "@/contracts/v2/schemas";
 import { getCredentialVault } from "@/security/credentials/runtime";
 import { getOfferingAvailabilityRuntime } from "@/providers/availability/offeringAvailability";
 
-const router = express.Router();
+const router = legacyHttp.Router();
 
 export default router.get("/", async (_req, res) => {
   const availability = await getOfferingAvailabilityRuntime().resolveAll();

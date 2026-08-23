@@ -1,9 +1,9 @@
-import express from "express";
+import legacyHttp from "@/http/compat";
 import { success, error } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
 import u from "@/utils";
 import { z } from "zod";
-const router = express.Router();
+const router = legacyHttp.Router();
 
 export default router.post(
   "/",

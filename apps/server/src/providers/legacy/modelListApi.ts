@@ -1,4 +1,5 @@
-import express from "express";
+import legacyHttp from "@/http/compat";
+import type { LegacyRouter } from "@/http/compat";
 import { z } from "zod";
 import { success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
@@ -11,8 +12,8 @@ export interface ModelListDependencies {
   getVendor(id: string): Promise<{ name: string }>;
 }
 
-export function createModelListRouter(dependencies: ModelListDependencies): express.Router {
-  const router = express.Router();
+export function createModelListRouter(dependencies: ModelListDependencies): LegacyRouter {
+  const router = legacyHttp.Router();
   router.post(
     "/",
     validateFields({

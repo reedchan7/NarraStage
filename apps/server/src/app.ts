@@ -1,57 +1,57 @@
 // import "./logger";
 import "./err";
 import "./env";
-import express from "express";
-import type { NextFunction, Request, Response } from "express";
-import { Server } from "socket.io";
-import http from "node:http";
-import expressWs from "express-ws";
-import logger from "morgan";
-import cors from "cors";
-import buildRoute from "@/core";
-import path from "path";
-import fs from "fs";
-import u from "@/utils";
+import { createAdaptorServer } from "@hono/node-server";
+import { serveStatic } from "@hono/node-server/serve-static";
+import type { Server as NodeServer } from "node:http";
+import fs from "node:fs";
+import path from "node:path";
+import { Hono } from "hono";
+import { logger } from "hono/logger";
+import isPathInside from "is-path-inside";
 import jwt from "jsonwebtoken";
-import socketInit from "@/socket/index";
-import { isEletron } from "@/utils/getPath";
-import { ensureThumbnail } from "@/utils/image";
-import type { ThumbnailSize } from "@/utils/image";
-import { isPublicApiPath } from "@/security/publicRoutes";
-import { databaseReady, db } from "@/utils/db";
-import { runProviderPlatformMigrations } from "@/lib/migrations";
-import { configureCredentialVault, getCredentialVault } from "@/security/credentials/runtime";
-import type { CredentialVault } from "@/security/credentials/types";
-import { migrateLegacyCredentials } from "@/security/credentials/legacyCredentialMigration";
-import { builtinCatalog } from "@/providers/catalog/builtinCatalog";
-import { resolveLocalApiPolicy } from "@/security/localApiPolicy";
 import type { Knex } from "knex";
+import { Server as SocketServer } from "socket.io";
+import { AssetGateway } from "@/assets/assetGateway";
+import { OwnedMediaAssetResolver } from "@/assets/mediaAssetRepository";
+import { configureMediaAssetRuntime } from "@/assets/runtime";
+import buildRoute from "@/core";
 import {
   configureGenerationRuntime,
   startGenerationWorker,
   stopGenerationWorker,
 } from "@/generation/runtime";
-import { configureProviderRuntime } from "@/providers/runtime";
-import { configureLanguageExecutionRuntime } from "@/providers/languageExecutionService";
+import { LegacyHttpApplication, type HonoEnvironment } from "@/http/compat";
+import { runProviderPlatformMigrations } from "@/lib/migrations";
 import { configureOfferingAvailabilityRuntime } from "@/providers/availability/offeringAvailability";
-import { AssetGateway } from "@/assets/assetGateway";
-import { configureMediaAssetRuntime } from "@/assets/runtime";
-import { OwnedMediaAssetResolver } from "@/assets/mediaAssetRepository";
-import { configureProviderFileLedger } from "@/providers/files/providerFileLedger";
-import {
-  configureProviderHealthRuntime,
-  ProviderHealthMonitor,
-} from "@/providers/availability/providerHealth";
 import {
   configureProviderConnectionProbeRuntime,
   ProviderConnectionProbe,
 } from "@/providers/availability/connectionProbe";
+import {
+  configureProviderHealthRuntime,
+  ProviderHealthMonitor,
+} from "@/providers/availability/providerHealth";
+import { builtinCatalog } from "@/providers/catalog/builtinCatalog";
+import { configureProviderFileLedger } from "@/providers/files/providerFileLedger";
+import { configureLanguageExecutionRuntime } from "@/providers/languageExecutionService";
+import { configureProviderRuntime } from "@/providers/runtime";
 import { productEvidenceDocumentSchema } from "@/release/evidence";
+import { resolveLocalApiPolicy } from "@/security/localApiPolicy";
+import { migrateLegacyCredentials } from "@/security/credentials/legacyCredentialMigration";
+import { configureCredentialVault, getCredentialVault } from "@/security/credentials/runtime";
+import type { CredentialVault } from "@/security/credentials/types";
+import socketInit from "@/socket/index";
+import u from "@/utils";
+import { databaseReady, db } from "@/utils/db";
+import { isEletron } from "@/utils/getPath";
+import { ensureThumbnail, type ThumbnailSize } from "@/utils/image";
+import { isPublicApiPath } from "@/security/publicRoutes";
 
-const app = express();
-const server = http.createServer(app);
+let server: NodeServer | undefined;
+let socketServer: SocketServer | undefined;
 
-async function checkPermissions() {
+async function checkPermissions(): Promise<boolean> {
   if (!isEletron()) return true;
   const userDataPath = u.getPath();
   try {
@@ -59,7 +59,8 @@ async function checkPermissions() {
     const testFile = path.join(userDataPath, ".access_test");
     fs.writeFileSync(testFile, "test");
     fs.unlinkSync(testFile);
-  } catch (e) {
+    return true;
+  } catch {
     const { dialog, app } = await import("electron");
     const { response } = await dialog.showMessageBox({
       type: "warning",
@@ -69,9 +70,8 @@ async function checkPermissions() {
       buttons: ["确认退出"],
       defaultId: 0,
     });
-    if (response === 0) {
-      app.quit();
-    }
+    if (response === 0) app.quit();
+    return false;
   }
 }
 
@@ -106,9 +106,137 @@ async function legacyCredentialDescriptors() {
   });
 }
 
+function thumbnailOptions(size: string): { directory: string; options: ThumbnailSize } | undefined {
+  const dimensions = size.match(/^(\d+)x(\d+)$/i);
+  if (dimensions) {
+    const width = Number.parseInt(dimensions[1]!, 10);
+    const height = Number.parseInt(dimensions[2]!, 10);
+    return { directory: `${width}x${height}`, options: { type: "dimensions", width, height } };
+  }
+  const percentage = size.match(/^(\d+(?:\.\d+)?)\s*%?$/);
+  if (!percentage) return undefined;
+  return {
+    directory: `${percentage[1]}p`,
+    options: { type: "percentage", value: Number.parseFloat(percentage[1]!) },
+  };
+}
+
+function staticRoute(root: string, prefix: string) {
+  return serveStatic<HonoEnvironment>({
+    root,
+    rewriteRequestPath(requestPath) {
+      return requestPath.slice(prefix.length) || "/";
+    },
+  });
+}
+
+async function createHttpApplication(
+  localApiPolicy: ReturnType<typeof resolveLocalApiPolicy>,
+): Promise<Hono<HonoEnvironment>> {
+  const app = new Hono<HonoEnvironment>();
+  app.use("*", logger());
+  app.use("*", async (context, next) => {
+    const origin = context.req.header("origin");
+    if (!localApiPolicy.isOriginAllowed(origin)) {
+      return context.json({ message: "Origin not allowed" }, 403);
+    }
+    if (origin) {
+      context.env.outgoing.setHeader("access-control-allow-origin", origin);
+      context.env.outgoing.setHeader(
+        "access-control-allow-headers",
+        context.req.header("access-control-request-headers") ?? "content-type, authorization",
+      );
+      context.env.outgoing.setHeader(
+        "access-control-allow-methods",
+        "GET,HEAD,POST,PUT,PATCH,DELETE",
+      );
+      context.env.outgoing.setHeader("vary", "Origin");
+      if (context.req.method === "OPTIONS") return context.body(null, 204);
+    }
+    return next();
+  });
+
+  const ossDirectory = u.getPath("oss");
+  const skillsDirectory = u.getPath("skills");
+  const assetsDirectory = u.getPath("assets");
+  for (const directory of [ossDirectory, skillsDirectory, assetsDirectory]) {
+    fs.mkdirSync(directory, { recursive: true });
+    console.log("文件目录:", directory);
+  }
+
+  app.get("/oss/*", async (context, next) => {
+    const requestedSize = context.req.query("size");
+    const selected = requestedSize ? thumbnailOptions(requestedSize) : undefined;
+    if (!selected) return next();
+    const relativePath = decodeURIComponent(context.req.path.slice("/oss/".length));
+    const originalPath = path.resolve(ossDirectory, relativePath);
+    if (!isPathInside(originalPath, ossDirectory)) {
+      return context.json({ message: "asset.path_escape" }, 403);
+    }
+    const extension = path.extname(relativePath);
+    const thumbnailPath = path.join(
+      ossDirectory,
+      "smallImage",
+      path.dirname(relativePath),
+      `${path.basename(relativePath, extension)}_${selected.directory}${extension}`,
+    );
+    const result = await ensureThumbnail(originalPath, thumbnailPath, selected.options);
+    return result ? new Response(Bun.file(result)) : next();
+  });
+  app.use("/oss/*", staticRoute(ossDirectory, "/oss"));
+  app.use("/skills/*", async (context, next) => {
+    return /\.(jpe?g|png|gif|webp|svg|ico|bmp)$/i.test(context.req.path)
+      ? next()
+      : context.body(null, 403);
+  });
+  app.use("/skills/*", staticRoute(skillsDirectory, "/skills"));
+  app.use("/assets/*", staticRoute(assetsDirectory, "/assets"));
+
+  const webDirectory = u.getPath("web");
+  if (fs.existsSync(webDirectory)) {
+    console.log("静态网站目录:", webDirectory);
+    app.use("*", serveStatic<HonoEnvironment>({ root: webDirectory }));
+  } else {
+    console.warn("静态网站目录不存在:", webDirectory);
+  }
+
+  app.use("/api/*", async (context, next) => {
+    const setting = await u.db("o_setting").where("key", "tokenKey").select("value").first();
+    if (!setting) {
+      return new Response(JSON.stringify({ message: "服务器秘钥未配置，请联系管理员" }), {
+        headers: { "content-type": "application/json; charset=utf-8" },
+        status: 444,
+      });
+    }
+    if (isPublicApiPath(context.req.path, context.req.method)) return next();
+    const rawToken = context.req.header("authorization") || context.req.query("token") || "";
+    const token = rawToken.replace("Bearer ", "");
+    if (!token) return context.json({ message: "未提供token" }, 401);
+    try {
+      context.set("user", jwt.verify(token, setting.value as string));
+      return next();
+    } catch {
+      return context.json({ message: "无效的token" }, 401);
+    }
+  });
+
+  const router = await import("@/router");
+  await router.default(new LegacyHttpApplication(app));
+  app.notFound((context) => context.json({ message: "API 404 Not Found" }, 404));
+  app.onError((error, context) => {
+    console.error(error);
+    const status = "status" in error && typeof error.status === "number" ? error.status : 500;
+    return new Response(JSON.stringify({ message: error.message }), {
+      headers: { "content-type": "application/json; charset=utf-8" },
+      status,
+    });
+  });
+  return app;
+}
+
 export default async function startServe(input: boolean | StartServeOptions = false) {
   const options = typeof input === "boolean" ? { randomPort: input } : input;
-  await checkPermissions();
+  if (!(await checkPermissions())) throw new Error("runtime.data_directory_unavailable");
   await databaseReady;
 
   const credentialVault = options.credentialVault ?? getCredentialVault();
@@ -158,14 +286,17 @@ export default async function startServe(input: boolean | StartServeOptions = fa
     await legacyCredentialDescriptors(),
   );
   await startGenerationWorker();
-
   await u.writeVersion();
+
   const localApiPolicy = resolveLocalApiPolicy({
     runtime: isEletron() ? "desktop" : "standalone",
     nodeEnv: process.env.NODE_ENV ?? "prod",
     env: process.env,
   });
-  const io = new Server(server, {
+  if (process.env.NODE_ENV === "dev") await buildRoute();
+  const app = await createHttpApplication(localApiPolicy);
+  server = createAdaptorServer({ fetch: app.fetch, hostname: localApiPolicy.host }) as NodeServer;
+  socketServer = new SocketServer(server, {
     cors: {
       credentials: false,
       origin(origin, callback) {
@@ -173,185 +304,36 @@ export default async function startServe(input: boolean | StartServeOptions = fa
       },
     },
   });
-  socketInit(io, generationRuntime.changes);
+  socketInit(socketServer, generationRuntime.changes);
 
-  if (process.env.NODE_ENV == "dev") await buildRoute();
-
-  expressWs(app);
-
-  app.use(logger("dev"));
-  app.use((req, res, next) => {
-    const origin = req.headers.origin;
-    if (!localApiPolicy.isOriginAllowed(origin)) {
-      return res.status(403).json({ message: "Origin not allowed" });
-    }
-    next();
-  });
-  app.use(
-    cors({
-      credentials: false,
-      origin(origin, callback) {
-        callback(null, localApiPolicy.isOriginAllowed(origin));
-      },
-    }),
-  );
-  app.use(express.json({ limit: "100mb" }));
-  app.use(express.urlencoded({ extended: true, limit: "100mb" }));
-
-  // oss 静态资源
-  const ossDir = u.getPath("oss");
-  if (!fs.existsSync(ossDir)) {
-    fs.mkdirSync(ossDir, { recursive: true });
-  }
-  console.log("文件目录:", ossDir);
-  app.use(
-    "/oss",
-    (req, res, next) => {
-      // 如果传参 type=small，则返回小图
-      if (req.query.size) {
-        const size = req.query.size as string;
-        const smallImageBaseDir = path.join(ossDir, "smallImage");
-        const originalPath = path.join(ossDir, req.path);
-
-        // 解析 size 参数
-        let sizeSubDir: string;
-        let sizeOpts: ThumbnailSize | undefined;
-
-        // 判断是否为 WIDTHxHEIGHT 格式，如 "200x300"：等比压缩到指定宽高边界
-        const dimensMatch = size.match(/^(\d+)x(\d+)$/i);
-        // 判断是否为百分比格式，如 "30"、"30%"：等比压缩到原图的指定百分比
-        const percentMatch = size.match(/^(\d+(?:\.\d+)?)\s*%?$/);
-
-        if (dimensMatch) {
-          const w = parseInt(dimensMatch[1], 10);
-          const h = parseInt(dimensMatch[2], 10);
-          sizeSubDir = `${w}x${h}`;
-          sizeOpts = { type: "dimensions", width: w, height: h };
-        } else if (percentMatch) {
-          const pct = parseFloat(percentMatch[1]);
-          sizeSubDir = `${percentMatch[1]}p`;
-          sizeOpts = { type: "percentage", value: pct };
-        } else {
-          // 无效的 size 参数，降级返回原图
-          express.static(ossDir, { acceptRanges: false })(req, res, next);
-          return;
-        }
-
-        const ext = path.extname(req.path);
-        const base = path.basename(req.path, ext);
-        const dir = path.dirname(req.path);
-        const smallImagePath = path.join(smallImageBaseDir, dir, `${base}_${sizeSubDir}${ext}`);
-
-        ensureThumbnail(originalPath, smallImagePath, sizeOpts).then((thumbnailPath) => {
-          if (thumbnailPath) {
-            res.sendFile(thumbnailPath);
-          } else {
-            // 缩略图生成失败，降级返回原图
-            express.static(ossDir, { acceptRanges: false })(req, res, next);
-          }
-        });
-        return;
-      }
-      next();
-    },
-    express.static(ossDir, { acceptRanges: false }),
-  );
-  // skills 静态资源
-  const skillsDir = u.getPath("skills");
-  if (!fs.existsSync(skillsDir)) {
-    fs.mkdirSync(skillsDir, { recursive: true });
-  }
-  console.log("文件目录:", skillsDir);
-  // 只允许图片文件访问
-  app.use(
-    "/skills",
-    (req, res, next) => {
-      /\.(jpe?g|png|gif|webp|svg|ico|bmp)$/i.test(req.path) ? next() : res.status(403).end();
-    },
-    express.static(skillsDir, { acceptRanges: false }),
-  );
-
-  // assets 静态资源
-  const assetsDir = u.getPath("assets");
-  if (!fs.existsSync(assetsDir)) {
-    fs.mkdirSync(assetsDir, { recursive: true });
-  }
-  console.log("文件目录:", assetsDir);
-  app.use("/assets", express.static(assetsDir, { acceptRanges: false }));
-
-  // data/web 静态网站
-  const webDir = u.getPath("web");
-  if (fs.existsSync(webDir)) {
-    console.log("静态网站目录:", webDir);
-    app.use(express.static(webDir, { acceptRanges: false }));
-  } else {
-    console.warn("静态网站目录不存在:", webDir);
-  }
-
-  app.use(async (req, res, next) => {
-    const setting = await u.db("o_setting").where("key", "tokenKey").select("value").first();
-    if (!setting) return res.status(444).send({ message: "服务器秘钥未配置，请联系管理员" });
-    const { value: tokenKey } = setting;
-    // 从 header 或 query 参数获取 token
-    const rawToken = req.headers.authorization || (req.query.token as string) || "";
-    const token = rawToken.replace("Bearer ", "");
-    if (isPublicApiPath(req.path, req.method)) return next();
-
-    if (!token) return res.status(401).send({ message: "未提供token" });
-    try {
-      const decoded = jwt.verify(token, tokenKey as string);
-      (req as any).user = decoded;
-      next();
-    } catch (err) {
-      return res.status(401).send({ message: "无效的token" });
-    }
-  });
-
-  const router = await import("@/router");
-  await router.default(app);
-
-  // 404 处理
-  app.use((_, res, next: NextFunction) => {
-    return res.status(404).send({ message: "API 404 Not Found" });
-  });
-
-  // 错误处理
-  app.use((err: any, _: Request, res: Response, __: NextFunction) => {
-    res.locals.message = err.message;
-    res.locals.error = err;
-    console.error(err);
-    res.status(err.status || 500).send(err);
-  });
-
-  const port = options.randomPort ? 0 : 10588;
-  return await new Promise((resolve) => {
-    server.listen(port, localApiPolicy.host, async () => {
-      const address = server.address();
-      const realPort = typeof address === "string" ? address : address?.port;
-      if (typeof realPort === "number") localApiPolicy.registerListeningPort(realPort);
+  const requestedPort = options.randomPort ? 0 : 10588;
+  return new Promise<number>((resolve, reject) => {
+    server!.once("error", reject);
+    server!.listen(requestedPort, localApiPolicy.host, () => {
+      const address = server!.address();
+      const realPort = typeof address === "string" ? undefined : address?.port;
+      if (typeof realPort !== "number") return reject(new Error("runtime.port_unavailable"));
+      localApiPolicy.registerListeningPort(realPort);
       console.log(`[服务启动成功]: http://localhost:${realPort}`);
       resolve(realPort);
     });
   });
 }
 
-// 支持await关闭
-export function closeServe(): Promise<void> {
-  return stopGenerationWorker().then(
-    () =>
-      new Promise((resolve, reject) => {
-        if (server) {
-          server.close((err?: Error) => {
-            if (err) return reject(err);
-            console.log("[服务已关闭]");
-            resolve();
-          });
-        } else {
-          resolve();
-        }
-      }),
-  );
+export async function closeServe(): Promise<void> {
+  await stopGenerationWorker();
+  socketServer?.disconnectSockets(true);
+  if (socketServer) {
+    await new Promise<void>((resolve) => socketServer!.close(() => resolve()));
+  }
+  if (server?.listening) {
+    await new Promise<void>((resolve, reject) => {
+      server!.close((error) => (error ? reject(error) : resolve()));
+    });
+  }
+  socketServer = undefined;
+  server = undefined;
+  console.log("[服务已关闭]");
 }
 
-const isElectron = typeof process.versions?.electron !== "undefined";
-if (import.meta.main && !isElectron) await startServe();
+if (import.meta.main && !isEletron()) await startServe();

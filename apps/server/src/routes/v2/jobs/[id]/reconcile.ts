@@ -1,15 +1,15 @@
-import express from "express";
+import legacyHttp from "@/http/compat";
 import { reconcileGenerationJobSchema } from "@/contracts/v2/schemas";
 import { getGenerationRuntime } from "@/generation/runtime";
 import { toGenerationJobView } from "@/generation/view";
 import { success } from "@/lib/responseFormat";
 import { assertOperatorClaims, principalIdFromClaims } from "@/security/principal";
 
-const router = express.Router({ mergeParams: true });
+const router = legacyHttp.Router({ mergeParams: true });
 
 router.post("/", async (req, res) => {
   const { id } = req.params as { id: string };
-  const claims = (req as express.Request & { user?: unknown }).user;
+  const claims = req.user;
   try {
     assertOperatorClaims(claims);
   } catch {

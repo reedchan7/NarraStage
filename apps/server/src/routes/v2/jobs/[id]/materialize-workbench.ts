@@ -1,4 +1,4 @@
-import express from "express";
+import legacyHttp from "@/http/compat";
 import type { Knex } from "knex";
 import { db } from "@/utils/db";
 import u from "@/utils";
@@ -8,7 +8,7 @@ import { getMediaAssetRepository } from "@/assets/runtime";
 import { principalIdFromClaims } from "@/security/principal";
 import { success } from "@/lib/responseFormat";
 
-const router = express.Router({ mergeParams: true });
+const router = legacyHttp.Router({ mergeParams: true });
 
 router.post("/", async (req, res) => {
   const database = db as unknown as Knex;
@@ -21,7 +21,7 @@ router.post("/", async (req, res) => {
   try {
     const output = await materializer.materialize({
       jobId: (req.params as { id: string }).id,
-      principalId: principalIdFromClaims((req as express.Request & { user?: unknown }).user),
+      principalId: principalIdFromClaims(req.user),
     });
     return res.status(200).json(
       success({

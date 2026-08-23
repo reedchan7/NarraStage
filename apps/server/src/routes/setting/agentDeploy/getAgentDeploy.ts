@@ -1,7 +1,7 @@
-import express from "express";
+import legacyHttp from "@/http/compat";
 import { success } from "@/lib/responseFormat";
 import u from "@/utils";
-const router = express.Router();
+const router = legacyHttp.Router();
 
 export default router.post("/", async (req, res) => {
   const allData = await u

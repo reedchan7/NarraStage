@@ -1,7 +1,7 @@
-import express from "express";
+import legacyHttp from "@/http/compat";
 import { error, success } from "@/lib/responseFormat";
 import u from "@/utils";
-const router = express.Router();
+const router = legacyHttp.Router();
 
 export default router.get("/", async (req, res) => {
   const settingData = await u

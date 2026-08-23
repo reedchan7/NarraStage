@@ -1,5 +1,5 @@
 import { afterEach, expect, test } from "bun:test";
-import express from "express";
+import legacyHttp from "@/http/compat";
 import http from "node:http";
 import type { FetchFunction } from "@ai-sdk/provider-utils";
 import generateRoute from "@/routes/v2/language/generate";
@@ -78,15 +78,13 @@ async function startApi() {
   registry.register(createDeepSeekAdapter({ credentialVault: vault, fetch: mockFetch }));
   configureLanguageExecutionRuntime(registry);
 
-  const app = express();
-  app.use(express.json());
+  const app = legacyHttp();
+  app.use(legacyHttp.json());
   app.use("/api/v2/language/generate", generateRoute);
   app.use("/api/v2/language/stream", streamRoute);
-  app.use(
-    (error: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-      res.status(500).json({ message: error.message });
-    },
-  );
+  app.useError((error, _req, res, _next) => {
+    res.status(500).json({ message: (error as Error).message });
+  });
   const server = app.listen(0);
   servers.push(server);
   await new Promise<void>((resolve) => server.once("listening", resolve));

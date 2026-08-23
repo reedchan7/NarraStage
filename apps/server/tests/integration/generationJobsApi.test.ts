@@ -3,7 +3,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import http from "node:http";
-import express from "express";
+import legacyHttp from "@/http/compat";
 import knex from "knex";
 import jobsRoute from "@/routes/v2/jobs/index";
 import jobRoute from "@/routes/v2/jobs/[id]/index";
@@ -41,21 +41,19 @@ test("job API deduplicates retries and returns the same snapshot after runtime r
     "implemented";
   configureGenerationRuntime(database, catalog);
 
-  const app = express();
-  app.use(express.json());
+  const app = legacyHttp();
+  app.use(legacyHttp.json());
   app.use((req, _res, next) => {
-    (req as express.Request & { user?: unknown }).user = { id: 42 };
+    req.user = { id: 42 };
     next();
   });
   app.use("/api/v2/jobs/:id/cancel", cancelRoute);
   app.use("/api/v2/jobs/:id/reconcile", reconcileRoute);
   app.use("/api/v2/jobs/:id", jobRoute);
   app.use("/api/v2/jobs", jobsRoute);
-  app.use(
-    (error: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-      res.status(500).json({ message: error.message });
-    },
-  );
+  app.useError((error, _req, res, _next) => {
+    res.status(500).json({ message: (error as Error).message });
+  });
   const server = app.listen(0);
   servers.push(server);
   await new Promise<void>((resolve) => server.once("listening", resolve));

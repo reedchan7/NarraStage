@@ -1,7 +1,7 @@
-import express from "express";
+import legacyHttp from "@/http/compat";
 import u from "@/utils";
 import { success } from "@/lib/responseFormat";
-const router = express.Router();
+const router = legacyHttp.Router();
 
 // 获取项目
 export default router.post("/", async (req, res) => {

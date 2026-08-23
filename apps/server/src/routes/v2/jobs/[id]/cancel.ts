@@ -1,11 +1,11 @@
-import express from "express";
+import legacyHttp from "@/http/compat";
 import { cancelGenerationJobSchema } from "@/contracts/v2/schemas";
 import { getGenerationRuntime } from "@/generation/runtime";
 import { toGenerationJobView } from "@/generation/view";
 import { success } from "@/lib/responseFormat";
 import { principalIdFromClaims } from "@/security/principal";
 
-const router = express.Router({ mergeParams: true });
+const router = legacyHttp.Router({ mergeParams: true });
 
 router.post("/", async (req, res) => {
   const { id } = req.params as { id: string };
@@ -14,7 +14,7 @@ router.post("/", async (req, res) => {
   try {
     const job = await getGenerationRuntime().cancel(
       id,
-      principalIdFromClaims((req as express.Request & { user?: unknown }).user),
+      principalIdFromClaims(req.user),
       parsed.data.reason,
     );
     return res.status(200).json(success(toGenerationJobView(job)));

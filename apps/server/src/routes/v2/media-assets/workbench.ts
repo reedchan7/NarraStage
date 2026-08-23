@@ -1,4 +1,4 @@
-import express from "express";
+import legacyHttp from "@/http/compat";
 import { workbenchAssetIngestRequestSchema } from "@/contracts/v2/schemas";
 import { getMediaAssetRepository } from "@/assets/runtime";
 import { WorkbenchAssetIngestService } from "@/assets/workbenchAssetIngestService";
@@ -8,7 +8,7 @@ import { db } from "@/utils/db";
 import u from "@/utils";
 import type { Knex } from "knex";
 
-const router = express.Router();
+const router = legacyHttp.Router();
 
 router.post("/", async (req, res) => {
   const parsed = workbenchAssetIngestRequestSchema.safeParse(req.body);
@@ -20,7 +20,7 @@ router.post("/", async (req, res) => {
   });
   try {
     const assets = await service.ingest({
-      principalId: principalIdFromClaims((req as express.Request & { user?: unknown }).user),
+      principalId: principalIdFromClaims(req.user),
       projectId: parsed.data.projectId,
       items: parsed.data.items,
     });

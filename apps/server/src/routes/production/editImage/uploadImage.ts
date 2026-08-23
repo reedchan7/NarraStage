@@ -1,10 +1,10 @@
-import express from "express";
+import legacyHttp from "@/http/compat";
 import u from "@/utils";
 import { success, error } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
 import { z } from "zod";
 import { v4 as uuid } from "uuid";
-const router = express.Router();
+const router = legacyHttp.Router();
 
 // 文件上传（支持图片、音频、视频）
 export default router.post(

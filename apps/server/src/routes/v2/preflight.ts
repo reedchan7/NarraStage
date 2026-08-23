@@ -1,4 +1,4 @@
-import express from "express";
+import legacyHttp from "@/http/compat";
 import { error, success } from "@/lib/responseFormat";
 import { preflightRequestSchema } from "@/contracts/v2/schemas";
 import { builtinCatalog } from "@/providers/catalog/builtinCatalog";
@@ -8,7 +8,7 @@ import {
   offeringAvailabilityKey,
 } from "@/providers/availability/offeringAvailability";
 
-const router = express.Router();
+const router = legacyHttp.Router();
 
 export default router.post("/", async (req, res) => {
   const parsed = preflightRequestSchema.safeParse(req.body);

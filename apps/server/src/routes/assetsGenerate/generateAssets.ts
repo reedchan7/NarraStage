@@ -1,11 +1,11 @@
-import express from "express";
+import legacyHttp from "@/http/compat";
 import u from "@/utils";
 import { z } from "zod";
 import { v4 as uuidv4 } from "uuid";
 import { error, success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
 
-const router = express.Router();
+const router = legacyHttp.Router();
 
 type AssetType = "role" | "scene" | "tool";
 

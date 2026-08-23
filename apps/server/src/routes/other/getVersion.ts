@@ -1,8 +1,8 @@
-import express from "express";
+import legacyHttp from "@/http/compat";
 import { success } from "@/lib/responseFormat";
 import { getVersion } from "@/utils/writeVersion";
 
-const router = express.Router();
+const router = legacyHttp.Router();
 
 export default router.get("/", async (req, res) => {
   const version = await getVersion();

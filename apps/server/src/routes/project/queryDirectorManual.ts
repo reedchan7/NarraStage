@@ -1,9 +1,9 @@
-import express from "express";
+import legacyHttp from "@/http/compat";
 import u from "@/utils";
 import { success } from "@/lib/responseFormat";
 import fs from "fs";
 import path from "path";
-const router = express.Router();
+const router = legacyHttp.Router();
 
 // 字段映射表
 const DATA_MAP: { label: string; value: string; subDir?: string }[] = [

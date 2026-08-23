@@ -1,5 +1,5 @@
 import { afterEach, expect, test } from "bun:test";
-import express from "express";
+import legacyHttp from "@/http/compat";
 import http from "node:http";
 import uploadRoute from "@/routes/v2/files/upload";
 import { defineProviderAdapter, type OperationContext } from "@/providers/ports";
@@ -62,10 +62,10 @@ test("owned provider-file uploads carry the authenticated principal to the asset
   );
   configureLanguageExecutionRuntime(registry);
 
-  const app = express();
-  app.use(express.json());
+  const app = legacyHttp();
+  app.use(legacyHttp.json());
   app.use((req, _res, next) => {
-    (req as express.Request & { user?: unknown }).user = { id: 42 };
+    req.user = { id: 42 };
     next();
   });
   app.use("/api/v2/files/upload", uploadRoute);

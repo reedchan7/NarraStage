@@ -1,4 +1,4 @@
-import express from "express";
+import legacyHttp from "@/http/compat";
 import { success } from "@/lib/responseFormat";
 import { builtinCatalog } from "@/providers/catalog/builtinCatalog";
 import { providerCredentialsResultSchema } from "@/contracts/v2/schemas";
@@ -11,7 +11,7 @@ import {
 import { providerIdSchema } from "@/providers/domain/ids";
 import { getProviderConnectionProbeRuntime } from "@/providers/availability/connectionProbe";
 
-const router = express.Router();
+const router = legacyHttp.Router();
 
 export async function buildProviderCredentialStatus(
   vault: CredentialVault,

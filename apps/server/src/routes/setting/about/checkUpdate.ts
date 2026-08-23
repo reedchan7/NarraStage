@@ -1,8 +1,8 @@
-import express from "express";
+import legacyHttp from "@/http/compat";
 import { success, error } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
 import { z } from "zod";
-const router = express.Router();
+const router = legacyHttp.Router();
 
 import fs from "fs";
 import path from "path";

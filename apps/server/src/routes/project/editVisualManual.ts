@@ -1,11 +1,11 @@
-import express from "express";
+import legacyHttp from "@/http/compat";
 import u from "@/utils";
 import { error, success } from "@/lib/responseFormat";
 import fs from "fs";
 import path from "path";
 import { validateFields } from "@/middleware/middleware";
 import { z } from "zod";
-const router = express.Router();
+const router = legacyHttp.Router();
 
 // 编辑视觉手册
 export default router.post(

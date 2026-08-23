@@ -1,4 +1,4 @@
-import express from "express";
+import legacyHttp from "@/http/compat";
 import { z } from "zod";
 import { submitGenerationJobSchema } from "@/contracts/v2/schemas";
 import { toGenerationJobView } from "@/generation/view";
@@ -8,16 +8,13 @@ import { principalIdFromClaims } from "@/security/principal";
 import { generationJobStateSchema } from "@/generation/stateMachine";
 import { decodeGenerationJobCursor, encodeGenerationJobCursor } from "@/generation/pagination";
 
-const router = express.Router();
+const router = legacyHttp.Router();
 
 router.post("/", async (req, res) => {
   const parsed = submitGenerationJobSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ message: "contract.invalid_request" });
   try {
-    const job = await getGenerationRuntime().submit(
-      parsed.data,
-      principalIdFromClaims((req as express.Request & { user?: unknown }).user),
-    );
+    const job = await getGenerationRuntime().submit(parsed.data, principalIdFromClaims(req.user));
     return res.status(202).json(success(toGenerationJobView(job), "任务已接受"));
   } catch (cause) {
     const error = cause as Error & { violations?: unknown };
@@ -61,7 +58,7 @@ router.get("/", async (req, res) => {
     return res.status(400).json({ message: "generation.invalid_cursor" });
   }
   const jobs = await getGenerationRuntime().list({
-    principalId: principalIdFromClaims((req as express.Request & { user?: unknown }).user),
+    principalId: principalIdFromClaims(req.user),
     limit: parsed.data.limit + 1,
     ...(parsed.data.beforeUpdatedAt ? { beforeUpdatedAt: parsed.data.beforeUpdatedAt } : {}),
     ...(cursor ? { cursor } : {}),

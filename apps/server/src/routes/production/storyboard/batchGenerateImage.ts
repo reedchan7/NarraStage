@@ -1,4 +1,4 @@
-import express from "express";
+import legacyHttp from "@/http/compat";
 import u from "@/utils";
 import { z } from "zod";
 import sharp from "sharp";
@@ -6,7 +6,7 @@ import { error, success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
 import { Output, tool } from "ai";
 import { assetItemSchema } from "@/agents/productionAgent/tools";
-const router = express.Router();
+const router = legacyHttp.Router();
 export type AssetData = z.infer<typeof assetItemSchema>;
 
 export default router.post(

@@ -1,9 +1,9 @@
-import express from "express";
+import legacyHttp from "@/http/compat";
 import u from "@/utils";
 import { success } from "@/lib/responseFormat";
 import { z } from "zod";
 import { validateFields } from "@/middleware/middleware";
-const router = express.Router();
+const router = legacyHttp.Router();
 
 // 获取生成图片
 export default router.post(

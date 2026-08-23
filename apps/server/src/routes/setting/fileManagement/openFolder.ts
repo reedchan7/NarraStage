@@ -1,4 +1,4 @@
-import express from "express";
+import legacyHttp from "@/http/compat";
 import { z } from "zod";
 import { exec } from "child_process";
 import { success, error } from "@/lib/responseFormat";
@@ -6,7 +6,7 @@ import { validateFields } from "@/middleware/middleware";
 import { isEletron } from "@/utils/getPath";
 import u from "@/utils";
 import path from "path";
-const router = express.Router();
+const router = legacyHttp.Router();
 
 export default router.post(
   "/",

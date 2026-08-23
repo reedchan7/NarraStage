@@ -1,10 +1,10 @@
-import express from "express";
+import legacyHttp from "@/http/compat";
 import { error, success } from "@/lib/responseFormat";
 import u from "@/utils";
 import fg from "fast-glob";
 import fs from "fs/promises";
 import path from "path";
-const router = express.Router();
+const router = legacyHttp.Router();
 
 export default router.get("/", async (req, res) => {
   const modelPromptRoot = u.getPath(["modelPrompt"]);

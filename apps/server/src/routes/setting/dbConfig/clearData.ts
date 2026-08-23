@@ -1,9 +1,9 @@
-import express from "express";
+import legacyHttp from "@/http/compat";
 import { success, error } from "@/lib/responseFormat";
 import { db } from "@/utils/db";
 import initDB from "@/lib/initDB";
 
-const router = express.Router();
+const router = legacyHttp.Router();
 
 export default router.get("/", async (req, res) => {
   try {

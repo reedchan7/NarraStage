@@ -1,10 +1,10 @@
-import express from "express";
+import legacyHttp from "@/http/compat";
 import u from "@/utils";
 import { z } from "zod";
 import { error, success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
 import { tool, jsonSchema } from "ai";
-const router = express.Router();
+const router = legacyHttp.Router();
 
 // 获取资产
 export default router.post(

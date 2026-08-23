@@ -1,10 +1,10 @@
-import express from "express";
+import legacyHttp from "@/http/compat";
 import u from "@/utils";
 import { z } from "zod";
 import { error, success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
 import axios from "axios";
-const router = express.Router();
+const router = legacyHttp.Router();
 
 async function urlToBase64(imageUrl: string): Promise<string> {
   if (imageUrl.startsWith("/oss/")) {

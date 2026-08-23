@@ -3,7 +3,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import http from "node:http";
-import express from "express";
+import legacyHttp from "@/http/compat";
 import knex from "knex";
 import { runProviderPlatformMigrations } from "@/lib/migrations";
 import { configureMediaAssetRuntime, resetMediaAssetRuntimeForTests } from "@/assets/runtime";
@@ -33,9 +33,9 @@ test("raw asset upload streams into principal-owned storage and rejects MIME spo
   await runProviderPlatformMigrations(database);
   configureMediaAssetRuntime(database, path.join(directory, "content"));
 
-  const app = express();
+  const app = legacyHttp();
   app.use((req, _res, next) => {
-    (req as express.Request & { user?: unknown }).user = { id: 42 };
+    req.user = { id: 42 };
     next();
   });
   app.use("/api/v2/media-assets/upload", uploadRoute);

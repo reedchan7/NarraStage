@@ -1,5 +1,5 @@
-import express from "express";
-const router = express.Router();
+import legacyHttp from "@/http/compat";
+const router = legacyHttp.Router();
 import u from "@/utils";
 import fs from "fs";
 

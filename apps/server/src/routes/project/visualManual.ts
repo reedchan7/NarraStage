@@ -1,4 +1,4 @@
-import express from "express";
+import legacyHttp from "@/http/compat";
 import u from "@/utils";
 import { z } from "zod";
 import { success } from "@/lib/responseFormat";
@@ -6,7 +6,7 @@ import { validateFields } from "@/middleware/middleware";
 import getPath from "@/utils/getPath";
 import fs from "fs";
 import path from "path";
-const router = express.Router();
+const router = legacyHttp.Router();
 
 // 视觉手册
 export default router.post(

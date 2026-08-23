@@ -1,9 +1,9 @@
-import express from "express";
+import legacyHttp from "@/http/compat";
 import { z } from "zod";
 import { getMediaAssetRepository } from "@/assets/runtime";
 import { principalIdFromClaims } from "@/security/principal";
 
-const router = express.Router();
+const router = legacyHttp.Router();
 const assetIdSchema = z.string().regex(/^sha256:[a-f0-9]{64}$/);
 
 router.get("/", async (req, res) => {
@@ -11,7 +11,7 @@ router.get("/", async (req, res) => {
   if (!parsed.success) return res.status(400).json({ message: "contract.invalid_asset_id" });
   const asset = await getMediaAssetRepository().getOwned(
     parsed.data,
-    principalIdFromClaims((req as express.Request & { user?: unknown }).user),
+    principalIdFromClaims(req.user),
   );
   if (!asset) return res.status(404).json({ message: "asset.not_found" });
   res.type(asset.mimeType);

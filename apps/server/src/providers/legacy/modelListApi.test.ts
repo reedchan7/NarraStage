@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import express from "express";
+import legacyHttp from "@/http/compat";
 import type http from "node:http";
 import { createModelListRouter } from "@/providers/legacy/modelListApi";
 
@@ -15,8 +15,8 @@ afterEach(async () => {
 
 describe("legacy model list API", () => {
   test("returns a successful empty collection when no vendor is enabled", async () => {
-    const app = express();
-    app.use(express.json());
+    const app = legacyHttp();
+    app.use(legacyHttp.json());
     app.use(
       "/api/modelSelect/getModelList",
       createModelListRouter({

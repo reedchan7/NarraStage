@@ -1,4 +1,4 @@
-import express from "express";
+import legacyHttp from "@/http/compat";
 import z from "zod";
 import { validateFields } from "@/middleware/middleware";
 import u from "@/utils";
@@ -6,7 +6,7 @@ import fs from "fs";
 import axios from "axios";
 import compressing from "compressing";
 import { success } from "@/lib/responseFormat";
-const router = express.Router();
+const router = legacyHttp.Router();
 
 export default router.post(
   "/",
