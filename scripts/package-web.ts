@@ -52,15 +52,12 @@ export async function repositoryContentRevision(
   repositoryRoot: string,
   scope: RepositoryRevisionScope,
 ): Promise<string> {
-  const [head, listed] = await Promise.all([
-    command(repositoryRoot, "git", ["rev-parse", "HEAD"]),
-    command(repositoryRoot, "git", [
-      "ls-files",
-      "--cached",
-      "--others",
-      "--exclude-standard",
-      "-z",
-    ]),
+  const listed = await command(repositoryRoot, "git", [
+    "ls-files",
+    "--cached",
+    "--others",
+    "--exclude-standard",
+    "-z",
   ]);
   const files = listed
     .split("\0")
@@ -78,12 +75,20 @@ export async function repositoryContentRevision(
     .sort();
   const digest = createHash("sha256");
   for (const file of files) {
+    const contents = await readFile(path.join(repositoryRoot, file)).catch(
+      (error: NodeJS.ErrnoException) => {
+        if (error.code === "ENOENT") return undefined;
+        throw error;
+      },
+    );
+    if (!contents) continue;
     digest.update(file);
     digest.update("\0");
-    digest.update(await readFile(path.join(repositoryRoot, file)));
+    digest.update(contents);
     digest.update("\0");
   }
-  return `${head.trim()}+tree.${digest.digest("hex").slice(0, 16)}`;
+  const contentDigest = digest.digest("hex");
+  return `content-${contentDigest.slice(0, 40)}+tree.${contentDigest.slice(0, 16)}`;
 }
 
 export async function packageWeb(): Promise<void> {

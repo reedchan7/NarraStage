@@ -5,7 +5,7 @@ import { viteSingleFile } from "vite-plugin-singlefile";
 
 export default defineConfig({
   base: "./",
-  plugins: [react(), viteSingleFile()],
+  plugins: [react(), viteSingleFile({ useRecommendedBuildConfig: false })],
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),
@@ -18,7 +18,7 @@ export default defineConfig({
     target: "es2022",
     rollupOptions: {
       output: {
-        inlineDynamicImports: true,
+        codeSplitting: false,
       },
     },
   },

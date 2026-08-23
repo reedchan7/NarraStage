@@ -378,7 +378,8 @@ pm2 monit             # แผงตรวจสอบ
 | ---------- | ----------------------------------------------------------------------------------------- |
 | รันไทม์     | Bun 1.4.1                                                                          |
 | ภาษา       | TypeScript 7.0.2                                                                            |
-| เฟรมเวิร์กแบ็กเอนด์   | Express 5                                                                                 |
+| เว็บไคลเอนต์            | React 19 / React Router 7 / TanStack Query 5 / Zustand 5 / Vite 8                     |
+| เฟรมเวิร์กแบ็กเอนด์   | Hono 4.13                                                                                 |
 | ฐานข้อมูล     | SQLite (better-sqlite3 / knex)                                                           |
 | การรวม AI    | Vercel AI SDK (OpenAI / Anthropic / Google / DeepSeek / Zhipu / MiniMax / Tongyi Qianwen / xAI) |
 | การอนุมานในพื้นที่   | @huggingface/transformers (ONNX)                                                         |

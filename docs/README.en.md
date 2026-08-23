@@ -378,7 +378,8 @@ pm2 monit             # Monitoring dashboard
 | ------------- | --------------------------------------------------------------------------------------------- |
 | Runtime       | Bun 1.4.1                                                                              |
 | Language      | TypeScript 7.0.2                                                                                |
-| Backend       | Express 5                                                                                     |
+| Web client    | React 19 / React Router 7 / TanStack Query 5 / Zustand 5 / Vite 8                            |
+| Backend       | Hono 4.13                                                                                      |
 | Database      | SQLite (better-sqlite3 / knex)                                                                |
 | AI Integration| Vercel AI SDK (OpenAI / Anthropic / Google / DeepSeek / Zhipu / MiniMax / Tongyi Qianwen / xAI)|
 | Local Inference| @huggingface/transformers (ONNX)                                                              |

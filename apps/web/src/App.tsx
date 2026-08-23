@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { HashRouter, Navigate, Outlet, Route, Routes } from "react-router-dom";
 import { AppShell } from "@/components/AppShell";
+import { DesktopTitlebar } from "@/components/DesktopTitlebar";
 import { LoginPage } from "@/pages/LoginPage";
 import { ProjectsPage } from "@/pages/ProjectsPage";
 import { ProvidersPage } from "@/pages/ProvidersPage";
@@ -36,20 +37,24 @@ function LoginRoute() {
 }
 
 export function App() {
+  const isDesktop = Boolean(window.toonflowWindow);
   return (
     <QueryClientProvider client={queryClient}>
-      <HashRouter>
-        <Routes>
-          <Route path="/login" element={<LoginRoute />} />
-          <Route element={<AuthenticatedLayout />}>
-            <Route path="/projects" element={<ProjectsPage />} />
-            <Route path="/studio" element={<StudioPage />} />
-            <Route path="/studio/:projectId" element={<StudioPage />} />
-            <Route path="/providers" element={<ProvidersPage />} />
-          </Route>
-          <Route path="*" element={<Navigate to="/projects" replace />} />
-        </Routes>
-      </HashRouter>
+      <DesktopTitlebar />
+      <div className={isDesktop ? "desktop-content" : undefined}>
+        <HashRouter>
+          <Routes>
+            <Route path="/login" element={<LoginRoute />} />
+            <Route element={<AuthenticatedLayout />}>
+              <Route path="/projects" element={<ProjectsPage />} />
+              <Route path="/studio" element={<StudioPage />} />
+              <Route path="/studio/:projectId" element={<StudioPage />} />
+              <Route path="/providers" element={<ProvidersPage />} />
+            </Route>
+            <Route path="*" element={<Navigate to="/projects" replace />} />
+          </Routes>
+        </HashRouter>
+      </div>
     </QueryClientProvider>
   );
 }

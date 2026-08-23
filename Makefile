@@ -36,6 +36,7 @@ DATA_DIR ?= $(CURDIR)/data
 	ci \
 	build \
 	pack \
+	pack-local \
 	dist \
 	dist-win \
 	dist-mac \
@@ -133,6 +134,9 @@ build: ## 构建后端和 Electron 主进程
 
 pack: ## 生成未打包的 Electron 应用目录
 	$(BUN) run pack
+
+pack-local: ## 跳过签名发布证据，生成本机验收用 Electron 应用目录
+	$(BUN) run pack:local
 
 dist: ## 构建当前平台安装包
 	$(BUN) run dist

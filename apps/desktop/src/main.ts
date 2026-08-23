@@ -1,12 +1,4 @@
-import {
-  app,
-  BrowserWindow,
-  ipcMain,
-  protocol,
-  safeStorage,
-  shell,
-  systemPreferences,
-} from "electron";
+import { app, BrowserWindow, ipcMain, safeStorage } from "electron";
 import fs from "node:fs";
 import { registerHooks } from "node:module";
 import path from "node:path";
@@ -40,6 +32,8 @@ const TARGET_ENTRIES = new Set([
   "vendor",
 ]);
 const buildDirectory = path.dirname(fileURLToPath(import.meta.url));
+const isolatedUserDataDirectory = process.env.TOONFLOW_USER_DATA_DIR?.trim();
+if (isolatedUserDataDirectory) app.setPath("userData", path.resolve(isolatedUserDataDirectory));
 
 function copyDir(src: string, dest: string): void {
   if (!fs.existsSync(src)) return;
@@ -124,7 +118,7 @@ registerHooks({
 
 let mainWindow: BrowserWindow | null = null;
 
-function createMainWindow(): Promise<void> {
+function createMainWindow(runtimePort?: number): Promise<void> {
   return new Promise((resolve) => {
     const win = new BrowserWindow({
       width: 1000,
@@ -147,14 +141,16 @@ function createMainWindow(): Promise<void> {
     win.setMenuBarVisibility(false);
     win.removeMenu();
 
-    const isDev = process.env.NODE_ENV === "dev" || !app.isPackaged;
-    const htmlPath = isDev
-      ? path.join(process.cwd(), "data", "web", "index.html")
-      : path.join(app.getPath("userData"), "data", "web", "index.html");
-    const developmentOrigins = process.env.VITE_DEV ? ["http://localhost:50188"] : [];
+    const htmlPath = app.isPackaged
+      ? path.join(app.getPath("userData"), "data", "web", "index.html")
+      : path.join(process.cwd(), "data", "web", "index.html");
+    const trustedOrigins = [
+      ...(process.env.VITE_DEV ? ["http://localhost:50188"] : []),
+      ...(runtimePort ? [`http://localhost:${runtimePort}`] : []),
+    ];
     const keepTrustedNavigation = (event: Electron.Event, targetUrl: string) => {
       try {
-        assertTrustedCredentialSender(targetUrl, developmentOrigins, htmlPath);
+        assertTrustedCredentialSender(targetUrl, trustedOrigins, htmlPath);
       } catch {
         event.preventDefault();
       }
@@ -174,6 +170,8 @@ function createMainWindow(): Promise<void> {
 
     if (process.env.VITE_DEV) {
       void win.loadURL("http://localhost:50188");
+    } else if (runtimePort) {
+      void win.loadURL(`http://localhost:${runtimePort}`);
     } else {
       void win.loadFile(htmlPath);
     }
@@ -181,17 +179,6 @@ function createMainWindow(): Promise<void> {
 }
 
 let closeServeFn: (() => Promise<void>) | undefined;
-
-protocol.registerSchemesAsPrivileged([
-  {
-    scheme: "toonflow",
-    privileges: {
-      secure: true,
-      supportFetchAPI: true,
-      corsEnabled: true,
-    },
-  },
-]);
 
 if (ownsSingleInstanceLock)
   app.whenReady().then(async () => {
@@ -208,6 +195,7 @@ if (ownsSingleInstanceLock)
         persistedCredentialVault,
       );
       const developmentOrigins = process.env.VITE_DEV ? ["http://localhost:50188"] : [];
+      const trustedRendererOrigins = [...developmentOrigins];
       const trustedRendererPath = app.isPackaged
         ? path.join(app.getPath("userData"), "data", "web", "index.html")
         : path.join(process.cwd(), "data", "web", "index.html");
@@ -220,7 +208,7 @@ if (ownsSingleInstanceLock)
         }
         assertTrustedCredentialSender(
           event.senderFrame?.url || event.sender.getURL(),
-          developmentOrigins,
+          trustedRendererOrigins,
           trustedRendererPath,
         );
       };
@@ -243,6 +231,19 @@ if (ownsSingleInstanceLock)
         await credentialVault.delete(parsed);
         return credentialVault.status(parsed);
       });
+      ipcMain.handle("toonflow:window:minimize", async (event) => {
+        trustedRequest(event);
+        mainWindow?.minimize();
+      });
+      ipcMain.handle("toonflow:window:toggle-maximize", async (event) => {
+        trustedRequest(event);
+        if (mainWindow?.isMaximized()) mainWindow.unmaximize();
+        else mainWindow?.maximize();
+      });
+      ipcMain.handle("toonflow:window:close", async (event) => {
+        trustedRequest(event);
+        mainWindow?.close();
+      });
 
       let servePath: string;
       if (app.isPackaged) {
@@ -261,84 +262,15 @@ if (ownsSingleInstanceLock)
         credentialMigrationVault: credentialVault,
       });
       process.env.PORT = port;
+      trustedRendererOrigins.push(`http://localhost:${port}`);
       await new Promise<void>((resolve, reject) => {
         setTimeout(() => {
           resolve();
         }, 2000);
       });
-      // 注册协议处理器
-      protocol.handle("toonflow", (request) => {
-        const url = new URL(request.url);
-        const pathname = url.hostname.toLowerCase();
-        const handlers: Record<string, () => object> = {
-          getappurl: () => ({ url: process.env.URL ?? `http://localhost:${port}/api` }),
-          windowminimize: () => {
-            mainWindow?.minimize();
-            return { ok: true };
-          },
-          windowmaximize: () => {
-            if (mainWindow?.isMaximized()) {
-              mainWindow.unmaximize();
-            } else {
-              mainWindow?.maximize();
-            }
-            return { ok: true };
-          },
-          windowclose: () => {
-            app.exit(0);
-            return { ok: true };
-          },
-          apprestart: () => {
-            // 延迟执行，让响应先返回给前端
-            setTimeout(() => {
-              app.relaunch();
-              app.exit(0);
-            }, 500);
-            return { ok: true, message: "应用即将重启" };
-          },
-          windowismaximized: () => ({
-            maximized: mainWindow?.isMaximized() ?? false,
-          }),
-          opendevtool: () => {
-            mainWindow?.webContents.openDevTools();
-            return { ok: true };
-          },
-          openurlwithbrowser: () => {
-            const search = url.searchParams;
-            const targetUrl = search.get("url");
-            if (targetUrl) {
-              shell.openExternal(targetUrl);
-              return { ok: true };
-            } else {
-              return { ok: false, error: "缺少url参数" };
-            }
-          },
-          getlocallanguage: () => {
-            // 获取应用区域设置
-
-            // macOS系统特定方法
-            if (process.platform === "darwin") {
-              const systemLocale = systemPreferences.getUserDefault("AppleLocale", "string");
-              return { ok: true, local: systemLocale };
-            }
-            const appLocale = app.getLocale();
-            return { ok: true, local: appLocale };
-          },
-        };
-
-        const handler = handlers[pathname];
-
-        const responseData = handler ? handler() : { error: "未知接口" };
-        return new Response(JSON.stringify(responseData), {
-          headers: {
-            "Content-Type": "application/json",
-            "Cache-Control": "no-store",
-          },
-        });
-      });
-
       // 服务启动成功，创建主窗口（主窗口 ready-to-show 时自动关闭loading）
-      await createMainWindow();
+      await createMainWindow(port);
+      console.log(`[桌面客户端就绪]: http://localhost:${port}`);
     } catch (err) {
       console.error("[服务启动失败]:", err);
       await createMainWindow();

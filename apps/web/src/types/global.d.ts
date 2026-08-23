@@ -11,7 +11,11 @@ interface ToonflowCredentialStatus {
 }
 
 interface Window {
-  $electron?: boolean;
+  toonflowWindow?: {
+    minimize(): Promise<void>;
+    toggleMaximize(): Promise<void>;
+    close(): Promise<void>;
+  };
   toonflowCredentials?: {
     status(request: ToonflowCredentialRef): Promise<ToonflowCredentialStatus>;
     set(request: ToonflowCredentialRef & { value: string }): Promise<ToonflowCredentialStatus>;

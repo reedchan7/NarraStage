@@ -30,11 +30,17 @@ export async function collectWorkspaceViolations(repositoryRoot: string): Promis
     }
   }
 
-  const lockfiles = await fg(["**/yarn.lock", "**/package-lock.json", "**/pnpm-lock.yaml"], {
-    cwd: repositoryRoot,
-    ignore: ["**/node_modules/**", "**/dist/**"],
-  });
-  for (const lockfile of lockfiles) violations.push(`secondary lockfile is forbidden: ${lockfile}`);
+  const lockfiles = await fg(
+    ["**/bun.lock", "**/yarn.lock", "**/package-lock.json", "**/pnpm-lock.yaml"],
+    {
+      cwd: repositoryRoot,
+      ignore: ["**/node_modules/**", "**/dist/**"],
+    },
+  );
+  for (const lockfile of lockfiles) {
+    if (lockfile !== "bun.lock") violations.push(`secondary lockfile is forbidden: ${lockfile}`);
+  }
+  if (!lockfiles.includes("bun.lock")) violations.push("root bun.lock is required");
 
   const manifests = await fg(["package.json", "apps/*/package.json", "packages/*/package.json"], {
     cwd: repositoryRoot,

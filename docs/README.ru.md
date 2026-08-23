@@ -378,7 +378,8 @@ pm2 monit             # Панель мониторинга
 | ------------------ | ---------------------------------------------------------------------------------------- |
 | Среда выполнения   | Bun 1.4.1                                                                         |
 | Язык               | TypeScript 7.0.2                                                                           |
-| Бэкенд-фреймворк   | Express 5                                                                                |
+| Веб-клиент         | React 19 / React Router 7 / TanStack Query 5 / Zustand 5 / Vite 8                     |
+| Бэкенд-фреймворк   | Hono 4.13                                                                                |
 | База данных        | SQLite (better-sqlite3 / knex)                                                           |
 | AI-интеграция      | Vercel AI SDK (OpenAI / Anthropic / Google / DeepSeek / Zhipu / MiniMax / Tongyi / xAI)  |
 | Локальный инференс | @huggingface/transformers (ONNX)                                                         |

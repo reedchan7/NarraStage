@@ -378,7 +378,8 @@ pm2 monit             # Bảng điều khiển giám sát
 | ---------- | ----------------------------------------------------------------------------------------- |
 | Môi trường chạy | Bun 1.4.1 |
 | Ngôn ngữ | TypeScript 7.0.2 |
-| Backend Framework | Express 5 |
+| Web Client | React 19 / React Router 7 / TanStack Query 5 / Zustand 5 / Vite 8 |
+| Backend Framework | Hono 4.13 |
 | Cơ sở dữ liệu | SQLite (better-sqlite3 / knex) |
 | Tích hợp AI | Vercel AI SDK (OpenAI / Anthropic / Google / DeepSeek / Zhipu / MiniMax / Tongyi Qianwen / xAI) |
 | Suy luận cục bộ | @huggingface/transformers (ONNX) |

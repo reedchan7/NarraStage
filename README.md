@@ -371,7 +371,8 @@ pm2 monit             # 监控面板
 | ---------- | ----------------------------------------------------------------------------------------- |
 | 运行时     | Bun 1.4.1                                                                                 |
 | 语言       | TypeScript 7.0.2                                                                          |
-| 后端框架   | Express 5                                                                                 |
+| Web 客户端 | React 19 / React Router 7 / TanStack Query 5 / Zustand 5 / Vite 8                         |
+| 后端框架   | Hono 4.13                                                                                 |
 | 数据库     | SQLite（better-sqlite3 / knex）                                                           |
 | AI 集成    | Vercel AI SDK（OpenAI / Anthropic / Google / DeepSeek / 智谱 / MiniMax / 通义千问 / xAI） |
 | 本地推理   | @huggingface/transformers（ONNX）                                                         |
@@ -408,24 +409,32 @@ pm2 monit             # 监控面板
 
 3. **启动开发环境**
 
-   本项目包含 **后端 API 服务** 和 **前端页面** 两部分，请根据需要选择启动方式：
+   本项目把 **Web、后端 API、Electron 桌面客户端和共享契约** 放在同一个 Bun workspace 中，请根据需要选择启动方式：
    - **方式一：仅启动后端服务**
 
      ```bash
      make dev
      ```
 
-     > ⚠️ 此命令仅启动后端 API 服务（端口 10588），**不包含前端页面**。如需完整界面，请使用下方的 GUI 模式。
+     > 后端使用 Hono，默认监听 10588，并同时提供仓库内已封装的 React 页面。
 
-   - **方式二：启动 Electron 桌面客户端**
+   - **方式二：启动 React Web 热更新环境**
+
+     ```bash
+     make web-dev
+     ```
+
+     > Web 默认监听 `http://localhost:50188`，并将 API 与 Socket.IO 代理到 10588；请在另一个终端同时运行 `make dev`。
+
+   - **方式三：启动 Electron 桌面客户端**
 
      ```bash
      make dev-gui
      ```
 
-     > 此命令会同时启动后端服务和 Electron 桌面窗口，自带内置前端页面，开箱即用，无需额外配置。适合想要完整体验所有功能的开发者。
+     > Electron 启动同一套 Hono 服务和单文件 React 渲染器。联调 Vite 时，先运行 `make web-dev`，再运行 `make dev-gui-vite`。
 
-   - **方式三：生产模式启动**
+   - **方式四：生产模式启动**
 
      ```bash
      make start
@@ -434,10 +443,17 @@ pm2 monit             # 监控面板
      > 以生产模式直接运行编译后的服务（需先执行 `make build`）。
 
 4. **项目打包**
-   - 编译并生成 TypeScript 文件：
+   - 更新嵌入式 React 渲染器并编译服务端/桌面端：
 
      ```bash
+     make web-package
      make build
+     ```
+
+   - 生成不要求签名发布证据的本机 Electron 验收包：
+
+     ```bash
+     make pack-local
      ```
 
    - 打包为 Windows 平台可执行程序：
@@ -476,58 +492,34 @@ pm2 monit             # 监控面板
 ## 项目结构
 
 ```
-📂 build/                    # 编译产物
+📂 apps/
+│  ├─ 📂 server/            # Hono API、Socket.IO、Agent 与生成任务
+│  │  ├─ 📂 src/
+│  │  └─ 📂 tests/
+│  ├─ 📂 web/               # React 19 Web 客户端与 Vitest 测试
+│  │  └─ 📂 src/
+│  └─ 📂 desktop/           # Electron main/preload 与安全凭据桥
+│     └─ 📂 src/
+📂 packages/
+│  └─ 📂 contracts/         # 由 OpenAPI 生成的跨端 TypeScript 契约
+📂 build/                   # Electron main/preload 编译产物
 📂 data/                     # 运行时数据
+│  ├─ 📂 contracts/         # OpenAPI 与 Web 构建来源清单
 │  ├─ 📂 models/            # 本地推理模型（ONNX）
 │  ├─ 📂 oss/               # 对象存储（素材/角色/场景）
 │  ├─ 📂 serve/             # 生产环境入口
 │  ├─ 📂 skills/            # Agent 技能提示词
-│  └─ 📂 web/               # 前端编译产物（内置）
+│  └─ 📂 web/               # React 单文件渲染器（Web/桌面共用）
 📂 docs/                     # 文档资源
 📂 env/                      # 环境配置
-📂 scripts/                  # 构建与辅助脚本
-📂 src/
-├─ 📂 agents/               # AI Agent 模块
-│  ├─ 📂 productionAgent/   # 生产 Agent
-│  └─ 📂 scriptAgent/       # 剧本 Agent
-├─ 📂 lib/                  # 公共库（数据库初始化、响应格式）
-├─ 📂 middleware/            # 中间件
-├─ 📂 routes/               # 路由模块
-│  ├─ 📂 agents/            # Agent 记忆管理
-│  ├─ 📂 artStyle/          # 画风管理
-│  ├─ 📂 assets/            # 素材管理
-│  ├─ 📂 assetsGenerate/    # 素材生成
-│  ├─ 📂 cornerScape/       # 分镜管理
-│  ├─ 📂 general/           # 通用接口
-│  ├─ 📂 login/             # 登录认证
-│  ├─ 📂 migrate/           # 数据迁移
-│  ├─ 📂 modelSelect/       # 模型选择
-│  ├─ 📂 novel/             # 小说管理
-│  ├─ 📂 other/             # 其他功能
-│  ├─ 📂 production/        # 制作管理
-│  ├─ 📂 project/           # 项目管理
-│  ├─ 📂 script/            # 剧本生成
-│  ├─ 📂 scriptAgent/       # 剧本 Agent 接口
-│  ├─ 📂 setting/           # 系统设置
-│  ├─ 📂 task/              # 任务管理
-│  └─ 📂 test/              # 测试接口
-├─ 📂 socket/               # WebSocket 实时通信
-├─ 📂 types/                # TypeScript 类型声明
-├─ 📂 utils/                # 工具函数
-├─ 📄 app.ts                # 应用入口
-├─ 📄 core.ts               # 核心初始化
-├─ 📄 env.ts                # 环境变量处理
-├─ 📄 err.ts                # 错误处理
-├─ 📄 logger.ts             # 日志模块
-├─ 📄 router.ts             # 路由注册
-└─ 📄 utils.ts              # 通用工具
+📂 scripts/                  # 构建、来源校验、验收与发布门禁
 📄 Dockerfile                # Docker 构建文件
 📄 electron-builder.yml      # Electron 打包配置
-📄 skillList.json            # 技能清单
 📄 LICENSE                   # 许可证（Apache-2.0）
 📄 NOTICES.txt               # 第三方依赖声明
-📄 package.json              # 项目配置
-📄 tsconfig.json             # TypeScript 配置
+📄 bun.lock                  # 全仓唯一依赖锁
+📄 package.json              # Bun workspace 与统一命令入口
+📄 tsconfig.base.json        # 多端统一 TypeScript 7 基线
 ```
 
 ---

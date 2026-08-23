@@ -378,7 +378,8 @@ pm2 monit             # モニタリングパネル
 | ------------ | ----------------------------------------------------------------------------------------- |
 | ランタイム   | Bun 1.4.1                                                                          |
 | 言語         | TypeScript 7.0.2                                                                            |
-| バックエンド | Express 5                                                                                 |
+| Web クライアント | React 19 / React Router 7 / TanStack Query 5 / Zustand 5 / Vite 8                       |
+| バックエンド | Hono 4.13                                                                                  |
 | データベース | SQLite（better-sqlite3 / knex）                                                           |
 | AI統合       | Vercel AI SDK（OpenAI / Anthropic / Google / DeepSeek / 智谱 / MiniMax / 通义千问 / xAI） |
 | ローカル推論 | @huggingface/transformers（ONNX）                                                         |

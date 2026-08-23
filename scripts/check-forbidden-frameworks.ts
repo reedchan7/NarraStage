@@ -44,6 +44,18 @@ export async function collectForbiddenFrameworks(
       ignore: ["**/node_modules/**", "**/dist/**"],
     });
     for (const file of vueFiles) failures.push(`Vue source is forbidden: ${file}`);
+    const webSources = await fg(["apps/web/src/**/*.{ts,tsx,js,jsx}"], {
+      absolute: true,
+      cwd: repositoryRoot,
+    });
+    for (const sourcePath of webSources) {
+      const source = await Bun.file(sourcePath).text();
+      if (/from\s+["'](?:vue|pinia|vue-router|@vue\/[^"']+)["']/.test(source)) {
+        failures.push(
+          `web source imports a forbidden framework: ${path.relative(repositoryRoot, sourcePath)}`,
+        );
+      }
+    }
   }
   return failures;
 }

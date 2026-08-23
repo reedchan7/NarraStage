@@ -24,7 +24,7 @@ bun run dev:server
 bun run web:dev
 ```
 
-打开 `http://localhost:50188`。开发服务器将 `/api` 和 `/oss` 代理到 `http://localhost:10588`。
+打开 `http://localhost:50188`。开发服务器将 `/api`、`/oss` 和 Socket.IO 代理到 `http://localhost:10588`。
 
 ```bash
 bun run web:typecheck
@@ -41,6 +41,7 @@ bun run web:check
 src/
 ├── api/          # 类型化 HTTP 边界
 ├── components/   # 应用外壳与错误边界
+├── features/     # 实时对话、图像与视频生成工作流
 ├── i18n/         # 七语言字典与 React hook
 ├── pages/        # 登录、项目、制作台、模型服务
 ├── state/        # 会话和非敏感偏好

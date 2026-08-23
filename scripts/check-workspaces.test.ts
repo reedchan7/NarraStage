@@ -43,6 +43,7 @@ describe("workspace policy", () => {
     const root = await fixture();
     try {
       await writeFile(path.join(root, "apps/web/yarn.lock"), "legacy");
+      await writeFile(path.join(root, "apps/web/bun.lock"), "legacy");
       await writeFile(
         path.join(root, "apps/web/package.json"),
         JSON.stringify({ name: "web", devDependencies: { typescript: "5.6.3" } }),
@@ -50,6 +51,7 @@ describe("workspace policy", () => {
       await writeFile(path.join(root, "scripts/package-web.ts"), "../Toonflow-web");
       const violations = await collectWorkspaceViolations(root);
       expect(violations).toContain("secondary lockfile is forbidden: apps/web/yarn.lock");
+      expect(violations).toContain("secondary lockfile is forbidden: apps/web/bun.lock");
       expect(violations).toContain("apps/web/package.json selects TypeScript below 7: 5.6.3");
       expect(violations).toContain("scripts/package-web.ts contains ../Toonflow-web");
     } finally {

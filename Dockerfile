@@ -7,6 +7,10 @@ RUN test "$(bun --version)" = "1.4.1"
 # The container only runs the backend, so development-only Electron packages
 # are excluded from the install.
 COPY package.json bun.lock ./
+COPY apps/server/package.json ./apps/server/package.json
+COPY apps/web/package.json ./apps/web/package.json
+COPY apps/desktop/package.json ./apps/desktop/package.json
+COPY packages/contracts/package.json ./packages/contracts/package.json
 COPY scripts/prepare.ts ./scripts/prepare.ts
 RUN apt-get update && \
     apt-get install --yes --no-install-recommends g++ make python3 && \
