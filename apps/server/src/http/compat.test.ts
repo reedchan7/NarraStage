@@ -48,3 +48,26 @@ test("Hono compatibility routes preserve params, query, JSON body, middleware, a
     user: { id: 42 },
   });
 });
+
+test("Hono compatibility routes retain the legacy 100 MB JSON body limit", async () => {
+  const app = legacyHttp();
+  const router = legacyHttp.Router();
+  router.post("/", (_request, response) => response.json({ accepted: true }));
+  app.use("/api/import", router);
+
+  const response = await app.hono.request("/api/import", {
+    body: "{}",
+    headers: {
+      "content-length": String(100 * 1024 * 1024 + 1),
+      "content-type": "application/json",
+    },
+    method: "POST",
+  });
+
+  expect(response.status).toBe(413);
+  expect(await response.json()).toEqual({
+    code: 413,
+    data: null,
+    message: "请求内容超过 100 MB 限制",
+  });
+});

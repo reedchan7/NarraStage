@@ -1808,7 +1808,30 @@ var compose = (middleware, onError, onNotFound) => {
 var init_compose = () => {};
 
 // node_modules/.bun/hono@4.13.3/node_modules/hono/dist/http-exception.js
-var init_http_exception = () => {};
+var HTTPException;
+var init_http_exception = __esm(() => {
+  HTTPException = class extends Error {
+    res;
+    status;
+    constructor(status = 500, options2) {
+      super(options2?.message, { cause: options2?.cause });
+      this.res = options2?.res;
+      this.status = status;
+    }
+    getResponse() {
+      if (this.res) {
+        const newResponse = new Response(this.res.body, {
+          status: this.status,
+          headers: this.res.headers
+        });
+        return newResponse;
+      }
+      return new Response(this.message, {
+        status: this.status
+      });
+    }
+  };
+});
 
 // node_modules/.bun/hono@4.13.3/node_modules/hono/dist/request/constants.js
 var GET_MATCH_RESULT;
@@ -51655,6 +51678,58 @@ var init_response = __esm(() => {
   RESPONSE_ALREADY_SENT = new Response(null, { headers: { [X_ALREADY_SENT]: "true" } });
 });
 
+// node_modules/.bun/hono@4.13.3/node_modules/hono/dist/middleware/body-limit/index.js
+var ERROR_MESSAGE = "Payload Too Large", bodyLimit = (options2) => {
+  const onError = options2.onError || (() => {
+    const res = new Response(ERROR_MESSAGE, {
+      status: 413
+    });
+    throw new HTTPException(413, { res });
+  });
+  const maxSize = options2.maxSize;
+  return async function bodyLimit2(c, next) {
+    if (!c.req.raw.body) {
+      return next();
+    }
+    const hasTransferEncoding = c.req.raw.headers.has("transfer-encoding");
+    const hasContentLength = c.req.raw.headers.has("content-length");
+    if (hasContentLength && !hasTransferEncoding) {
+      const contentLength = parseInt(c.req.raw.headers.get("content-length") || "0", 10);
+      return contentLength > maxSize ? onError(c) : next();
+    }
+    let size = 0;
+    const chunks = [];
+    const rawReader = c.req.raw.body.getReader();
+    for (;; ) {
+      const { done, value } = await rawReader.read();
+      if (done) {
+        break;
+      }
+      size += value.length;
+      if (size > maxSize) {
+        return onError(c);
+      }
+      chunks.push(value);
+    }
+    const requestInit = {
+      body: new ReadableStream({
+        start(controller) {
+          for (const chunk of chunks) {
+            controller.enqueue(chunk);
+          }
+          controller.close();
+        }
+      }),
+      duplex: "half"
+    };
+    c.req.raw = new Request(c.req.raw, requestInit);
+    return next();
+  };
+};
+var init_body_limit = __esm(() => {
+  init_http_exception();
+});
+
 // apps/server/src/http/compat.ts
 import { createReadStream as createReadStream3 } from "node:fs";
 
@@ -51765,6 +51840,16 @@ class LegacyHttpApplication {
   errorHandlers = [];
   constructor(hono = new Hono2) {
     this.hono = hono;
+    this.hono.use("*", async (context, next) => {
+      const contentType2 = context.req.header("content-type")?.toLowerCase() ?? "";
+      if (!contentType2.includes("application/json") && !contentType2.includes("application/x-www-form-urlencoded")) {
+        return next();
+      }
+      return bodyLimit({
+        maxSize: LEGACY_BODY_LIMIT_BYTES,
+        onError: (limitedContext) => limitedContext.json({ code: 413, data: null, message: "请求内容超过 100 MB 限制" }, 413)
+      })(context, next);
+    });
   }
   use(first, second) {
     if (typeof first === "string" && second) {
@@ -51809,11 +51894,13 @@ class LegacyHttpApplication {
 function bodyParser() {
   return (_request, _response, next) => next();
 }
-var legacyHttp, compat_default;
+var LEGACY_BODY_LIMIT_BYTES, legacyHttp, compat_default;
 var init_compat2 = __esm(() => {
   init_dist();
   init_response();
   init_dist2();
+  init_body_limit();
+  LEGACY_BODY_LIMIT_BYTES = 100 * 1024 * 1024;
   legacyHttp = Object.assign(() => new LegacyHttpApplication, {
     json: bodyParser,
     Router: (_options) => new LegacyRouter,
@@ -162604,7 +162691,7 @@ var require_Object_getPrototypeOf = __commonJS(function(exports, module) {
 
 // node_modules/.bun/function-bind@1.1.2/node_modules/function-bind/implementation.js
 var require_implementation = __commonJS(function(exports, module) {
-  var ERROR_MESSAGE = "Function.prototype.bind called on incompatible ";
+  var ERROR_MESSAGE2 = "Function.prototype.bind called on incompatible ";
   var toStr = Object.prototype.toString;
   var max = Math.max;
   var funcType = "[object Function]";
@@ -162638,7 +162725,7 @@ var require_implementation = __commonJS(function(exports, module) {
   module.exports = function bind2(that) {
     var target = this;
     if (typeof target !== "function" || toStr.apply(target) !== funcType) {
-      throw new TypeError(ERROR_MESSAGE + target);
+      throw new TypeError(ERROR_MESSAGE2 + target);
     }
     var args = slicy(arguments, 1);
     var bound;

@@ -117,6 +117,7 @@ registerHooks({
 });
 
 let mainWindow: BrowserWindow | null = null;
+let activeRuntimePort: number | undefined;
 
 function createMainWindow(runtimePort?: number): Promise<void> {
   return new Promise((resolve) => {
@@ -261,6 +262,7 @@ if (ownsSingleInstanceLock)
         credentialVault,
         credentialMigrationVault: credentialVault,
       });
+      activeRuntimePort = port;
       process.env.PORT = port;
       trustedRendererOrigins.push(`http://localhost:${port}`);
       await new Promise<void>((resolve, reject) => {
@@ -289,7 +291,7 @@ app.on("window-all-closed", () => {
 
 app.on("activate", () => {
   if (BrowserWindow.getAllWindows().length === 0) {
-    createMainWindow();
+    createMainWindow(activeRuntimePort);
   }
 });
 

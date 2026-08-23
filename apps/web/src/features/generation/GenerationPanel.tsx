@@ -139,6 +139,7 @@ export function GenerationPanel(props: {
   const [values, setValues] = useState<Record<string, string | number | boolean>>({});
   const [jobId, setJobId] = useState<string | null>(null);
   const [mediaUrl, setMediaUrl] = useState<string | null>(null);
+  const [mediaError, setMediaError] = useState<string | null>(null);
 
   useEffect(() => {
     setOfferingId(offerings[0]?.id ?? "");
@@ -152,6 +153,7 @@ export function GenerationPanel(props: {
     );
     setJobId(null);
     setMediaUrl(null);
+    setMediaError(null);
   }, [schema]);
 
   const job = useQuery({
@@ -193,8 +195,14 @@ export function GenerationPanel(props: {
 
   useEffect(() => {
     const artifact = extractMediaArtifact(currentJob?.result);
-    if (currentJob?.state !== "succeeded" || !artifact) {
+    setMediaError(null);
+    if (currentJob?.state !== "succeeded") {
       setMediaUrl(null);
+      return;
+    }
+    if (!artifact) {
+      setMediaUrl(null);
+      setMediaError("生成已完成，但结果中没有可显示的媒体素材");
       return;
     }
     if (artifact.url) {
@@ -204,11 +212,17 @@ export function GenerationPanel(props: {
     if (!artifact.assetId) return;
     let revokedUrl: string | null = null;
     let active = true;
-    void api.mediaAsset(props.token, artifact.assetId).then((blob) => {
-      if (!active) return;
-      revokedUrl = URL.createObjectURL(blob);
-      setMediaUrl(revokedUrl);
-    });
+    void api
+      .mediaAsset(props.token, artifact.assetId)
+      .then((blob) => {
+        if (!active) return;
+        revokedUrl = URL.createObjectURL(blob);
+        setMediaUrl(revokedUrl);
+      })
+      .catch((error: unknown) => {
+        if (!active) return;
+        setMediaError(error instanceof Error ? error.message : "生成素材读取失败");
+      });
     return () => {
       active = false;
       if (revokedUrl) URL.revokeObjectURL(revokedUrl);
@@ -279,6 +293,11 @@ export function GenerationPanel(props: {
               {(submit.error ?? job.error ?? cancel.error)?.message}
             </p>
           ) : null}
+          {mediaError ? (
+            <p className="form-error" role="alert">
+              {mediaError}
+            </p>
+          ) : null}
           <div className="generation-actions">
             <button
               className="button primary"
@@ -323,9 +342,25 @@ export function GenerationPanel(props: {
       {mediaUrl && currentJob?.state === "succeeded" ? (
         <figure className="media-result">
           {isImage ? (
-            <img src={mediaUrl} alt="生成的镜头画面" />
+            <img
+              src={mediaUrl}
+              alt="生成的镜头画面"
+              onError={() => {
+                setMediaUrl(null);
+                setMediaError("生成画面加载失败");
+              }}
+            />
           ) : (
-            <video src={mediaUrl} controls playsInline aria-label="生成的视频" />
+            <video
+              src={mediaUrl}
+              controls
+              playsInline
+              aria-label="生成的视频"
+              onError={() => {
+                setMediaUrl(null);
+                setMediaError("生成视频加载失败");
+              }}
+            />
           )}
           <figcaption>
             <strong>{isImage ? "画面已就绪" : "视频已就绪"}</strong>

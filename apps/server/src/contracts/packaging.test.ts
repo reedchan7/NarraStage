@@ -35,6 +35,7 @@ describe("packaged contract provenance", () => {
     expect(mainSource).toContain('win.webContents.on("will-navigate"');
     expect(mainSource).toContain("event.sender !== mainWindow?.webContents");
     expect(mainSource).toContain("randomPort: !process.env.VITE_DEV");
+    expect(mainSource).toContain("createMainWindow(activeRuntimePort)");
     for (const channel of [
       "toonflow:window:minimize",
       "toonflow:window:toggle-maximize",

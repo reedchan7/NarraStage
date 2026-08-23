@@ -3,6 +3,9 @@ import type { IncomingHttpHeaders, IncomingMessage, Server, ServerResponse } fro
 import { createAdaptorServer, type HttpBindings } from "@hono/node-server";
 import { RESPONSE_ALREADY_SENT } from "@hono/node-server/utils/response";
 import { Hono, type Context } from "hono";
+import { bodyLimit } from "hono/body-limit";
+
+const LEGACY_BODY_LIMIT_BYTES = 100 * 1024 * 1024;
 
 export type NextFunction = () => void | Promise<void>;
 
@@ -168,6 +171,20 @@ export class LegacyHttpApplication {
 
   constructor(hono = new Hono<HonoEnvironment>()) {
     this.hono = hono;
+    this.hono.use("*", async (context, next) => {
+      const contentType = context.req.header("content-type")?.toLowerCase() ?? "";
+      if (
+        !contentType.includes("application/json") &&
+        !contentType.includes("application/x-www-form-urlencoded")
+      ) {
+        return next();
+      }
+      return bodyLimit({
+        maxSize: LEGACY_BODY_LIMIT_BYTES,
+        onError: (limitedContext) =>
+          limitedContext.json({ code: 413, data: null, message: "请求内容超过 100 MB 限制" }, 413),
+      })(context, next);
+    });
   }
 
   use(handler: Handler): this;
