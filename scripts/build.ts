@@ -82,6 +82,11 @@ export async function build(): Promise<void> {
     throw new Error("构建失败");
   }
 
+  const serverBundle = await readFile("data/serve/app.js", "utf8");
+  if (/\bBun\./.test(serverBundle)) {
+    throw new Error("构建失败：Node 后端产物仍包含 Bun 运行时 API");
+  }
+
   console.log("✅ 后端服务构建完成: data/serve/app.js");
   console.log("✅ Electron主进程构建完成: build/main.js");
   console.log("✅ Electron preload构建完成: build/preload.cjs");
@@ -94,3 +99,4 @@ if (import.meta.main) {
     process.exit(1);
   });
 }
+import { readFile } from "node:fs/promises";

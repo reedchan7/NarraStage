@@ -23,6 +23,16 @@ export interface Project {
   videoRatio: string | null;
   projectType: string | null;
   createTime?: number;
+  directorManual?: string | null;
+  imageModel?: string | null;
+  imageQuality?: string | null;
+  mode?: string | null;
+  videoModel?: string | null;
+  videoCatalogMode?: string | null;
+  videoCanonicalModelId?: string | null;
+  videoOfferingId?: string | null;
+  videoOfferingPreferenceMode?: string | null;
+  videoProviderId?: string | null;
 }
 
 export interface CreateProjectInput {
@@ -37,6 +47,13 @@ export interface CreateProjectInput {
   videoModel: string;
   imageQuality: string;
   mode: string;
+  videoGenerationSelection?: {
+    catalogMode: "builtin";
+    canonicalModelId: string;
+    offeringId: string;
+    providerId: string;
+    preferenceMode: "auto" | "pinned";
+  };
 }
 
 export interface ConversationHistoryItem {
@@ -225,9 +242,33 @@ export const api = {
     return apiRequest<Project[]>("/api/project/getProject", { method: "POST" }, token);
   },
   createProject(token: string, input: CreateProjectInput) {
-    return apiRequest<{ message: string }>(
+    return apiRequest<{ message: string; id: number }>(
       "/api/project/addProject",
       { method: "POST", body: JSON.stringify(input) },
+      token,
+    );
+  },
+  updateImageGenerationSelection(token: string, projectId: number, offeringId: string) {
+    return apiRequest<{ offeringId: string }>(
+      "/api/project/updateImageGenerationSelection",
+      { method: "POST", body: JSON.stringify({ id: projectId, offeringId }) },
+      token,
+    );
+  },
+  updateGenerationSelection(
+    token: string,
+    projectId: number,
+    selection: {
+      catalogMode: "builtin";
+      canonicalModelId: string;
+      offeringId: string;
+      providerId: string;
+      preferenceMode: "pinned";
+    },
+  ) {
+    return apiRequest<{ selection: typeof selection }>(
+      "/api/project/updateGenerationSelection",
+      { method: "POST", body: JSON.stringify({ id: projectId, selection }) },
       token,
     );
   },

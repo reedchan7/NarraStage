@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen } from "@testing-library/react";
-import { describe, expect, test } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, test } from "vitest";
 import type { CatalogResult } from "@/api/client";
 import { GenerationPanel } from "@/features/generation/GenerationPanel";
 
@@ -49,6 +49,8 @@ const unavailableCatalog = {
   ],
 } satisfies CatalogResult;
 
+afterEach(cleanup);
+
 describe("generation panel", () => {
   test("renders generated reasonCodes when a provider is unavailable", () => {
     render(
@@ -63,6 +65,24 @@ describe("generation panel", () => {
     );
 
     expect(screen.getByRole("status")).toHaveTextContent("provider.credential_missing");
+    expect(screen.getByRole("button", { name: "开始生成" })).toBeDisabled();
+  });
+
+  test("does not silently replace a saved project offering that is absent from the catalog", () => {
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <GenerationPanel
+          operation="image.generate"
+          projectId={7}
+          catalog={unavailableCatalog}
+          token="Bearer fixture"
+          configuredOfferingId="toonflow:legacy-image"
+        />
+      </QueryClientProvider>,
+    );
+
+    expect(screen.getByRole("alert")).toHaveTextContent("toonflow:legacy-image");
+    expect(screen.getByRole("combobox", { name: "模型服务" })).toHaveValue("");
     expect(screen.getByRole("button", { name: "开始生成" })).toBeDisabled();
   });
 });

@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { projectImageQualitySchema, projectModelIdSchema } from "@/routes/project/addProject";
+import { generationSelectionColumns } from "@/providers/catalog/generationSelection";
 
 describe("project creation defaults", () => {
   test("accepts consumable provider:model identities and production image qualities", () => {
@@ -14,5 +15,20 @@ describe("project creation defaults", () => {
     expect(projectModelIdSchema.safeParse("").success).toBe(false);
     expect(projectModelIdSchema.safeParse("model-without-provider").success).toBe(false);
     expect(projectImageQualitySchema.safeParse("standard").success).toBe(false);
+  });
+
+  test("accepts the React defaults as an exact image offering and structured video pin", () => {
+    expect(projectModelIdSchema.parse("google:nano-banana-2-lite:official")).toBe(
+      "google:nano-banana-2-lite:official",
+    );
+    expect(
+      generationSelectionColumns({
+        catalogMode: "builtin",
+        canonicalModelId: "minimax:h3",
+        offeringId: "minimax:h3:official",
+        providerId: "minimax",
+        preferenceMode: "pinned",
+      }),
+    ).toMatchObject({ videoOfferingId: "minimax:h3:official" });
   });
 });

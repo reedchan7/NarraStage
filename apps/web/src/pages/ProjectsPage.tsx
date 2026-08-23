@@ -11,10 +11,17 @@ const projectDefaults: Omit<CreateProjectInput, "name" | "intro" | "artStyle" | 
   projectType: "animation",
   type: "short",
   directorManual: "",
-  imageModel: "toonflow:doubao-seedream-5.0-Lite",
+  imageModel: "google:nano-banana-2-lite:official",
   videoModel: "toonflow:Kling-Video-O1",
   imageQuality: "1K",
   mode: "text",
+  videoGenerationSelection: {
+    catalogMode: "builtin",
+    canonicalModelId: "minimax:h3",
+    offeringId: "minimax:h3:official",
+    providerId: "minimax",
+    preferenceMode: "pinned",
+  },
 };
 
 export function ProjectsPage() {

@@ -42066,7 +42066,7 @@ var init_metadata = __esm(() => {
 // apps/server/src/assets/mediaAssetRepository.ts
 import { createHash as createHash2, randomUUID as randomUUID2 } from "node:crypto";
 import { createWriteStream as createWriteStream2 } from "node:fs";
-import { mkdir as mkdir2, rename as rename2, rm as rm2, stat as stat2, writeFile } from "node:fs/promises";
+import { mkdir as mkdir2, readFile, rename as rename2, rm as rm2, stat as stat2, writeFile } from "node:fs/promises";
 import path3 from "node:path";
 import { Transform as Transform2 } from "node:stream";
 import { pipeline as pipeline2 } from "node:stream/promises";
@@ -42299,8 +42299,8 @@ class OwnedMediaAssetResolver {
       throw new Error("provider.asset_not_found");
     if (stored.kind !== asset.kind)
       throw new Error("provider.asset_kind_mismatch");
-    const blob = Bun.file(stored.filePath);
-    if (blob.size !== stored.byteLength)
+    const bytes = await readFile(stored.filePath);
+    if (bytes.byteLength !== stored.byteLength)
       throw new Error("provider.asset_length_mismatch");
     return {
       assetId: stored.id,
@@ -42308,7 +42308,7 @@ class OwnedMediaAssetResolver {
       mimeType: stored.mimeType,
       byteLength: stored.byteLength,
       sha256: stored.sha256,
-      source: { kind: "blob", blob }
+      source: { kind: "blob", blob: new Blob([bytes], { type: stored.mimeType }) }
     };
   }
   async resolveFile(assetId, context) {
@@ -42317,8 +42317,10 @@ class OwnedMediaAssetResolver {
     const stored = await this.#repository.getOwned(assetId, context.principalId);
     if (!stored)
       throw new Error("provider.asset_not_found");
-    const blob = Bun.file(stored.filePath);
-    if (blob.size !== stored.byteLength)
+    const file2 = await stat2(stored.filePath);
+    if (!file2.isFile())
+      throw new Error("provider.asset_path_not_file");
+    if (file2.size !== stored.byteLength)
       throw new Error("provider.asset_length_mismatch");
     const filename = stored.metadata && typeof stored.metadata.filename === "string" ? stored.metadata.filename : undefined;
     return {
@@ -51814,6 +51816,7 @@ function enhanceResponse(outgoing) {
     return response;
   };
   response.sendFile = (filePath) => {
+    response.flushHeaders();
     createReadStream3(filePath).on("error", (error51) => response.destroy(error51)).pipe(response);
     return response;
   };
@@ -62207,6 +62210,8 @@ var init_languageAdapter = __esm(() => {
 });
 
 // apps/server/src/providers/adapters/deepseek/filesAdapter.ts
+import { readFile as readFile2 } from "node:fs/promises";
+
 class DeepSeekFilesAdapter {
   operation = "files.upload";
   #transport;
@@ -62224,7 +62229,7 @@ class DeepSeekFilesAdapter {
       const owned = "source" in input ? await this.#assetResolver?.resolveFile(input.assetId, context) : undefined;
       if ("source" in input && !owned)
         throw new Error("provider.asset_resolver_unavailable");
-      const bytes = "source" in input ? Buffer.from(await (owned.source.kind === "path" ? Bun.file(owned.source.path) : owned.source.blob).arrayBuffer()) : decodeDeepSeekBase64(input.dataBase64);
+      const bytes = "source" in input ? owned.source.kind === "path" ? await readFile2(owned.source.path) : Buffer.from(await owned.source.blob.arrayBuffer()) : decodeDeepSeekBase64(input.dataBase64);
       const byteLength = "source" in input ? owned.byteLength : input.byteLength;
       const mediaType = "source" in input ? owned.mimeType : input.mediaType;
       const filename = input.filename ?? ("source" in input ? owned.filename : undefined) ?? "upload";
@@ -81953,7 +81958,7 @@ var require_getCredentials = __commonJS(function(exports) {
   var fs2 = __require("fs");
   var util_1 = __require("util");
   var errorWithCode_1 = require_errorWithCode();
-  var readFile = fs2.readFile ? (0, util_1.promisify)(fs2.readFile) : async () => {
+  var readFile3 = fs2.readFile ? (0, util_1.promisify)(fs2.readFile) : async () => {
     throw new errorWithCode_1.ErrorWithCode("use key rather than keyFile.", "MISSING_CREDENTIALS");
   };
   var ExtensionFiles;
@@ -81972,7 +81977,7 @@ var require_getCredentials = __commonJS(function(exports) {
       this.keyFilePath = keyFilePath;
     }
     async getCredentials() {
-      const key = await readFile(this.keyFilePath, "utf8");
+      const key = await readFile3(this.keyFilePath, "utf8");
       let body;
       try {
         body = JSON.parse(key);
@@ -81995,7 +82000,7 @@ var require_getCredentials = __commonJS(function(exports) {
       this.keyFilePath = keyFilePath;
     }
     async getCredentials() {
-      const privateKey = await readFile(this.keyFilePath, "utf8");
+      const privateKey = await readFile3(this.keyFilePath, "utf8");
       return { privateKey };
     }
   }
@@ -83193,7 +83198,7 @@ var require_filesubjecttokensupplier = __commonJS(function(exports) {
   exports.FileSubjectTokenSupplier = undefined;
   var util_1 = __require("util");
   var fs2 = __require("fs");
-  var readFile = (0, util_1.promisify)(fs2.readFile ?? (() => {}));
+  var readFile3 = (0, util_1.promisify)(fs2.readFile ?? (() => {}));
   var realpath = (0, util_1.promisify)(fs2.realpath ?? (() => {}));
   var lstat = (0, util_1.promisify)(fs2.lstat ?? (() => {}));
 
@@ -83220,7 +83225,7 @@ var require_filesubjecttokensupplier = __commonJS(function(exports) {
         throw err;
       }
       let subjectToken;
-      const rawText = await readFile(parsedFilePath, { encoding: "utf8" });
+      const rawText = await readFile3(parsedFilePath, { encoding: "utf8" });
       if (this.formatType === "text") {
         subjectToken = rawText;
       } else if (this.formatType === "json" && this.subjectTokenFieldName) {
@@ -111771,7 +111776,7 @@ var require_fs5 = __commonJS(function(exports, module) {
   var path6 = __require("path");
   var { promisify: promisify2 } = __require("util");
   var stat5 = promisify2(fs3.stat);
-  var readFile = promisify2(fs3.readFile);
+  var readFile3 = promisify2(fs3.readFile);
   var writeFile3 = promisify2(fs3.writeFile);
   var readdir = promisify2(fs3.readdir);
   var mkdir3 = promisify2(fs3.mkdir);
@@ -111807,7 +111812,7 @@ var require_fs5 = __commonJS(function(exports, module) {
     existsSync: existsSync2,
     stat: stat5,
     readdir,
-    readFile,
+    readFile: readFile3,
     writeFile: writeFile3,
     createTemp,
     ensureDirectoryExists,
@@ -111818,13 +111823,13 @@ var require_fs5 = __commonJS(function(exports, module) {
 // node_modules/.bun/knex@3.3.0+9606eb3220952147/node_modules/knex/lib/migrations/util/template.js
 var require_template2 = __commonJS(function(exports, module) {
   var template = require_template();
-  var { readFile, writeFile: writeFile3 } = require_fs5();
+  var { readFile: readFile3, writeFile: writeFile3 } = require_fs5();
   var jsSourceTemplate = (content, options2) => template(content, {
     interpolate: /<%=([\s\S]+?)%>/g,
     ...options2
   });
   var jsFileTemplate = async (filePath, options2) => {
-    const contentBuffer = await readFile(filePath);
+    const contentBuffer = await readFile3(filePath);
     return jsSourceTemplate(contentBuffer.toString(), options2);
   };
   var writeJsFileUsingTemplate = async (targetFilePath, sourceFilePath, options2, variables) => writeFile3(targetFilePath, (await jsFileTemplate(sourceFilePath, options2))(variables));
@@ -112545,7 +112550,7 @@ var require_cache = __commonJS(function(exports, module) {
 var require_async7 = __commonJS(function(exports, module) {
   var path6 = __require("path");
   var { promisify: promisify2 } = __require("util");
-  var readFile = promisify2(__require("fs").readFile);
+  var readFile3 = promisify2(__require("fs").readFile);
   var isNodeModules = require_is_node_modules();
   var resultsCache = require_cache();
   var promiseCache = new Map;
@@ -112554,7 +112559,7 @@ var require_async7 = __commonJS(function(exports, module) {
       return "commonjs";
     }
     try {
-      return JSON.parse(await readFile(path6.resolve(directory, "package.json"))).type || "commonjs";
+      return JSON.parse(await readFile3(path6.resolve(directory, "package.json"))).type || "commonjs";
     } catch (_) {}
     const parent = path6.dirname(directory);
     if (parent === directory) {
@@ -261920,9 +261925,9 @@ var init_openapi = __esm(() => {
 });
 
 // apps/server/src/contracts/v2/meta.ts
-import { readFile } from "node:fs/promises";
+import { readFile as readFile3 } from "node:fs/promises";
 async function getApiMeta() {
-  const webBuildManifest = JSON.parse(await readFile(getPath_default("contracts/web-build.json"), "utf8"));
+  const webBuildManifest = JSON.parse(await readFile3(getPath_default("contracts/web-build.json"), "utf8"));
   return metaSchema.parse({
     contractVersion,
     openapiSha256: createOpenApiArtifact().sha256,
@@ -264565,6 +264570,45 @@ var init_addDirectorManual = __esm(() => {
   });
 });
 
+// apps/server/src/providers/catalog/generationSelection.ts
+function generationSelectionColumns(input) {
+  if (input.catalogMode === "custom") {
+    return {
+      videoCatalogMode: "custom",
+      videoCanonicalModelId: null,
+      videoOfferingId: null,
+      videoProviderId: null,
+      videoOfferingPreferenceMode: null
+    };
+  }
+  const offering = builtinCatalog.offerings.find((candidate) => candidate.id === input.offeringId);
+  if (!offering || offering.canonicalModelId !== input.canonicalModelId || offering.providerId !== input.providerId || !offering.operations.some((operation) => operation.operation === "video.generate" && operation.enabled)) {
+    throw new Error("project.generation_selection_invalid");
+  }
+  return {
+    videoCatalogMode: "builtin",
+    videoCanonicalModelId: input.canonicalModelId,
+    videoOfferingId: input.offeringId,
+    videoProviderId: input.providerId,
+    videoOfferingPreferenceMode: input.preferenceMode
+  };
+}
+var generationSelectionSchema;
+var init_generationSelection = __esm(() => {
+  init_zod();
+  init_builtinCatalog();
+  generationSelectionSchema = exports_external.discriminatedUnion("catalogMode", [
+    exports_external.object({ catalogMode: exports_external.literal("custom") }).strict(),
+    exports_external.object({
+      catalogMode: exports_external.literal("builtin"),
+      canonicalModelId: exports_external.string().min(1),
+      offeringId: exports_external.string().min(1),
+      providerId: exports_external.string().min(1),
+      preferenceMode: exports_external.enum(["auto", "pinned"])
+    }).strict()
+  ]);
+});
+
 // apps/server/src/routes/project/addProject.ts
 var router93, projectModelIdSchema, projectImageQualitySchema, addProject_default;
 var init_addProject = __esm(() => {
@@ -264572,6 +264616,7 @@ var init_addProject = __esm(() => {
   init_utils3();
   init_zod();
   init_middleware();
+  init_generationSelection();
   router93 = compat_default.Router();
   projectModelIdSchema = exports_external.string().regex(/^[a-z0-9_-]+:.+$/i);
   projectImageQualitySchema = exports_external.enum(["1K", "2K", "4K"]);
@@ -264586,7 +264631,8 @@ var init_addProject = __esm(() => {
     imageModel: projectModelIdSchema,
     videoModel: projectModelIdSchema,
     imageQuality: projectImageQualitySchema,
-    mode: exports_external.string()
+    mode: exports_external.string(),
+    videoGenerationSelection: generationSelectionSchema.optional()
   }), async (req, res) => {
     const {
       projectType,
@@ -264599,10 +264645,12 @@ var init_addProject = __esm(() => {
       imageModel,
       videoModel,
       imageQuality,
-      mode
+      mode,
+      videoGenerationSelection
     } = req.body;
+    const id = Date.now();
     await utils_default.db("o_project").insert({
-      id: Date.now(),
+      id,
       projectType,
       name: name30,
       intro,
@@ -264615,9 +264663,10 @@ var init_addProject = __esm(() => {
       videoModel,
       createTime: Date.now(),
       imageQuality,
-      mode
+      mode,
+      ...videoGenerationSelection ? generationSelectionColumns(videoGenerationSelection) : {}
     });
-    res.status(200).send(success3({ message: "新增项目成功" }));
+    res.status(200).send(success3({ message: "新增项目成功", id }));
   });
 });
 
@@ -265294,45 +265343,6 @@ var init_queryDirectorManual = __esm(() => {
   });
 });
 
-// apps/server/src/providers/catalog/generationSelection.ts
-function generationSelectionColumns(input) {
-  if (input.catalogMode === "custom") {
-    return {
-      videoCatalogMode: "custom",
-      videoCanonicalModelId: null,
-      videoOfferingId: null,
-      videoProviderId: null,
-      videoOfferingPreferenceMode: null
-    };
-  }
-  const offering = builtinCatalog.offerings.find((candidate) => candidate.id === input.offeringId);
-  if (!offering || offering.canonicalModelId !== input.canonicalModelId || offering.providerId !== input.providerId || !offering.operations.some((operation) => operation.operation === "video.generate" && operation.enabled)) {
-    throw new Error("project.generation_selection_invalid");
-  }
-  return {
-    videoCatalogMode: "builtin",
-    videoCanonicalModelId: input.canonicalModelId,
-    videoOfferingId: input.offeringId,
-    videoProviderId: input.providerId,
-    videoOfferingPreferenceMode: input.preferenceMode
-  };
-}
-var generationSelectionSchema;
-var init_generationSelection = __esm(() => {
-  init_zod();
-  init_builtinCatalog();
-  generationSelectionSchema = exports_external.discriminatedUnion("catalogMode", [
-    exports_external.object({ catalogMode: exports_external.literal("custom") }).strict(),
-    exports_external.object({
-      catalogMode: exports_external.literal("builtin"),
-      canonicalModelId: exports_external.string().min(1),
-      offeringId: exports_external.string().min(1),
-      providerId: exports_external.string().min(1),
-      preferenceMode: exports_external.enum(["auto", "pinned"])
-    }).strict()
-  ]);
-});
-
 // apps/server/src/routes/project/updateGenerationSelection.ts
 async function persistProjectGenerationSelection(database, projectId, userId, selection) {
   const columns = generationSelectionColumns(selection);
@@ -265364,17 +265374,54 @@ var init_updateGenerationSelection = __esm(() => {
   });
 });
 
+// apps/server/src/routes/project/updateImageGenerationSelection.ts
+function isImageOffering(offeringId) {
+  return builtinCatalog.offerings.some((offering) => offering.id === offeringId && offering.support.implementation === "implemented" && offering.operations.some((operation) => operation.operation === "image.generate" && operation.enabled));
+}
+async function persistProjectImageOffering(database, projectId, userId, offeringId) {
+  if (!isImageOffering(offeringId))
+    throw new Error("project.image_offering_invalid");
+  const updated = await database("o_project").where({ id: projectId, userId }).update({ imageModel: offeringId });
+  return updated > 0;
+}
+var router106, updateImageGenerationSelection_default;
+var init_updateImageGenerationSelection = __esm(() => {
+  init_zod();
+  init_compat2();
+  init_middleware();
+  init_builtinCatalog();
+  init_utils3();
+  router106 = compat_default.Router();
+  updateImageGenerationSelection_default = router106.post("/", validateFields({ id: exports_external.number().int().positive(), offeringId: exports_external.string().min(1) }), async (req, res) => {
+    const userId = Number(req.user?.id);
+    if (!Number.isSafeInteger(userId) || userId <= 0) {
+      return res.status(403).send({ message: "project.owner_required" });
+    }
+    try {
+      const updated = await persistProjectImageOffering(utils_default.db, req.body.id, userId, req.body.offeringId);
+      if (!updated)
+        return res.status(404).send({ message: "project.not_found" });
+      return res.status(200).send(success3({ offeringId: req.body.offeringId }));
+    } catch (cause) {
+      if (cause instanceof Error && cause.message === "project.image_offering_invalid") {
+        return res.status(400).send({ message: cause.message });
+      }
+      throw cause;
+    }
+  });
+});
+
 // apps/server/src/routes/project/visualManual.ts
 import fs25 from "fs";
 import path27 from "path";
-var router106, visualManual_default;
+var router107, visualManual_default;
 var init_visualManual = __esm(() => {
   init_compat2();
   init_zod();
   init_middleware();
   init_getPath();
-  router106 = compat_default.Router();
-  visualManual_default = router106.post("/", validateFields({
+  router107 = compat_default.Router();
+  visualManual_default = router107.post("/", validateFields({
     type: exports_external.string()
   }), async (req, res) => {
     const { type } = req.body;
@@ -265404,14 +265451,14 @@ var init_visualManual = __esm(() => {
 });
 
 // apps/server/src/routes/script/addScript.ts
-var router107, addScript_default;
+var router108, addScript_default;
 var init_addScript = __esm(() => {
   init_compat2();
   init_utils3();
   init_zod();
   init_middleware();
-  router107 = compat_default.Router();
-  addScript_default = router107.post("/", validateFields({
+  router108 = compat_default.Router();
+  addScript_default = router108.post("/", validateFields({
     name: exports_external.string(),
     content: exports_external.string(),
     projectId: exports_external.number(),
@@ -265442,14 +265489,14 @@ var init_addScript = __esm(() => {
 });
 
 // apps/server/src/routes/script/batchAddScript.ts
-var router108, batchAddScript_default;
+var router109, batchAddScript_default;
 var init_batchAddScript = __esm(() => {
   init_compat2();
   init_utils3();
   init_zod();
   init_middleware();
-  router108 = compat_default.Router();
-  batchAddScript_default = router108.post("/", validateFields({
+  router109 = compat_default.Router();
+  batchAddScript_default = router109.post("/", validateFields({
     data: exports_external.array(exports_external.object({
       scriptName: exports_external.string(),
       scriptData: exports_external.string()
@@ -265470,14 +265517,14 @@ var init_batchAddScript = __esm(() => {
 });
 
 // apps/server/src/routes/script/delScript.ts
-var router109, delScript_default;
+var router110, delScript_default;
 var init_delScript = __esm(() => {
   init_compat2();
   init_utils3();
   init_zod();
   init_middleware();
-  router109 = compat_default.Router();
-  delScript_default = router109.post("/", validateFields({
+  router110 = compat_default.Router();
+  delScript_default = router110.post("/", validateFields({
     ids: exports_external.array(exports_external.number())
   }), async (req, res) => {
     const { ids } = req.body;
@@ -276547,15 +276594,15 @@ var require_compressing = __commonJS(function(exports) {
 });
 
 // apps/server/src/routes/script/exportScript.ts
-var import_compressing, router110, exportScript_default;
+var import_compressing, router111, exportScript_default;
 var init_exportScript = __esm(() => {
   init_compat2();
   init_utils3();
   init_zod();
   init_middleware();
   import_compressing = __toESM(require_compressing(), 1);
-  router110 = compat_default.Router();
-  exportScript_default = router110.post("/", validateFields({
+  router111 = compat_default.Router();
+  exportScript_default = router111.post("/", validateFields({
     id: exports_external.array(exports_external.number())
   }), async (req, res) => {
     const { id } = req.body;
@@ -276583,14 +276630,14 @@ function chunkArray(arr, groupSize) {
   }
   return groupChunks;
 }
-var router111, NewAssetSchema, ExistingAssetRefSchema, AssetSchema, extractAssets_default;
+var router112, NewAssetSchema, ExistingAssetRefSchema, AssetSchema, extractAssets_default;
 var init_extractAssets = __esm(() => {
   init_compat2();
   init_utils3();
   init_zod();
   init_middleware();
   init_dist24();
-  router111 = compat_default.Router();
+  router112 = compat_default.Router();
   NewAssetSchema = exports_external.object({
     name: exports_external.string().describe("资产名称,仅为名称不做其他任何表述"),
     desc: exports_external.string().describe("资产描述"),
@@ -276606,7 +276653,7 @@ var init_extractAssets = __esm(() => {
     desc: exports_external.string().describe("资产描述"),
     type: exports_external.enum(["role", "tool", "scene"]).describe("资产类型")
   });
-  extractAssets_default = router111.post("/", validateFields({
+  extractAssets_default = router112.post("/", validateFields({
     scriptIds: exports_external.array(exports_external.number()),
     projectId: exports_external.number(),
     groupSize: exports_external.number().min(1).optional()
@@ -276777,14 +276824,14 @@ ${scriptsContent}`
 });
 
 // apps/server/src/routes/script/getAiRegex.ts
-var router112, getAiRegex_default;
+var router113, getAiRegex_default;
 var init_getAiRegex = __esm(() => {
   init_compat2();
   init_utils3();
   init_zod();
   init_middleware();
-  router112 = compat_default.Router();
-  getAiRegex_default = router112.post("/", validateFields({
+  router113 = compat_default.Router();
+  getAiRegex_default = router113.post("/", validateFields({
     content: exports_external.string()
   }), async (req, res) => {
     const { content } = req.body;
@@ -276811,14 +276858,14 @@ var init_getAiRegex = __esm(() => {
 });
 
 // apps/server/src/routes/script/getScrptApi.ts
-var router113, getScrptApi_default;
+var router114, getScrptApi_default;
 var init_getScrptApi = __esm(() => {
   init_compat2();
   init_utils3();
   init_zod();
   init_middleware();
-  router113 = compat_default.Router();
-  getScrptApi_default = router113.post("/", validateFields({
+  router114 = compat_default.Router();
+  getScrptApi_default = router114.post("/", validateFields({
     projectId: exports_external.number(),
     name: exports_external.string().optional()
   }), async (req, res) => {
@@ -276851,14 +276898,14 @@ var init_getScrptApi = __esm(() => {
 });
 
 // apps/server/src/routes/script/pollScriptAssets.ts
-var router114, pollScriptAssets_default;
+var router115, pollScriptAssets_default;
 var init_pollScriptAssets = __esm(() => {
   init_compat2();
   init_utils3();
   init_zod();
   init_middleware();
-  router114 = compat_default.Router();
-  pollScriptAssets_default = router114.post("/", validateFields({
+  router115 = compat_default.Router();
+  pollScriptAssets_default = router115.post("/", validateFields({
     ids: exports_external.array(exports_external.number())
   }), async (req, res) => {
     const { ids } = req.body;
@@ -276868,14 +276915,14 @@ var init_pollScriptAssets = __esm(() => {
 });
 
 // apps/server/src/routes/script/updateScript.ts
-var router115, updateScript_default;
+var router116, updateScript_default;
 var init_updateScript = __esm(() => {
   init_compat2();
   init_utils3();
   init_zod();
   init_middleware();
-  router115 = compat_default.Router();
-  updateScript_default = router115.post("/", validateFields({
+  router116 = compat_default.Router();
+  updateScript_default = router116.post("/", validateFields({
     id: exports_external.number(),
     name: exports_external.string(),
     content: exports_external.string(),
@@ -276904,14 +276951,14 @@ var init_updateScript = __esm(() => {
 });
 
 // apps/server/src/routes/scriptAgent/getPlanData.ts
-var router116, getPlanData_default;
+var router117, getPlanData_default;
 var init_getPlanData = __esm(() => {
   init_compat2();
   init_utils3();
   init_zod();
   init_middleware();
-  router116 = compat_default.Router();
-  getPlanData_default = router116.post("/", validateFields({
+  router117 = compat_default.Router();
+  getPlanData_default = router117.post("/", validateFields({
     projectId: exports_external.number(),
     agentType: exports_external.enum(["scriptAgent"])
   }), async (req, res) => {
@@ -276941,14 +276988,14 @@ var init_getPlanData = __esm(() => {
 });
 
 // apps/server/src/routes/scriptAgent/setPlanData.ts
-var router117, setPlanData_default;
+var router118, setPlanData_default;
 var init_setPlanData = __esm(() => {
   init_compat2();
   init_utils3();
   init_zod();
   init_middleware();
-  router117 = compat_default.Router();
-  setPlanData_default = router117.post("/", validateFields({
+  router118 = compat_default.Router();
+  setPlanData_default = router118.post("/", validateFields({
     projectId: exports_external.number(),
     agentType: exports_external.enum(["scriptAgent"]),
     data: exports_external.object({
@@ -276974,14 +277021,14 @@ var init_setPlanData = __esm(() => {
 });
 
 // apps/server/src/routes/scriptAgent/updateData.ts
-var router118, updateData_default;
+var router119, updateData_default;
 var init_updateData = __esm(() => {
   init_compat2();
   init_utils3();
   init_zod();
   init_middleware();
-  router118 = compat_default.Router();
-  updateData_default = router118.post("/", validateFields({
+  router119 = compat_default.Router();
+  updateData_default = router119.post("/", validateFields({
     id: exports_external.number(),
     data: exports_external.object({
       storySkeleton: exports_external.string(),
@@ -277003,12 +277050,12 @@ var init_updateData = __esm(() => {
 // apps/server/src/routes/setting/about/checkUpdate.ts
 import fs26 from "fs";
 import path28 from "path";
-var router119, APP_VERSION2, checkUpdate_default;
+var router120, APP_VERSION2, checkUpdate_default;
 var init_checkUpdate = __esm(() => {
   init_compat2();
   init_middleware();
   init_zod();
-  router119 = compat_default.Router();
+  router120 = compat_default.Router();
   APP_VERSION2 = (() => {
     if (true) {
       return "2.1.0";
@@ -277017,7 +277064,7 @@ var init_checkUpdate = __esm(() => {
     const pkg = JSON.parse(fs26.readFileSync(pkgPath, "utf8"));
     return pkg.version;
   })();
-  checkUpdate_default = router119.post("/", validateFields({
+  checkUpdate_default = router120.post("/", validateFields({
     source: exports_external.enum(["toonflow", "github", "gitee", "atomgit"]),
     url: exports_external.url().nullable().optional()
   }), async (req, res) => {
@@ -277087,7 +277134,7 @@ var init_checkUpdate = __esm(() => {
 
 // apps/server/src/routes/setting/about/downloadApp.ts
 import fs27 from "fs";
-var import_compressing2, router120, downloadApp_default;
+var import_compressing2, router121, downloadApp_default;
 var init_downloadApp = __esm(() => {
   init_compat2();
   init_zod();
@@ -277095,8 +277142,8 @@ var init_downloadApp = __esm(() => {
   init_utils3();
   init_axios2();
   import_compressing2 = __toESM(require_compressing(), 1);
-  router120 = compat_default.Router();
-  downloadApp_default = router120.post("/", validateFields({
+  router121 = compat_default.Router();
+  downloadApp_default = router121.post("/", validateFields({
     url: zod_default.url(),
     reinstall: zod_default.boolean(),
     version: zod_default.string()
@@ -277119,14 +277166,14 @@ var init_downloadApp = __esm(() => {
 });
 
 // apps/server/src/routes/setting/agentDeploy/agentSetKey.ts
-var router121, agentSetKey_default;
+var router122, agentSetKey_default;
 var init_agentSetKey = __esm(() => {
   init_compat2();
   init_utils3();
   init_zod();
   init_middleware();
-  router121 = compat_default.Router();
-  agentSetKey_default = router121.post("/", validateFields({
+  router122 = compat_default.Router();
+  agentSetKey_default = router122.post("/", validateFields({
     key: exports_external.string().optional()
   }), async (req, res) => {
     const { key } = req.body;
@@ -277205,15 +277252,15 @@ var init_agentModelSelection = __esm(() => {
 });
 
 // apps/server/src/routes/setting/agentDeploy/deployAgentModel.ts
-var router122, deployAgentModel_default;
+var router123, deployAgentModel_default;
 var init_deployAgentModel = __esm(() => {
   init_compat2();
   init_utils3();
   init_zod();
   init_middleware();
   init_agentModelSelection();
-  router122 = compat_default.Router();
-  deployAgentModel_default = router122.post("/", validateFields({
+  router123 = compat_default.Router();
+  deployAgentModel_default = router123.post("/", validateFields({
     items: exports_external.array(exports_external.object({
       id: exports_external.number(),
       name: exports_external.string(),
@@ -277249,12 +277296,12 @@ var init_deployAgentModel = __esm(() => {
 });
 
 // apps/server/src/routes/setting/agentDeploy/getAgentDeploy.ts
-var router123, getAgentDeploy_default;
+var router124, getAgentDeploy_default;
 var init_getAgentDeploy = __esm(() => {
   init_compat2();
   init_utils3();
-  router123 = compat_default.Router();
-  getAgentDeploy_default = router123.post("/", async (req, res) => {
+  router124 = compat_default.Router();
+  getAgentDeploy_default = router124.post("/", async (req, res) => {
     const allData = await utils_default.db("o_agentDeploy").leftJoin("o_vendorConfig", "o_vendorConfig.id", "o_agentDeploy.vendorId").select("o_agentDeploy.*");
     const qrdinaryData = allData.filter((item) => !item.key?.includes(":"));
     const advancedData = allData.filter((item) => item.key?.includes(":") || item.key == "universalAi");
@@ -277263,12 +277310,12 @@ var init_getAgentDeploy = __esm(() => {
 });
 
 // apps/server/src/routes/setting/agentDeploy/getAgentUseMode.ts
-var router124, getAgentUseMode_default;
+var router125, getAgentUseMode_default;
 var init_getAgentUseMode = __esm(() => {
   init_compat2();
   init_utils3();
-  router124 = compat_default.Router();
-  getAgentUseMode_default = router124.get("/", async (req, res) => {
+  router125 = compat_default.Router();
+  getAgentUseMode_default = router125.get("/", async (req, res) => {
     const useMode = await utils_default.db("o_setting").where("key", "agentUseMode").first();
     console.log("%c Line:9 \uD83C\uDF53 useMode", "background:#33a5ff", useMode);
     res.status(200).send(success3(useMode?.value || "0"));
@@ -277276,15 +277323,15 @@ var init_getAgentUseMode = __esm(() => {
 });
 
 // apps/server/src/routes/setting/agentDeploy/updateAgentModel.ts
-var router125, updateAgentModel_default;
+var router126, updateAgentModel_default;
 var init_updateAgentModel = __esm(() => {
   init_compat2();
   init_utils3();
   init_zod();
   init_middleware();
   init_agentModelSelection();
-  router125 = compat_default.Router();
-  updateAgentModel_default = router125.post("/", validateFields({
+  router126 = compat_default.Router();
+  updateAgentModel_default = router126.post("/", validateFields({
     id: exports_external.number(),
     name: exports_external.string(),
     model: exports_external.string(),
@@ -277310,14 +277357,14 @@ var init_updateAgentModel = __esm(() => {
 });
 
 // apps/server/src/routes/setting/agentDeploy/updateUseMode.ts
-var router126, updateUseMode_default;
+var router127, updateUseMode_default;
 var init_updateUseMode = __esm(() => {
   init_compat2();
   init_utils3();
   init_zod();
   init_middleware();
-  router126 = compat_default.Router();
-  updateUseMode_default = router126.post("/", validateFields({
+  router127 = compat_default.Router();
+  updateUseMode_default = router127.post("/", validateFields({
     agentUseMode: exports_external.string()
   }), async (req, res) => {
     const { agentUseMode } = req.body;
@@ -277329,13 +277376,13 @@ var init_updateUseMode = __esm(() => {
 });
 
 // apps/server/src/routes/setting/dbConfig/clearData.ts
-var router127, clearData_default;
+var router128, clearData_default;
 var init_clearData = __esm(() => {
   init_compat2();
   init_db();
   init_initDB();
-  router127 = compat_default.Router();
-  clearData_default = router127.get("/", async (req, res) => {
+  router128 = compat_default.Router();
+  clearData_default = router128.get("/", async (req, res) => {
     try {
       const tables = await db.raw(`SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE 'knex_%'`);
       await db.raw("PRAGMA foreign_keys = OFF");
@@ -277352,12 +277399,12 @@ var init_clearData = __esm(() => {
 });
 
 // apps/server/src/routes/setting/dbConfig/clearTable.ts
-var router128, clearTable_default;
+var router129, clearTable_default;
 var init_clearTable = __esm(() => {
   init_compat2();
   init_db();
-  router128 = compat_default.Router();
-  clearTable_default = router128.post("/", async (req, res) => {
+  router129 = compat_default.Router();
+  clearTable_default = router129.post("/", async (req, res) => {
     try {
       const { tableName } = req.body;
       if (!tableName || typeof tableName !== "string") {
@@ -277376,12 +277423,12 @@ var init_clearTable = __esm(() => {
 });
 
 // apps/server/src/routes/setting/dbConfig/dbInfo.ts
-var router129, dbInfo_default;
+var router130, dbInfo_default;
 var init_dbInfo = __esm(() => {
   init_compat2();
   init_db();
-  router129 = compat_default.Router();
-  dbInfo_default = router129.get("/", async (req, res) => {
+  router130 = compat_default.Router();
+  dbInfo_default = router130.get("/", async (req, res) => {
     try {
       const tables = await db.raw(`SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE 'knex_%'`);
       const tableInfo = [];
@@ -277400,12 +277447,12 @@ var init_dbInfo = __esm(() => {
 });
 
 // apps/server/src/routes/setting/dbConfig/exportData.ts
-var router130, exportData_default;
+var router131, exportData_default;
 var init_exportData = __esm(() => {
   init_compat2();
   init_db();
-  router130 = compat_default.Router();
-  exportData_default = router130.get("/", async (req, res) => {
+  router131 = compat_default.Router();
+  exportData_default = router131.get("/", async (req, res) => {
     try {
       const tables = await db.raw(`SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE 'knex_%'`);
       const data = {};
@@ -277426,13 +277473,13 @@ var init_exportData = __esm(() => {
 });
 
 // apps/server/src/routes/setting/dbConfig/importData.ts
-var router131, importData_default;
+var router132, importData_default;
 var init_importData = __esm(() => {
   init_compat2();
   init_db();
   init_initDB();
-  router131 = compat_default.Router();
-  importData_default = router131.post("/", async (req, res) => {
+  router132 = compat_default.Router();
+  importData_default = router132.post("/", async (req, res) => {
     try {
       const { tables: importTables } = req.body;
       if (!importTables || typeof importTables !== "object") {
@@ -277467,26 +277514,26 @@ var init_importData = __esm(() => {
 });
 
 // apps/server/src/routes/setting/dev/getSwitchAiDevTool.ts
-var router132, getSwitchAiDevTool_default;
+var router133, getSwitchAiDevTool_default;
 var init_getSwitchAiDevTool = __esm(() => {
   init_compat2();
   init_utils3();
-  router132 = compat_default.Router();
-  getSwitchAiDevTool_default = router132.get("/", async (req, res) => {
+  router133 = compat_default.Router();
+  getSwitchAiDevTool_default = router133.get("/", async (req, res) => {
     const switchAiDevTool = await utils_default.db("o_setting").where("key", "switchAiDevTool").first();
     res.status(200).send(success3(switchAiDevTool?.value || "0"));
   });
 });
 
 // apps/server/src/routes/setting/dev/updateSwitchAiDevTool.ts
-var router133, updateSwitchAiDevTool_default;
+var router134, updateSwitchAiDevTool_default;
 var init_updateSwitchAiDevTool = __esm(() => {
   init_compat2();
   init_utils3();
   init_zod();
   init_middleware();
-  router133 = compat_default.Router();
-  updateSwitchAiDevTool_default = router133.post("/", validateFields({
+  router134 = compat_default.Router();
+  updateSwitchAiDevTool_default = router134.post("/", validateFields({
     switchAiDevTool: exports_external.string()
   }), async (req, res) => {
     const { switchAiDevTool } = req.body;
@@ -277499,15 +277546,15 @@ var init_updateSwitchAiDevTool = __esm(() => {
 
 // apps/server/src/routes/setting/fileManagement/openFolder.ts
 import { exec } from "child_process";
-var router134, openFolder_default;
+var router135, openFolder_default;
 var init_openFolder = __esm(() => {
   init_compat2();
   init_zod();
   init_middleware();
   init_getPath();
   init_utils3();
-  router134 = compat_default.Router();
-  openFolder_default = router134.post("/", validateFields({
+  router135 = compat_default.Router();
+  openFolder_default = router135.post("/", validateFields({
     path: exports_external.string()
   }), async (req, res) => {
     if (!isEletron()) {
@@ -277527,36 +277574,36 @@ var init_openFolder = __esm(() => {
 });
 
 // apps/server/src/routes/setting/getTextModel.ts
-var router135, getTextModel_default;
+var router136, getTextModel_default;
 var init_getTextModel = __esm(() => {
   init_compat2();
-  router135 = compat_default.Router();
-  getTextModel_default = router135.post("/", async (req, res) => {
+  router136 = compat_default.Router();
+  getTextModel_default = router136.post("/", async (req, res) => {
     res.status(200).send(success3("123"));
   });
 });
 
 // apps/server/src/routes/setting/loginConfig/getUser.ts
-var router136, getUser_default;
+var router137, getUser_default;
 var init_getUser = __esm(() => {
   init_compat2();
   init_utils3();
-  router136 = compat_default.Router();
-  getUser_default = router136.get("/", async (req, res) => {
+  router137 = compat_default.Router();
+  getUser_default = router137.get("/", async (req, res) => {
     const data = await utils_default.db("o_user").select("*").first();
     res.status(200).send(success3(data));
   });
 });
 
 // apps/server/src/routes/setting/loginConfig/updateUserPwd.ts
-var router137, updateUserPwd_default;
+var router138, updateUserPwd_default;
 var init_updateUserPwd = __esm(() => {
   init_compat2();
   init_utils3();
   init_zod();
   init_middleware();
-  router137 = compat_default.Router();
-  updateUserPwd_default = router137.post("/", validateFields({
+  router138 = compat_default.Router();
+  updateUserPwd_default = router138.post("/", validateFields({
     name: exports_external.string(),
     password: exports_external.string(),
     id: exports_external.number()
@@ -277571,24 +277618,24 @@ var init_updateUserPwd = __esm(() => {
 });
 
 // apps/server/src/routes/setting/memoryConfig/delAllMemory.ts
-var router138, delAllMemory_default;
+var router139, delAllMemory_default;
 var init_delAllMemory = __esm(() => {
   init_compat2();
   init_utils3();
-  router138 = compat_default.Router();
-  delAllMemory_default = router138.post("/", async (req, res) => {
+  router139 = compat_default.Router();
+  delAllMemory_default = router139.post("/", async (req, res) => {
     await utils_default.db("memories").del();
     res.status(200).send(success3(true));
   });
 });
 
 // apps/server/src/routes/setting/memoryConfig/getMemory.ts
-var router139, getMemory_default2;
+var router140, getMemory_default2;
 var init_getMemory2 = __esm(() => {
   init_compat2();
   init_utils3();
-  router139 = compat_default.Router();
-  getMemory_default2 = router139.get("/", async (req, res) => {
+  router140 = compat_default.Router();
+  getMemory_default2 = router140.get("/", async (req, res) => {
     const settingData = await utils_default.db("o_setting").whereIn("key", [
       "messagesPerSummary",
       "shortTermLimit",
@@ -277618,14 +277665,14 @@ var init_getMemory2 = __esm(() => {
 });
 
 // apps/server/src/routes/setting/memoryConfig/sureMemory.ts
-var router140, sureMemory_default;
+var router141, sureMemory_default;
 var init_sureMemory = __esm(() => {
   init_compat2();
   init_utils3();
   init_zod();
   init_middleware();
-  router140 = compat_default.Router();
-  sureMemory_default = router140.post("/", validateFields({
+  router141 = compat_default.Router();
+  sureMemory_default = router141.post("/", validateFields({
     messagesPerSummary: exports_external.number(),
     shortTermLimit: exports_external.number(),
     summaryMaxLength: exports_external.number(),
@@ -277666,14 +277713,14 @@ var init_sureMemory = __esm(() => {
 });
 
 // apps/server/src/routes/setting/modelMap/bindingPrompt.ts
-var router141, bindingPrompt_default;
+var router142, bindingPrompt_default;
 var init_bindingPrompt = __esm(() => {
   init_compat2();
   init_utils3();
   init_zod();
   init_middleware();
-  router141 = compat_default.Router();
-  bindingPrompt_default = router141.post("/", validateFields({
+  router142 = compat_default.Router();
+  bindingPrompt_default = router142.post("/", validateFields({
     vendorId: exports_external.string(),
     model: exports_external.string(),
     path: exports_external.string(),
@@ -277694,14 +277741,14 @@ var init_bindingPrompt = __esm(() => {
 // apps/server/src/routes/setting/modelMap/deletePrompt.ts
 import fs28 from "fs/promises";
 import path29 from "path";
-var router142, deletePrompt_default;
+var router143, deletePrompt_default;
 var init_deletePrompt = __esm(() => {
   init_compat2();
   init_utils3();
   init_zod();
   init_middleware();
-  router142 = compat_default.Router();
-  deletePrompt_default = router142.post("/", validateFields({
+  router143 = compat_default.Router();
+  deletePrompt_default = router143.post("/", validateFields({
     path: exports_external.string()
   }), async (req, res) => {
     const { path: filePath } = req.body;
@@ -277722,12 +277769,12 @@ var init_deletePrompt = __esm(() => {
 });
 
 // apps/server/src/routes/setting/modelMap/getImageAndVideoModel.ts
-var router143, getImageAndVideoModel_default;
+var router144, getImageAndVideoModel_default;
 var init_getImageAndVideoModel = __esm(() => {
   init_compat2();
   init_utils3();
-  router143 = compat_default.Router();
-  getImageAndVideoModel_default = router143.post("/", async (req, res) => {
+  router144 = compat_default.Router();
+  getImageAndVideoModel_default = router144.post("/", async (req, res) => {
     const dataList = await utils_default.db("o_vendorConfig").select("id").where("enable", 1);
     if (!dataList || dataList.length === 0) {
       return res.status(404).send({ error: "模型未找到" });
@@ -277756,13 +277803,13 @@ var init_getImageAndVideoModel = __esm(() => {
 // apps/server/src/routes/setting/modelMap/getPromptList.ts
 import fs29 from "fs/promises";
 import path30 from "path";
-var import_fast_glob3, router144, getPromptList_default;
+var import_fast_glob3, router145, getPromptList_default;
 var init_getPromptList = __esm(() => {
   init_compat2();
   init_utils3();
   import_fast_glob3 = __toESM(require_out4(), 1);
-  router144 = compat_default.Router();
-  getPromptList_default = router144.get("/", async (req, res) => {
+  router145 = compat_default.Router();
+  getPromptList_default = router145.get("/", async (req, res) => {
     const modelPromptRoot = utils_default.getPath(["modelPrompt"]);
     const entries = await import_fast_glob3.default("**/*.md", {
       cwd: modelPromptRoot.replace(/\\/g, "/"),
@@ -277782,14 +277829,14 @@ var init_getPromptList = __esm(() => {
 // apps/server/src/routes/setting/modelMap/savePrompt.ts
 import fs30 from "fs/promises";
 import path31 from "path";
-var router145, savePrompt_default;
+var router146, savePrompt_default;
 var init_savePrompt = __esm(() => {
   init_compat2();
   init_utils3();
   init_zod();
   init_middleware();
-  router145 = compat_default.Router();
-  savePrompt_default = router145.post("/", validateFields({
+  router146 = compat_default.Router();
+  savePrompt_default = router146.post("/", validateFields({
     name: exports_external.string().min(1),
     data: exports_external.string(),
     type: exports_external.enum(["image", "video"])
@@ -277807,14 +277854,14 @@ var init_savePrompt = __esm(() => {
 // apps/server/src/routes/setting/modelMap/updatePrompt.ts
 import fs31 from "fs/promises";
 import path32 from "path";
-var router146, updatePrompt_default;
+var router147, updatePrompt_default;
 var init_updatePrompt = __esm(() => {
   init_compat2();
   init_utils3();
   init_zod();
   init_middleware();
-  router146 = compat_default.Router();
-  updatePrompt_default = router146.post("/", validateFields({
+  router147 = compat_default.Router();
+  updatePrompt_default = router147.post("/", validateFields({
     name: exports_external.string().min(1),
     data: exports_external.string(),
     type: exports_external.enum(["image", "video"])
@@ -277838,12 +277885,12 @@ var init_updatePrompt = __esm(() => {
 });
 
 // apps/server/src/routes/setting/promptManage/getPrompt.ts
-var router147, getPrompt_default;
+var router148, getPrompt_default;
 var init_getPrompt = __esm(() => {
   init_compat2();
   init_utils3();
-  router147 = compat_default.Router();
-  getPrompt_default = router147.post("/", async (req, res) => {
+  router148 = compat_default.Router();
+  getPrompt_default = router148.post("/", async (req, res) => {
     const list2 = await utils_default.db("o_prompt").select("*");
     const data = await Promise.all(list2.map(async (item) => {
       return {
@@ -277856,14 +277903,14 @@ var init_getPrompt = __esm(() => {
 });
 
 // apps/server/src/routes/setting/promptManage/updatePrompt.ts
-var router148, updatePrompt_default2;
+var router149, updatePrompt_default2;
 var init_updatePrompt2 = __esm(() => {
   init_compat2();
   init_utils3();
   init_zod();
   init_middleware();
-  router148 = compat_default.Router();
-  updatePrompt_default2 = router148.post("/", validateFields({
+  router149 = compat_default.Router();
+  updatePrompt_default2 = router149.post("/", validateFields({
     id: exports_external.number()
   }), async (req, res) => {
     const { id, data } = req.body;
@@ -277877,15 +277924,15 @@ var init_updatePrompt2 = __esm(() => {
 // apps/server/src/routes/setting/skillManagement/getSkillContent.ts
 import p from "path";
 import * as fs32 from "fs";
-var router149, getSkillContent_default;
+var router150, getSkillContent_default;
 var init_getSkillContent = __esm(() => {
   init_compat2();
   init_middleware();
   init_zod();
   init_is_path_inside();
   init_utils3();
-  router149 = compat_default.Router();
-  getSkillContent_default = router149.post("/", validateFields({
+  router150 = compat_default.Router();
+  getSkillContent_default = router150.post("/", validateFields({
     path: exports_external.string()
   }), async (req, res) => {
     const { path: path33 } = req.body;
@@ -277900,13 +277947,13 @@ var init_getSkillContent = __esm(() => {
 });
 
 // apps/server/src/routes/setting/skillManagement/getSkillList.ts
-var import_fast_glob4, router150, getSkillList_default;
+var import_fast_glob4, router151, getSkillList_default;
 var init_getSkillList = __esm(() => {
   init_compat2();
   init_utils3();
   import_fast_glob4 = __toESM(require_out4(), 1);
-  router150 = compat_default.Router();
-  getSkillList_default = router150.post("/", async (req, res) => {
+  router151 = compat_default.Router();
+  getSkillList_default = router151.post("/", async (req, res) => {
     const skillsRoot = utils_default.getPath(["skills"]);
     const entries = await import_fast_glob4.default("**/*.md", {
       cwd: skillsRoot.replace(/\\/g, "/"),
@@ -277919,15 +277966,15 @@ var init_getSkillList = __esm(() => {
 // apps/server/src/routes/setting/skillManagement/saveSkillContent.ts
 import p2 from "path";
 import * as fs33 from "fs";
-var router151, saveSkillContent_default;
+var router152, saveSkillContent_default;
 var init_saveSkillContent = __esm(() => {
   init_compat2();
   init_middleware();
   init_zod();
   init_is_path_inside();
   init_utils3();
-  router151 = compat_default.Router();
-  saveSkillContent_default = router151.post("/", validateFields({
+  router152 = compat_default.Router();
+  saveSkillContent_default = router152.post("/", validateFields({
     path: exports_external.string(),
     content: exports_external.string()
   }), async (req, res) => {
@@ -277946,14 +277993,14 @@ var init_saveSkillContent = __esm(() => {
 });
 
 // apps/server/src/routes/setting/vendorConfig/addVendor.ts
-var import_sucrase4, router152, vendorConfigSchema, addVendor_default;
+var import_sucrase4, router153, vendorConfigSchema, addVendor_default;
 var init_addVendor = __esm(() => {
   init_compat2();
   init_middleware();
   init_utils3();
   init_zod();
   import_sucrase4 = __toESM(require_dist8(), 1);
-  router152 = compat_default.Router();
+  router153 = compat_default.Router();
   vendorConfigSchema = exports_external.object({
     id: exports_external.string(),
     author: exports_external.string(),
@@ -278005,7 +278052,7 @@ var init_addVendor = __esm(() => {
       })
     ]))
   });
-  addVendor_default = router152.post("/", validateFields({
+  addVendor_default = router153.post("/", validateFields({
     tsCode: exports_external.string()
   }), async (req, res) => {
     const { tsCode } = req.body;
@@ -278058,14 +278105,14 @@ ${issueLines.join(`
 });
 
 // apps/server/src/routes/setting/vendorConfig/addVendorModel.ts
-var router153, addVendorModel_default;
+var router154, addVendorModel_default;
 var init_addVendorModel = __esm(() => {
   init_compat2();
   init_middleware();
   init_utils3();
   init_zod();
-  router153 = compat_default.Router();
-  addVendorModel_default = router153.post("/", validateFields({
+  router154 = compat_default.Router();
+  addVendorModel_default = router154.post("/", validateFields({
     id: exports_external.string(),
     model: exports_external.discriminatedUnion("type", [
       exports_external.object({
@@ -278120,14 +278167,14 @@ var init_addVendorModel = __esm(() => {
 // apps/server/src/routes/setting/vendorConfig/deleteVendor.ts
 import path33 from "path";
 import fs34 from "fs";
-var router154, deleteVendor_default;
+var router155, deleteVendor_default;
 var init_deleteVendor = __esm(() => {
   init_compat2();
   init_middleware();
   init_utils3();
   init_zod();
-  router154 = compat_default.Router();
-  deleteVendor_default = router154.post("/", validateFields({
+  router155 = compat_default.Router();
+  deleteVendor_default = router155.post("/", validateFields({
     id: exports_external.string()
   }), async (req, res) => {
     const { id } = req.body;
@@ -278142,14 +278189,14 @@ var init_deleteVendor = __esm(() => {
 });
 
 // apps/server/src/routes/setting/vendorConfig/delVendorModel.ts
-var router155, delVendorModel_default;
+var router156, delVendorModel_default;
 var init_delVendorModel = __esm(() => {
   init_compat2();
   init_middleware();
   init_utils3();
   init_zod();
-  router155 = compat_default.Router();
-  delVendorModel_default = router155.post("/", validateFields({
+  router156 = compat_default.Router();
+  delVendorModel_default = router156.post("/", validateFields({
     id: exports_external.string(),
     modelName: exports_external.string()
   }), async (req, res) => {
@@ -278170,14 +278217,14 @@ var init_delVendorModel = __esm(() => {
 });
 
 // apps/server/src/routes/setting/vendorConfig/enableVendor.ts
-var router156, enableVendor_default;
+var router157, enableVendor_default;
 var init_enableVendor = __esm(() => {
   init_compat2();
   init_middleware();
   init_utils3();
   init_zod();
-  router156 = compat_default.Router();
-  enableVendor_default = router156.post("/", validateFields({
+  router157 = compat_default.Router();
+  enableVendor_default = router157.post("/", validateFields({
     id: exports_external.string(),
     enable: exports_external.number()
   }), async (req, res) => {
@@ -278188,13 +278235,13 @@ var init_enableVendor = __esm(() => {
 });
 
 // apps/server/src/routes/setting/vendorConfig/getCodeByLink.ts
-var router157, getCodeByLink_default;
+var router158, getCodeByLink_default;
 var init_getCodeByLink = __esm(() => {
   init_compat2();
   init_middleware();
   init_zod();
-  router157 = compat_default.Router();
-  getCodeByLink_default = router157.post("/", validateFields({
+  router158 = compat_default.Router();
+  getCodeByLink_default = router158.post("/", validateFields({
     link: exports_external.string()
   }), async (req, res) => {
     const { link } = req.body;
@@ -278218,12 +278265,12 @@ function validateLegacyVendorInputUpdate(inputs, values) {
 }
 
 // apps/server/src/routes/setting/vendorConfig/getVendorList.ts
-var router158, getVendorList_default;
+var router159, getVendorList_default;
 var init_getVendorList = __esm(() => {
   init_compat2();
   init_utils3();
-  router158 = compat_default.Router();
-  getVendorList_default = router158.post("/", async (req, res) => {
+  router159 = compat_default.Router();
+  getVendorList_default = router159.post("/", async (req, res) => {
     const data = await utils_default.db("o_vendorConfig").select("*");
     const list2 = (await Promise.all(data.map(async (item) => {
       const vendor = utils_default.vendor.getVendor(item.id);
@@ -278249,15 +278296,15 @@ var init_getVendorList = __esm(() => {
 });
 
 // apps/server/src/routes/setting/vendorConfig/modelTest.ts
-var router159, modelTest_default;
+var router160, modelTest_default;
 var init_modelTest = __esm(() => {
   init_compat2();
   init_middleware();
   init_utils3();
   init_zod();
   init_dist24();
-  router159 = compat_default.Router();
-  modelTest_default = router159.post("/", validateFields({
+  router160 = compat_default.Router();
+  modelTest_default = router160.post("/", validateFields({
     modelName: exports_external.string(),
     type: exports_external.enum(["text", "video", "image"]),
     id: exports_external.string()
@@ -278348,14 +278395,14 @@ var init_modelTest = __esm(() => {
 });
 
 // apps/server/src/routes/setting/vendorConfig/modelTest/imageTest.ts
-var router160, imageTest_default;
+var router161, imageTest_default;
 var init_imageTest = __esm(() => {
   init_compat2();
   init_middleware();
   init_utils3();
   init_zod();
-  router160 = compat_default.Router();
-  imageTest_default = router160.post("/", validateFields({
+  router161 = compat_default.Router();
+  imageTest_default = router161.post("/", validateFields({
     modelName: exports_external.string(),
     id: exports_external.string(),
     imageBase64: exports_external.string().optional(),
@@ -278387,15 +278434,15 @@ var init_imageTest = __esm(() => {
 });
 
 // apps/server/src/routes/setting/vendorConfig/modelTest/textTest.ts
-var router161, textTest_default;
+var router162, textTest_default;
 var init_textTest = __esm(() => {
   init_compat2();
   init_middleware();
   init_utils3();
   init_zod();
   init_dist24();
-  router161 = compat_default.Router();
-  textTest_default = router161.post("/", validateFields({
+  router162 = compat_default.Router();
+  textTest_default = router162.post("/", validateFields({
     modelName: exports_external.string(),
     id: exports_external.string(),
     messages: exports_external.array(exports_external.object({
@@ -278441,14 +278488,14 @@ var init_textTest = __esm(() => {
 });
 
 // apps/server/src/routes/setting/vendorConfig/modelTest/videoTest.ts
-var router162, videoTest_default;
+var router163, videoTest_default;
 var init_videoTest = __esm(() => {
   init_compat2();
   init_middleware();
   init_utils3();
   init_zod();
-  router162 = compat_default.Router();
-  videoTest_default = router162.post("/", validateFields({
+  router163 = compat_default.Router();
+  videoTest_default = router163.post("/", validateFields({
     modelName: exports_external.string(),
     id: exports_external.string(),
     mode: exports_external.string(),
@@ -278503,7 +278550,7 @@ var init_videoTest = __esm(() => {
 });
 
 // apps/server/src/routes/setting/vendorConfig/updateCode.ts
-var import_sucrase5, router163, vendorConfigSchema2, updateCode_default;
+var import_sucrase5, router164, vendorConfigSchema2, updateCode_default;
 var init_updateCode = __esm(() => {
   init_compat2();
   init_serialize_error();
@@ -278511,7 +278558,7 @@ var init_updateCode = __esm(() => {
   init_utils3();
   init_zod();
   import_sucrase5 = __toESM(require_dist8(), 1);
-  router163 = compat_default.Router();
+  router164 = compat_default.Router();
   vendorConfigSchema2 = exports_external.object({
     id: exports_external.string(),
     author: exports_external.string(),
@@ -278563,7 +278610,7 @@ var init_updateCode = __esm(() => {
       })
     ]))
   });
-  updateCode_default = router163.post("/", validateFields({
+  updateCode_default = router164.post("/", validateFields({
     id: exports_external.string(),
     tsCode: exports_external.string()
   }), async (req, res) => {
@@ -278600,14 +278647,14 @@ var init_updateCode = __esm(() => {
 });
 
 // apps/server/src/routes/setting/vendorConfig/updateVendorInputs.ts
-var router164, updateVendorInputs_default;
+var router165, updateVendorInputs_default;
 var init_updateVendorInputs = __esm(() => {
   init_compat2();
   init_middleware();
   init_utils3();
   init_zod();
-  router164 = compat_default.Router();
-  updateVendorInputs_default = router164.post("/", validateFields({
+  router165 = compat_default.Router();
+  updateVendorInputs_default = router165.post("/", validateFields({
     id: exports_external.string(),
     inputValues: exports_external.record(exports_external.string(), exports_external.string())
   }), async (req, res) => {
@@ -278632,14 +278679,14 @@ var init_updateVendorInputs = __esm(() => {
 });
 
 // apps/server/src/routes/setting/vendorConfig/upVendorModel.ts
-var router165, upVendorModel_default;
+var router166, upVendorModel_default;
 var init_upVendorModel = __esm(() => {
   init_compat2();
   init_middleware();
   init_utils3();
   init_zod();
-  router165 = compat_default.Router();
-  upVendorModel_default = router165.post("/", validateFields({
+  router166 = compat_default.Router();
+  upVendorModel_default = router166.post("/", validateFields({
     id: exports_external.string(),
     modelName: exports_external.string(),
     model: exports_external.discriminatedUnion("type", [
@@ -278697,12 +278744,12 @@ var init_upVendorModel = __esm(() => {
 });
 
 // apps/server/src/routes/task/getProject.ts
-var router166, getProject_default2;
+var router167, getProject_default2;
 var init_getProject2 = __esm(() => {
   init_compat2();
   init_utils3();
-  router166 = compat_default.Router();
-  getProject_default2 = router166.post("/", async (req, res) => {
+  router167 = compat_default.Router();
+  getProject_default2 = router167.post("/", async (req, res) => {
     const list2 = await utils_default.db("o_project").select("id", "name").groupBy("name");
     const data = list2.filter((item) => item.name);
     res.status(200).send(success3(data));
@@ -278710,14 +278757,14 @@ var init_getProject2 = __esm(() => {
 });
 
 // apps/server/src/routes/task/getTaskApi.ts
-var router167, getTaskApi_default;
+var router168, getTaskApi_default;
 var init_getTaskApi = __esm(() => {
   init_compat2();
   init_utils3();
   init_middleware();
   init_zod();
-  router167 = compat_default.Router();
-  getTaskApi_default = router167.post("/", validateFields({
+  router168 = compat_default.Router();
+  getTaskApi_default = router168.post("/", validateFields({
     state: exports_external.string().optional().nullable(),
     taskClass: exports_external.string().optional().nullable(),
     projectId: exports_external.number().optional().nullable(),
@@ -278753,12 +278800,12 @@ var init_getTaskApi = __esm(() => {
 });
 
 // apps/server/src/routes/task/getTaskCategories.ts
-var router168, getTaskCategories_default;
+var router169, getTaskCategories_default;
 var init_getTaskCategories = __esm(() => {
   init_compat2();
   init_utils3();
-  router168 = compat_default.Router();
-  getTaskCategories_default = router168.post("/", async (req, res) => {
+  router169 = compat_default.Router();
+  getTaskCategories_default = router169.post("/", async (req, res) => {
     const list2 = await utils_default.db("o_tasks").select("taskClass").groupBy("taskClass");
     const data = list2.filter((item) => item.taskClass);
     res.status(200).send(success3(data));
@@ -278766,14 +278813,14 @@ var init_getTaskCategories = __esm(() => {
 });
 
 // apps/server/src/routes/task/taskDetails.ts
-var router169, taskDetails_default;
+var router170, taskDetails_default;
 var init_taskDetails = __esm(() => {
   init_compat2();
   init_utils3();
   init_middleware();
   init_zod();
-  router169 = compat_default.Router();
-  taskDetails_default = router169.post("/", validateFields({
+  router170 = compat_default.Router();
+  taskDetails_default = router170.post("/", validateFields({
     taskId: exports_external.number()
   }), async (req, res) => {
     const { taskId } = req.body;
@@ -278784,12 +278831,12 @@ var init_taskDetails = __esm(() => {
 
 // apps/server/src/routes/test/test.ts
 import fs35 from "fs";
-var router170, test_default;
+var router171, test_default;
 var init_test = __esm(() => {
   init_compat2();
   init_utils3();
-  router170 = compat_default.Router();
-  test_default = router170.get("/", async (req, res) => {
+  router171 = compat_default.Router();
+  test_default = router171.get("/", async (req, res) => {
     return res.send("ok");
     const test2 = await utils_default.db("o_vendorConfig").select("*");
     fs35.writeFileSync("test.json", JSON.stringify(test2, null, 2));
@@ -278798,29 +278845,29 @@ var init_test = __esm(() => {
 });
 
 // apps/server/src/routes/v2/catalog.ts
-var router171, catalog_default;
+var router172, catalog_default;
 var init_catalog = __esm(() => {
   init_compat2();
   init_builtinCatalog();
   init_schemas3();
   init_offeringAvailability();
-  router171 = compat_default.Router();
-  catalog_default = router171.get("/", async (_req, res) => {
+  router172 = compat_default.Router();
+  catalog_default = router172.get("/", async (_req, res) => {
     const availability = await getOfferingAvailabilityRuntime().resolveAll();
     res.status(200).json(catalogResponseSchema.parse(success3({ ...builtinCatalog, availability })));
   });
 });
 
 // apps/server/src/routes/v2/files/upload.ts
-var router172, upload_default;
+var router173, upload_default;
 var init_upload = __esm(() => {
   init_compat2();
   init_schemas3();
   init_languageExecutionService();
   init_executionError();
   init_principal();
-  router172 = compat_default.Router();
-  upload_default = router172.post("/", async (req, res) => {
+  router173 = compat_default.Router();
+  upload_default = router173.post("/", async (req, res) => {
     const parsed = fileExecutionRequestSchema.safeParse(req.body);
     if (!parsed.success)
       return res.status(400).json({ message: "contract.invalid_request" });
@@ -278870,15 +278917,15 @@ var init_view = __esm(() => {
 });
 
 // apps/server/src/routes/v2/jobs/[id]/cancel.ts
-var router173, cancel_default;
+var router174, cancel_default;
 var init_cancel = __esm(() => {
   init_compat2();
   init_schemas3();
   init_runtime2();
   init_view();
   init_principal();
-  router173 = compat_default.Router({ mergeParams: true });
-  router173.post("/", async (req, res) => {
+  router174 = compat_default.Router({ mergeParams: true });
+  router174.post("/", async (req, res) => {
     const { id } = req.params;
     const parsed = cancelGenerationJobSchema.safeParse(req.body);
     if (!parsed.success)
@@ -278893,25 +278940,25 @@ var init_cancel = __esm(() => {
       throw cause;
     }
   });
-  cancel_default = router173;
+  cancel_default = router174;
 });
 
 // apps/server/src/routes/v2/jobs/[id]/index.ts
-var router174, __id__default;
+var router175, __id__default;
 var init___id_ = __esm(() => {
   init_compat2();
   init_runtime2();
   init_view();
   init_principal();
-  router174 = compat_default.Router({ mergeParams: true });
-  router174.get("/", async (req, res) => {
+  router175 = compat_default.Router({ mergeParams: true });
+  router175.get("/", async (req, res) => {
     const { id } = req.params;
     const job = await getGenerationRuntime().get(id, principalIdFromClaims(req.user));
     if (!job)
       return res.status(404).json({ message: "generation.job_not_found" });
     res.status(200).json(success3(toGenerationJobView(job)));
   });
-  __id__default = router174;
+  __id__default = router175;
 });
 
 // apps/server/src/generation/assetImageMaterializer.ts
@@ -279012,7 +279059,7 @@ var init_assetImageMaterializer = __esm(() => {
 });
 
 // apps/server/src/routes/v2/jobs/[id]/materialize-asset-image.ts
-var router175, materialize_asset_image_default;
+var router176, materialize_asset_image_default;
 var init_materialize_asset_image = __esm(() => {
   init_compat2();
   init_db();
@@ -279021,8 +279068,8 @@ var init_materialize_asset_image = __esm(() => {
   init_assetImageMaterializer();
   init_runtime();
   init_principal();
-  router175 = compat_default.Router({ mergeParams: true });
-  router175.post("/", async (req, res) => {
+  router176 = compat_default.Router({ mergeParams: true });
+  router176.post("/", async (req, res) => {
     const database = db;
     const materializer = new AssetImageGenerationMaterializer({
       database,
@@ -279048,7 +279095,7 @@ var init_materialize_asset_image = __esm(() => {
       throw cause;
     }
   });
-  materialize_asset_image_default = router175;
+  materialize_asset_image_default = router176;
 });
 
 // apps/server/src/generation/workbenchMaterializer.ts
@@ -279137,7 +279184,7 @@ class WorkbenchGenerationMaterializer {
 var init_workbenchMaterializer = () => {};
 
 // apps/server/src/routes/v2/jobs/[id]/materialize-workbench.ts
-var router176, materialize_workbench_default;
+var router177, materialize_workbench_default;
 var init_materialize_workbench = __esm(() => {
   init_compat2();
   init_db();
@@ -279146,8 +279193,8 @@ var init_materialize_workbench = __esm(() => {
   init_workbenchMaterializer();
   init_runtime();
   init_principal();
-  router176 = compat_default.Router({ mergeParams: true });
-  router176.post("/", async (req, res) => {
+  router177 = compat_default.Router({ mergeParams: true });
+  router177.post("/", async (req, res) => {
     const database = db;
     const materializer = new WorkbenchGenerationMaterializer({
       database,
@@ -279173,19 +279220,19 @@ var init_materialize_workbench = __esm(() => {
       throw cause;
     }
   });
-  materialize_workbench_default = router176;
+  materialize_workbench_default = router177;
 });
 
 // apps/server/src/routes/v2/jobs/[id]/reconcile.ts
-var router177, reconcile_default;
+var router178, reconcile_default;
 var init_reconcile = __esm(() => {
   init_compat2();
   init_schemas3();
   init_runtime2();
   init_view();
   init_principal();
-  router177 = compat_default.Router({ mergeParams: true });
-  router177.post("/", async (req, res) => {
+  router178 = compat_default.Router({ mergeParams: true });
+  router178.post("/", async (req, res) => {
     const { id } = req.params;
     const claims = req.user;
     try {
@@ -279214,18 +279261,18 @@ var init_reconcile = __esm(() => {
       throw cause;
     }
   });
-  reconcile_default = router177;
+  reconcile_default = router178;
 });
 
 // apps/server/src/routes/v2/jobs/[id]/resume-import.ts
-var router178, resume_import_default;
+var router179, resume_import_default;
 var init_resume_import = __esm(() => {
   init_compat2();
   init_runtime2();
   init_view();
   init_principal();
-  router178 = compat_default.Router({ mergeParams: true });
-  router178.post("/", async (req, res) => {
+  router179 = compat_default.Router({ mergeParams: true });
+  router179.post("/", async (req, res) => {
     const { id } = req.params;
     try {
       const job = await getGenerationRuntime().resumeImport(id, principalIdFromClaims(req.user));
@@ -279240,7 +279287,7 @@ var init_resume_import = __esm(() => {
       throw cause;
     }
   });
-  resume_import_default = router178;
+  resume_import_default = router179;
 });
 
 // apps/server/src/generation/pagination.ts
@@ -279264,7 +279311,7 @@ var init_pagination = __esm(() => {
 });
 
 // apps/server/src/routes/v2/jobs/index.ts
-var router179, jobs_default;
+var router180, jobs_default;
 var init_jobs = __esm(() => {
   init_compat2();
   init_zod();
@@ -279274,8 +279321,8 @@ var init_jobs = __esm(() => {
   init_principal();
   init_stateMachine();
   init_pagination();
-  router179 = compat_default.Router();
-  router179.post("/", async (req, res) => {
+  router180 = compat_default.Router();
+  router180.post("/", async (req, res) => {
     const parsed = submitGenerationJobSchema.safeParse(req.body);
     if (!parsed.success)
       return res.status(400).json({ message: "contract.invalid_request" });
@@ -279299,7 +279346,7 @@ var init_jobs = __esm(() => {
       throw cause;
     }
   });
-  router179.get("/", async (req, res) => {
+  router180.get("/", async (req, res) => {
     const parsed = exports_external.object({
       limit: exports_external.coerce.number().int().min(1).max(100).default(50),
       beforeUpdatedAt: exports_external.coerce.number().int().optional(),
@@ -279334,19 +279381,19 @@ var init_jobs = __esm(() => {
       } : {}
     }));
   });
-  jobs_default = router179;
+  jobs_default = router180;
 });
 
 // apps/server/src/routes/v2/language/generate.ts
-var router180, generate_default;
+var router181, generate_default;
 var init_generate = __esm(() => {
   init_compat2();
   init_schemas3();
   init_languageExecutionService();
   init_executionError();
   init_principal();
-  router180 = compat_default.Router();
-  generate_default = router180.post("/", async (req, res) => {
+  router181 = compat_default.Router();
+  generate_default = router181.post("/", async (req, res) => {
     const parsed = languageExecutionRequestSchema.safeParse(req.body);
     if (!parsed.success)
       return res.status(400).json({ message: "contract.invalid_request" });
@@ -279365,15 +279412,15 @@ var init_generate = __esm(() => {
 });
 
 // apps/server/src/routes/v2/language/stream.ts
-var router181, stream_default;
+var router182, stream_default;
 var init_stream2 = __esm(() => {
   init_compat2();
   init_schemas3();
   init_languageExecutionService();
   init_executionError();
   init_principal();
-  router181 = compat_default.Router();
-  stream_default = router181.post("/", async (req, res) => {
+  router182 = compat_default.Router();
+  stream_default = router182.post("/", async (req, res) => {
     const parsed = languageExecutionRequestSchema.safeParse(req.body);
     if (!parsed.success)
       return res.status(400).json({ message: "contract.invalid_request" });
@@ -279409,15 +279456,15 @@ var init_stream2 = __esm(() => {
 });
 
 // apps/server/src/routes/v2/media-assets/[id]/content.ts
-var router182, assetIdSchema, content_default;
+var router183, assetIdSchema, content_default;
 var init_content = __esm(() => {
   init_compat2();
   init_zod();
   init_runtime();
   init_principal();
-  router182 = compat_default.Router();
+  router183 = compat_default.Router();
   assetIdSchema = exports_external.string().regex(/^sha256:[a-f0-9]{64}$/);
-  router182.get("/", async (req, res) => {
+  router183.get("/", async (req, res) => {
     const parsed = assetIdSchema.safeParse(req.params.id);
     if (!parsed.success)
       return res.status(400).json({ message: "contract.invalid_asset_id" });
@@ -279429,18 +279476,18 @@ var init_content = __esm(() => {
     res.setHeader("Cache-Control", "private, max-age=3600, immutable");
     return res.sendFile(asset.filePath);
   });
-  content_default = router182;
+  content_default = router183;
 });
 
 // apps/server/src/routes/v2/media-assets/upload.ts
-var router183, maximumUploadBytes, upload_default2;
+var router184, maximumUploadBytes, upload_default2;
 var init_upload2 = __esm(() => {
   init_compat2();
   init_runtime();
   init_principal();
-  router183 = compat_default.Router();
+  router184 = compat_default.Router();
   maximumUploadBytes = 2 * 1024 * 1024 * 1024;
-  router183.put("/", async (req, res) => {
+  router184.put("/", async (req, res) => {
     const contentLength = Number(req.headers["content-length"]);
     const mediaType = req.headers["x-toonflow-media-type"];
     const encodedFilename = req.headers["x-toonflow-filename"];
@@ -279480,7 +279527,7 @@ var init_upload2 = __esm(() => {
       throw cause;
     }
   });
-  upload_default2 = router183;
+  upload_default2 = router184;
 });
 
 // apps/server/src/assets/workbenchAssetIngestService.ts
@@ -279541,7 +279588,7 @@ class WorkbenchAssetIngestService {
 }
 
 // apps/server/src/routes/v2/media-assets/workbench.ts
-var router184, workbench_default;
+var router185, workbench_default;
 var init_workbench = __esm(() => {
   init_compat2();
   init_schemas3();
@@ -279549,8 +279596,8 @@ var init_workbench = __esm(() => {
   init_principal();
   init_db();
   init_utils3();
-  router184 = compat_default.Router();
-  router184.post("/", async (req, res) => {
+  router185 = compat_default.Router();
+  router185.post("/", async (req, res) => {
     const parsed = workbenchAssetIngestRequestSchema.safeParse(req.body);
     if (!parsed.success)
       return res.status(400).json({ message: "contract.invalid_request" });
@@ -279573,19 +279620,19 @@ var init_workbench = __esm(() => {
       throw cause;
     }
   });
-  workbench_default = router184;
+  workbench_default = router185;
 });
 
 // apps/server/src/routes/v2/preflight.ts
-var router185, preflight_default;
+var router186, preflight_default;
 var init_preflight = __esm(() => {
   init_compat2();
   init_schemas3();
   init_builtinCatalog();
   init_preflightService();
   init_offeringAvailability();
-  router185 = compat_default.Router();
-  preflight_default = router185.post("/", async (req, res) => {
+  router186 = compat_default.Router();
+  preflight_default = router186.post("/", async (req, res) => {
     const parsed = preflightRequestSchema.safeParse(req.body);
     if (!parsed.success) {
       return res.status(400).json(error53("参数错误", {
@@ -279637,7 +279684,7 @@ async function buildProviderCredentialStatus(vault, availability) {
     })))
   });
 }
-var router186, providers_default;
+var router187, providers_default;
 var init_providers = __esm(() => {
   init_compat2();
   init_builtinCatalog();
@@ -279646,11 +279693,11 @@ var init_providers = __esm(() => {
   init_offeringAvailability();
   init_ids();
   init_connectionProbe();
-  router186 = compat_default.Router();
-  providers_default = router186.get("/", async (_req, res) => {
+  router187 = compat_default.Router();
+  providers_default = router187.get("/", async (_req, res) => {
     res.status(200).json(success3(await buildProviderCredentialStatus(getCredentialVault(), getOfferingAvailabilityRuntime())));
   });
-  router186.post("/:providerId/health-check", async (req, res) => {
+  router187.post("/:providerId/health-check", async (req, res) => {
     const providerId = providerIdSchema.parse(req.params.providerId);
     if (!builtinCatalog.providers.some((provider) => provider.id === providerId)) {
       return res.status(404).json({ message: "provider.not_found" });
@@ -279661,15 +279708,15 @@ var init_providers = __esm(() => {
 });
 
 // apps/server/src/routes/v2/support.ts
-var router187, support_default;
+var router188, support_default;
 var init_support = __esm(() => {
   init_compat2();
   init_builtinCatalog();
   init_schemas3();
   init_runtime3();
   init_offeringAvailability();
-  router187 = compat_default.Router();
-  support_default = router187.get("/", async (_req, res) => {
+  router188 = compat_default.Router();
+  support_default = router188.get("/", async (_req, res) => {
     const availability = await getOfferingAvailabilityRuntime().resolveAll();
     const data = supportResultSchema.parse({
       schemaVersion: "2.0.0",
@@ -279807,6 +279854,7 @@ var router_default = async (app) => {
   app.use("/api/project/getVisualManual", getVisualManual_default);
   app.use("/api/project/queryDirectorManual", queryDirectorManual_default);
   app.use("/api/project/updateGenerationSelection", updateGenerationSelection_default);
+  app.use("/api/project/updateImageGenerationSelection", updateImageGenerationSelection_default);
   app.use("/api/project/visualManual", visualManual_default);
   app.use("/api/script/addScript", addScript_default);
   app.use("/api/script/batchAddScript", batchAddScript_default);
@@ -279997,6 +280045,7 @@ var init_router5 = __esm(() => {
   init_getVisualManual();
   init_queryDirectorManual();
   init_updateGenerationSelection();
+  init_updateImageGenerationSelection();
   init_visualManual();
   init_addScript();
   init_batchAddScript();
@@ -284012,8 +284061,8 @@ async function createHttpApplication(localApiPolicy) {
       return context.json({ message: "无效的token" }, 401);
     }
   });
-  const router188 = await Promise.resolve().then(() => (init_router5(), exports_router));
-  await router188.default(new LegacyHttpApplication(app));
+  const router189 = await Promise.resolve().then(() => (init_router5(), exports_router));
+  await router189.default(new LegacyHttpApplication(app));
   app.notFound((context) => context.json({ message: "API 404 Not Found" }, 404));
   app.onError((error54, context) => {
     console.error(error54);

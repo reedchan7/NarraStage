@@ -257,13 +257,30 @@ export async function startDeterministicProductFixture(requestedPort = 0) {
           type: "short",
           artStyle: "手绘胶片质感",
           videoRatio: "16:9",
+          imageModel: "deterministic:image",
+          imageQuality: "1K",
+          mode: "text",
+          videoModel: "toonflow:Kling-Video-O1",
+          videoCatalogMode: "builtin",
+          videoCanonicalModelId: "deterministic:video-v1",
+          videoOfferingId: "deterministic:video",
+          videoOfferingPreferenceMode: "pinned",
+          videoProviderId: "deterministic",
         },
       ]),
     ),
   );
   app.post("/api/project/addProject", (context) =>
-    context.json(envelope({ message: "新增项目成功" })),
+    context.json(envelope({ message: "新增项目成功", id: 7002 })),
   );
+  app.post("/api/project/updateImageGenerationSelection", async (context) => {
+    const input = (await context.req.json()) as { offeringId?: string };
+    return context.json(envelope({ offeringId: input.offeringId }));
+  });
+  app.post("/api/project/updateGenerationSelection", async (context) => {
+    const input = (await context.req.json()) as { selection?: unknown };
+    return context.json(envelope({ selection: input.selection }));
+  });
   app.post("/api/agents/getMemory", (context) => context.json(envelope(conversationHistory)));
   app.post("/api/agents/clearMemory", (context) => {
     conversationHistory = [];

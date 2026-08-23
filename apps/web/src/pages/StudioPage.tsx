@@ -5,6 +5,7 @@ import { Link, useParams } from "react-router-dom";
 import { api } from "@/api/client";
 import { ConversationPanel } from "@/features/conversation/ConversationPanel";
 import { GenerationPanel } from "@/features/generation/GenerationPanel";
+import { configuredProjectOffering } from "@/features/generation/contracts";
 import { useI18n } from "@/i18n/useI18n";
 import { useSession } from "@/state/session";
 import { useWorkspace } from "@/state/workspace";
@@ -27,6 +28,12 @@ export function StudioPage() {
     enabled: Number.isInteger(projectId) && projectId > 0,
     staleTime: 60_000,
   });
+  const projects = useQuery({
+    queryKey: ["projects"],
+    queryFn: () => api.projects(token),
+    enabled: Number.isInteger(projectId) && projectId > 0,
+  });
+  const project = projects.data?.find((candidate) => candidate.id === projectId);
   const stages: Array<{
     id: StudioStage;
     label: string;
@@ -86,34 +93,55 @@ export function StudioPage() {
       </nav>
 
       {stage === "story" ? <ConversationPanel projectId={projectId} token={token} /> : null}
-      {stage !== "story" && catalog.isPending ? (
+      {stage !== "story" && (catalog.isPending || projects.isPending) ? (
         <div className="studio-loading" role="status">
           正在读取模型能力…
         </div>
       ) : null}
-      {stage !== "story" && catalog.isError ? (
+      {stage !== "story" && (catalog.isError || projects.isError) ? (
         <section className="empty-state" role="alert">
           <strong>模型目录读取失败</strong>
-          <p>{catalog.error.message}</p>
-          <button className="button secondary" onClick={() => catalog.refetch()} type="button">
+          <p>{catalog.error?.message ?? projects.error?.message}</p>
+          <button
+            className="button secondary"
+            onClick={() => {
+              void catalog.refetch();
+              void projects.refetch();
+            }}
+            type="button"
+          >
             重试
           </button>
         </section>
       ) : null}
-      {stage === "image" && catalog.data ? (
+      {stage === "image" && catalog.data && project ? (
         <GenerationPanel
           operation="image.generate"
           projectId={projectId}
           catalog={catalog.data}
           token={token}
+          configuredOfferingId={configuredProjectOffering(project, "image.generate")}
+          onOfferingChange={(offering) =>
+            api.updateImageGenerationSelection(token, projectId, offering.id)
+          }
         />
       ) : null}
-      {stage === "video" && catalog.data ? (
+      {stage === "video" && catalog.data && project ? (
         <GenerationPanel
           operation="video.generate"
           projectId={projectId}
           catalog={catalog.data}
           token={token}
+          configuredOfferingId={configuredProjectOffering(project, "video.generate")}
+          onOfferingChange={(offering) =>
+            api.updateGenerationSelection(token, projectId, {
+              catalogMode: "builtin",
+              canonicalModelId: offering.canonicalModelId,
+              offeringId: offering.id,
+              providerId: offering.providerId,
+              preferenceMode: "pinned",
+            })
+          }
         />
       ) : null}
     </div>

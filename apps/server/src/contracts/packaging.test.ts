@@ -30,6 +30,15 @@ describe("packaged contract provenance", () => {
     expect(desktopManifest.version).toBe(rootManifest.version);
   });
 
+  test("replaces immutable runtime code while preserving user-editable vendors and skills", async () => {
+    const mainSource = await readFile(path.join(process.cwd(), "apps/desktop/src/main.ts"), "utf8");
+
+    expect(mainSource).toContain('const IMMUTABLE_RUNTIME_ENTRIES = new Set(["assets"');
+    expect(mainSource).toContain('const MUTABLE_RUNTIME_ENTRIES = new Set(["skills", "vendor"])');
+    expect(mainSource).toContain("for (const dir of MUTABLE_RUNTIME_ENTRIES)");
+    expect(mainSource).not.toMatch(/rmSync\([^\n]+MUTABLE_RUNTIME_ENTRIES/);
+  });
+
   test("packages Web only after generated contract provenance is verified", async () => {
     const packageSource = await readFile(
       path.join(process.cwd(), "scripts/package-web.ts"),

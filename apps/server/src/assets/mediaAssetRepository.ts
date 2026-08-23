@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 import { createWriteStream } from "node:fs";
-import { mkdir, rename, rm, stat, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { Transform, type Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
@@ -314,15 +314,15 @@ export class OwnedMediaAssetResolver implements ProviderAssetResolver, ProviderF
     const stored = await this.#repository.getOwned(asset.assetId, context.principalId);
     if (!stored) throw new Error("provider.asset_not_found");
     if (stored.kind !== asset.kind) throw new Error("provider.asset_kind_mismatch");
-    const blob = Bun.file(stored.filePath);
-    if (blob.size !== stored.byteLength) throw new Error("provider.asset_length_mismatch");
+    const bytes = await readFile(stored.filePath);
+    if (bytes.byteLength !== stored.byteLength) throw new Error("provider.asset_length_mismatch");
     return {
       assetId: stored.id,
       kind: asset.kind,
       mimeType: stored.mimeType,
       byteLength: stored.byteLength,
       sha256: stored.sha256,
-      source: { kind: "blob", blob },
+      source: { kind: "blob", blob: new Blob([bytes], { type: stored.mimeType }) },
     };
   }
 
@@ -333,8 +333,9 @@ export class OwnedMediaAssetResolver implements ProviderAssetResolver, ProviderF
     if (!context?.principalId) throw new Error("provider.asset_principal_required");
     const stored = await this.#repository.getOwned(assetId, context.principalId);
     if (!stored) throw new Error("provider.asset_not_found");
-    const blob = Bun.file(stored.filePath);
-    if (blob.size !== stored.byteLength) throw new Error("provider.asset_length_mismatch");
+    const file = await stat(stored.filePath);
+    if (!file.isFile()) throw new Error("provider.asset_path_not_file");
+    if (file.size !== stored.byteLength) throw new Error("provider.asset_length_mismatch");
     const filename =
       stored.metadata && typeof stored.metadata.filename === "string"
         ? stored.metadata.filename

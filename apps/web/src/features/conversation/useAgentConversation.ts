@@ -29,8 +29,18 @@ interface ContentEvent {
   content?: ConversationContent;
 }
 
+export function mergeConversationMessages(
+  history: ConversationMessage[],
+  current: ConversationMessage[],
+): ConversationMessage[] {
+  const merged = new Map(history.map((message) => [message.id, message]));
+  for (const message of current) merged.set(message.id, message);
+  return [...merged.values()];
+}
+
 export function useAgentConversation(input: { projectId: number; token: string }) {
   const socketRef = useRef<Socket | null>(null);
+  const historyEpochRef = useRef(0);
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
   const [connection, setConnection] = useState<
     "connecting" | "connected" | "reconnecting" | "error"
@@ -39,20 +49,21 @@ export function useAgentConversation(input: { projectId: number; token: string }
 
   useEffect(() => {
     let active = true;
+    const historyEpoch = ++historyEpochRef.current;
+    setMessages([]);
     void api
       .conversationHistory(input.token, input.projectId)
       .then((history) => {
-        if (!active) return;
-        setMessages(
-          history.map((message) => ({
-            ...message,
-            id: String(message.id),
-            content: message.content.map((content, index) => ({
-              ...content,
-              id: String(content.id ?? `${message.id}:${index}`),
-            })),
+        if (!active || historyEpoch !== historyEpochRef.current) return;
+        const normalized = history.map((message) => ({
+          ...message,
+          id: String(message.id),
+          content: message.content.map((content, index) => ({
+            ...content,
+            id: String(content.id ?? `${message.id}:${index}`),
           })),
-        );
+        }));
+        setMessages((current) => mergeConversationMessages(normalized, current));
       })
       .catch((cause: unknown) => {
         if (active) setError(cause instanceof Error ? cause.message : "对话历史读取失败");
@@ -162,6 +173,7 @@ export function useAgentConversation(input: { projectId: number; token: string }
 
   const stop = useCallback(() => socketRef.current?.emit("stop"), []);
   const clear = useCallback(async () => {
+    historyEpochRef.current += 1;
     try {
       await api.clearConversation(input.token, input.projectId);
       setMessages([]);

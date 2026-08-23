@@ -1,10 +1,95 @@
 import type {
+  CapabilityField,
   CapabilitySchema,
   GenerationJob,
   GenerationOperation,
   Offering,
+  Project,
   SubmitGenerationJobInput,
 } from "@/api/client";
+
+export type CapabilityValue = string | number | boolean | undefined;
+
+export function configuredProjectOffering(
+  project: Project | undefined,
+  operation: GenerationOperation,
+): string | undefined {
+  if (!project) return undefined;
+  if (operation === "video.generate" && project.videoOfferingId) {
+    return project.videoOfferingId;
+  }
+  return operation === "image.generate"
+    ? (project.imageModel ?? undefined)
+    : (project.videoModel ?? undefined);
+}
+
+export function initialCapabilityValue(field: CapabilityField): CapabilityValue {
+  const allowed = field.enumValues ?? field.allowedValues;
+  if (field.path === "aspectRatio" && allowed?.includes("16:9")) return "16:9";
+  if (!field.required) return undefined;
+  if (field.kind === "enum") return allowed?.[0];
+  if (field.kind === "integer") return field.allowedValues?.[0] ?? field.minimum;
+  if (field.kind === "boolean") return false;
+  return undefined;
+}
+
+export function capabilityFieldForMode(
+  field: CapabilityField,
+  mode: CapabilityAssetMode | undefined,
+): CapabilityField {
+  const rule = mode?.fieldRules?.find((candidate) => candidate.path === field.path);
+  return {
+    ...field,
+    ...(rule?.required === undefined ? {} : { required: rule.required }),
+    ...(rule?.enumValues ? { enumValues: rule.enumValues } : {}),
+    ...(rule?.allowedValues ? { allowedValues: rule.allowedValues } : {}),
+  };
+}
+
+function activeValueConstraints(schema: CapabilitySchema, values: Record<string, CapabilityValue>) {
+  return (schema.valueConstraints ?? []).filter((constraint) =>
+    constraint.when.values.includes(values[constraint.when.path] as string | number | boolean),
+  );
+}
+
+export function effectiveCapabilityFields(
+  schema: CapabilitySchema,
+  mode: CapabilityAssetMode | undefined,
+  values: Record<string, CapabilityValue>,
+): CapabilityField[] {
+  const constraints = activeValueConstraints(schema, values);
+  return schema.fields.map((field) => {
+    const effective = capabilityFieldForMode(field, mode);
+    const constrained = constraints
+      .flatMap((constraint) => constraint.require)
+      .find((requirement) => requirement.path === field.path);
+    return constrained ? { ...effective, allowedValues: constrained.allowedValues } : effective;
+  });
+}
+
+export function normalizeCapabilityValues(
+  schema: CapabilitySchema,
+  mode: CapabilityAssetMode | undefined,
+  values: Record<string, CapabilityValue>,
+): Record<string, CapabilityValue> {
+  let normalized = { ...values };
+  for (let pass = 0; pass < 2; pass += 1) {
+    const fields = effectiveCapabilityFields(schema, mode, normalized);
+    normalized = Object.fromEntries(
+      fields.map((field) => {
+        const current = normalized[field.path];
+        const allowed = field.enumValues ?? field.allowedValues;
+        return [
+          field.path,
+          current !== undefined && (!allowed || allowed.includes(current))
+            ? current
+            : initialCapabilityValue(field),
+        ];
+      }),
+    );
+  }
+  return normalized;
+}
 
 export function idempotencyKeyFor(
   projectId: number,
@@ -37,7 +122,7 @@ export function buildGenerationRequest(input: {
   operation: GenerationOperation;
   offering: Offering;
   schema: CapabilitySchema;
-  values: Record<string, string | number | boolean>;
+  values: Record<string, CapabilityValue>;
   mode?: string;
   assets?: SubmitGenerationJobInput["input"]["assets"];
   parentJobId?: string;
@@ -47,12 +132,9 @@ export function buildGenerationRequest(input: {
     const candidate = input.values[field.path];
     if (candidate !== undefined && candidate !== "") {
       values[field.path] = candidate;
-    } else if (field.required && field.kind === "enum") {
-      values[field.path] = field.enumValues?.[0] ?? field.allowedValues?.[0];
-    } else if (field.required && field.kind === "integer") {
-      values[field.path] = field.minimum ?? 1;
-    } else if (field.required && field.kind === "boolean") {
-      values[field.path] = false;
+    } else if (field.required) {
+      const fallback = initialCapabilityValue(field);
+      if (fallback !== undefined) values[field.path] = fallback;
     }
   }
   const assets = input.assets ?? [];

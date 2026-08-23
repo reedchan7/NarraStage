@@ -22,15 +22,8 @@ app.commandLine.appendSwitch("disable-features", "CalculateNativeWinOcclusion");
 const ownsSingleInstanceLock = app.requestSingleInstanceLock();
 if (!ownsSingleInstanceLock) app.quit();
 
-const TARGET_ENTRIES = new Set([
-  "assets",
-  "contracts",
-  "models",
-  "serve",
-  "skills",
-  "web",
-  "vendor",
-]);
+const IMMUTABLE_RUNTIME_ENTRIES = new Set(["assets", "contracts", "models", "serve", "web"]);
+const MUTABLE_RUNTIME_ENTRIES = new Set(["skills", "vendor"]);
 const buildDirectory = path.dirname(fileURLToPath(import.meta.url));
 const isolatedUserDataDirectory = process.env.TOONFLOW_USER_DATA_DIR?.trim();
 if (isolatedUserDataDirectory) app.setPath("userData", path.resolve(isolatedUserDataDirectory));
@@ -81,7 +74,7 @@ function initializeData(): void {
     }
   }
 
-  for (const dir of TARGET_ENTRIES) {
+  for (const dir of IMMUTABLE_RUNTIME_ENTRIES) {
     const targetDir = path.join(destDir, dir);
     if (shouldForceReplace) {
       fs.rmSync(targetDir, { recursive: true, force: true });
@@ -91,6 +84,10 @@ function initializeData(): void {
     if (!fs.existsSync(targetDir)) {
       copyDir(path.join(srcDir, dir), targetDir);
     }
+  }
+
+  for (const dir of MUTABLE_RUNTIME_ENTRIES) {
+    copyDir(path.join(srcDir, dir), path.join(destDir, dir));
   }
 
   if (shouldForceReplace) {

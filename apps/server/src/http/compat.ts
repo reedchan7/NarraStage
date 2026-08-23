@@ -138,6 +138,7 @@ function enhanceResponse(outgoing: ServerResponse): Response {
     return response;
   };
   response.sendFile = (filePath) => {
+    response.flushHeaders();
     createReadStream(filePath)
       .on("error", (error) => response.destroy(error))
       .pipe(response);

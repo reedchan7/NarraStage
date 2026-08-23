@@ -2,8 +2,10 @@ import { describe, expect, test } from "vitest";
 import {
   assetModeViolation,
   buildGenerationRequest,
+  configuredProjectOffering,
   extractMediaArtifact,
   idempotencyKeyFor,
+  normalizeCapabilityValues,
 } from "@/features/generation/contracts";
 import type { CapabilitySchema, Offering } from "@/api/client";
 
@@ -42,6 +44,25 @@ describe("generation request contract", () => {
     expect(idempotencyKeyFor(7, "image.generate", offering.id, { prompt: "sunrise" })).not.toBe(
       left,
     );
+  });
+
+  test("prefers structured video pins and exact image model identities from the project", () => {
+    const project = {
+      id: 7,
+      name: "Fixture",
+      intro: null,
+      type: null,
+      artStyle: null,
+      videoRatio: "16:9",
+      projectType: "animation",
+      imageModel: "google:nano-banana-2-lite:official",
+      videoModel: "toonflow:Kling-Video-O1",
+      videoOfferingId: "minimax:h3:official",
+    };
+    expect(configuredProjectOffering(project, "image.generate")).toBe(
+      "google:nano-banana-2-lite:official",
+    );
+    expect(configuredProjectOffering(project, "video.generate")).toBe("minimax:h3:official");
   });
 
   test("fills declared required defaults without inventing fields", () => {
@@ -106,5 +127,79 @@ describe("generation request contract", () => {
         artifacts: [{ kind: "image", assetId: "sha256:abc", mimeType: "image/png" }],
       }),
     ).toEqual({ kind: "image", assetId: "sha256:abc", mimeType: "image/png" });
+  });
+
+  test("materializes discrete integer and conditional capability constraints", () => {
+    const videoSchema: CapabilitySchema = {
+      id: "fixture:video",
+      schemaVersion: "1.0.0",
+      operation: "video.generate",
+      fields: [
+        { path: "prompt", kind: "text", label: "Prompt", required: true },
+        {
+          path: "durationSeconds",
+          kind: "integer",
+          label: "Duration",
+          required: true,
+          allowedValues: [4, 6, 8],
+        },
+        {
+          path: "resolution",
+          kind: "enum",
+          label: "Resolution",
+          required: true,
+          enumValues: ["720P", "1080P"],
+        },
+        { path: "seed", kind: "integer", label: "Seed", required: false, advanced: true },
+        {
+          path: "enableSafetyChecker",
+          kind: "boolean",
+          label: "Safety",
+          required: false,
+          advanced: true,
+        },
+      ],
+      assetModes: [
+        { id: "text", label: "Text", roles: [], maximumTotalAssets: 0 },
+        {
+          id: "reference",
+          label: "Reference",
+          roles: [{ role: "reference_image", kinds: ["image"], minimum: 1, maximum: 3 }],
+          minimumTotalAssets: 1,
+          maximumTotalAssets: 3,
+          fieldRules: [{ path: "durationSeconds", allowedValues: [8] }],
+        },
+      ],
+      valueConstraints: [
+        {
+          when: { path: "resolution", values: ["1080P"] },
+          require: [{ path: "durationSeconds", allowedValues: [8] }],
+        },
+      ],
+    };
+    const textMode = videoSchema.assetModes![0];
+    const defaults = normalizeCapabilityValues(videoSchema, textMode, { prompt: "harbor" });
+    expect(defaults).toMatchObject({ durationSeconds: 4, resolution: "720P" });
+    expect(defaults.seed).toBeUndefined();
+    expect(defaults.enableSafetyChecker).toBeUndefined();
+
+    const highResolution = normalizeCapabilityValues(videoSchema, textMode, {
+      ...defaults,
+      resolution: "1080P",
+    });
+    expect(highResolution.durationSeconds).toBe(8);
+    const reference = normalizeCapabilityValues(videoSchema, videoSchema.assetModes![1], defaults);
+    expect(reference.durationSeconds).toBe(8);
+
+    const request = buildGenerationRequest({
+      projectId: 7,
+      operation: "video.generate",
+      offering: { ...offering, operations: [], id: "fixture:video" },
+      schema: videoSchema,
+      values: defaults,
+      mode: "text",
+    });
+    expect(request.input.values).not.toHaveProperty("seed");
+    expect(request.input.values).not.toHaveProperty("enableSafetyChecker");
   });
 });

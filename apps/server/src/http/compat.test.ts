@@ -1,14 +1,21 @@
 import { afterEach, expect, test } from "bun:test";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import type { Server } from "node:http";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import legacyHttp from "@/http/compat";
 
 const servers: Server[] = [];
+const directories: string[] = [];
 
 afterEach(async () => {
   await Promise.all(
     servers
       .splice(0)
       .map((server) => new Promise<void>((resolve) => server.close(() => resolve()))),
+  );
+  await Promise.all(
+    directories.splice(0).map((directory) => rm(directory, { recursive: true, force: true })),
   );
 });
 
@@ -70,4 +77,28 @@ test("Hono compatibility routes retain the legacy 100 MB JSON body limit", async
     data: null,
     message: "请求内容超过 100 MB 限制",
   });
+});
+
+test("Hono compatibility routes stream sendFile responses without falling through to 204", async () => {
+  const directory = await mkdtemp(path.join(tmpdir(), "toonflow-send-file-"));
+  directories.push(directory);
+  const filePath = path.join(directory, "asset.bin");
+  await writeFile(filePath, Buffer.from("owned-media"));
+  const app = legacyHttp();
+  const router = legacyHttp.Router();
+  router.get("/", (_request, response) => {
+    response.type("application/octet-stream");
+    response.setHeader("Content-Length", "11");
+    return response.sendFile(filePath);
+  });
+  app.use("/api/media", router);
+  const server = app.listen(0);
+  servers.push(server);
+  await new Promise<void>((resolve) => server.once("listening", resolve));
+  const address = server.address();
+  const port = typeof address === "object" && address ? address.port : 0;
+
+  const response = await fetch(`http://127.0.0.1:${port}/api/media`);
+  expect(response.status).toBe(200);
+  expect(await response.text()).toBe("owned-media");
 });

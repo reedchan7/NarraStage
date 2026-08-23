@@ -16,13 +16,17 @@ import {
   type CatalogResult,
   type GenerationJob,
   type GenerationOperation,
+  type Offering,
 } from "@/api/client";
 import {
   buildGenerationRequest,
   assetModeViolation,
+  effectiveCapabilityFields,
   extractMediaArtifact,
   isTerminalJob,
+  normalizeCapabilityValues,
   type CapabilityAssetMode,
+  type CapabilityValue,
   type GenerationAssetInput,
 } from "@/features/generation/contracts";
 
@@ -31,44 +35,6 @@ interface UploadedGenerationAsset {
   filename: string;
   mediaType: string;
   byteLength: number;
-}
-
-function initialFieldValue(field: CapabilityField): string | number | boolean {
-  if (field.path === "aspectRatio" && field.enumValues?.includes("16:9")) return "16:9";
-  if (field.kind === "enum") return field.enumValues?.[0] ?? field.allowedValues?.[0] ?? "";
-  if (field.kind === "integer") return field.minimum ?? 1;
-  if (field.kind === "boolean") return false;
-  return "";
-}
-
-function fieldForMode(field: CapabilityField, mode: CapabilityAssetMode | undefined) {
-  const rule = mode?.fieldRules?.find((candidate) => candidate.path === field.path);
-  return {
-    ...field,
-    ...(rule?.required === undefined ? {} : { required: rule.required }),
-    ...(rule?.enumValues ? { enumValues: rule.enumValues } : {}),
-    ...(rule?.allowedValues ? { allowedValues: rule.allowedValues } : {}),
-  };
-}
-
-function normalizeValuesForMode(
-  fields: CapabilityField[],
-  mode: CapabilityAssetMode | undefined,
-  values: Record<string, string | number | boolean>,
-) {
-  return Object.fromEntries(
-    fields.map((field) => {
-      const effective = fieldForMode(field, mode);
-      const current = values[field.path];
-      const allowed = effective.enumValues ?? effective.allowedValues;
-      return [
-        field.path,
-        current !== undefined && (!allowed || allowed.includes(current))
-          ? current
-          : initialFieldValue(effective),
-      ];
-    }),
-  );
 }
 
 function acceptForKinds(kinds: readonly ("image" | "video" | "audio")[]) {
@@ -121,11 +87,30 @@ function statusLabel(job: GenerationJob | undefined) {
 
 function CapabilityFieldControl(props: {
   field: CapabilityField;
-  value: string | number | boolean;
-  onChange: (value: string | number | boolean) => void;
+  value: CapabilityValue;
+  onChange: (value: CapabilityValue) => void;
 }) {
   const { field, value, onChange } = props;
   if (field.kind === "boolean") {
+    if (!field.required) {
+      return (
+        <label>
+          <span>{field.label}</span>
+          <select
+            value={value === undefined ? "" : String(value)}
+            onChange={(event) =>
+              onChange(
+                event.currentTarget.value === "" ? undefined : event.currentTarget.value === "true",
+              )
+            }
+          >
+            <option value="">未设置</option>
+            <option value="true">是</option>
+            <option value="false">否</option>
+          </select>
+        </label>
+      );
+    }
     return (
       <label className="toggle-field">
         <input
@@ -142,7 +127,12 @@ function CapabilityFieldControl(props: {
     return (
       <label>
         <span>{field.label}</span>
-        <select value={String(value)} onChange={(event) => onChange(event.currentTarget.value)}>
+        <select
+          value={value === undefined ? "" : String(value)}
+          onChange={(event) => onChange(event.currentTarget.value || undefined)}
+          required={field.required}
+        >
+          {!field.required ? <option value="">未设置</option> : null}
           {options.map((option) => (
             <option key={option}>{option}</option>
           ))}
@@ -151,15 +141,48 @@ function CapabilityFieldControl(props: {
     );
   }
   if (field.kind === "integer") {
+    const discreteValues = field.allowedValues?.filter(
+      (candidate): candidate is number => typeof candidate === "number",
+    );
+    if (discreteValues?.length) {
+      return (
+        <label>
+          <span>{field.label}</span>
+          <select
+            value={value === undefined ? "" : String(value)}
+            onChange={(event) =>
+              onChange(
+                event.currentTarget.value === "" ? undefined : Number(event.currentTarget.value),
+              )
+            }
+            required={field.required}
+          >
+            {!field.required ? <option value="">未设置</option> : null}
+            {discreteValues.map((option) => (
+              <option key={option} value={option}>
+                {option}
+                {field.unit ? ` ${field.unit}` : ""}
+              </option>
+            ))}
+          </select>
+        </label>
+      );
+    }
     return (
       <label>
         <span>{field.label}</span>
         <input
           type="number"
-          value={Number(value)}
+          value={value === undefined ? "" : Number(value)}
           min={field.minimum}
           max={field.maximum}
-          onChange={(event) => onChange(event.currentTarget.valueAsNumber)}
+          onChange={(event) =>
+            onChange(
+              Number.isNaN(event.currentTarget.valueAsNumber)
+                ? undefined
+                : event.currentTarget.valueAsNumber,
+            )
+          }
           required={field.required}
         />
       </label>
@@ -170,7 +193,7 @@ function CapabilityFieldControl(props: {
       <span>{field.label}</span>
       {field.path === "prompt" ? (
         <textarea
-          value={String(value)}
+          value={value === undefined ? "" : String(value)}
           onChange={(event) => onChange(event.currentTarget.value)}
           rows={4}
           maxLength={field.maximumLength}
@@ -179,7 +202,7 @@ function CapabilityFieldControl(props: {
         />
       ) : (
         <input
-          value={String(value)}
+          value={value === undefined ? "" : String(value)}
           onChange={(event) => onChange(event.currentTarget.value)}
           required={field.required}
         />
@@ -193,6 +216,8 @@ export function GenerationPanel(props: {
   projectId: number;
   catalog: CatalogResult;
   token: string;
+  configuredOfferingId?: string;
+  onOfferingChange?: (offering: Offering) => Promise<unknown>;
 }) {
   const queryClient = useQueryClient();
   const offerings = useMemo(
@@ -206,15 +231,21 @@ export function GenerationPanel(props: {
       ),
     [props.catalog.offerings, props.operation],
   );
-  const [offeringId, setOfferingId] = useState(offerings[0]?.id ?? "");
-  const offering = offerings.find((candidate) => candidate.id === offeringId) ?? offerings[0];
+  const configuredOffering = offerings.find(
+    (candidate) => candidate.id === props.configuredOfferingId,
+  );
+  const configuredOfferingUnavailable = Boolean(props.configuredOfferingId && !configuredOffering);
+  const [offeringId, setOfferingId] = useState(
+    configuredOffering?.id ?? (props.configuredOfferingId ? "" : (offerings[0]?.id ?? "")),
+  );
+  const offering = offerings.find((candidate) => candidate.id === offeringId);
   const operationDescriptor = offering?.operations.find(
     (candidate) => candidate.operation === props.operation,
   );
   const schema = props.catalog.capabilitySchemas.find(
     (candidate) => candidate.id === operationDescriptor?.capabilitySchemaId,
   );
-  const [values, setValues] = useState<Record<string, string | number | boolean>>({});
+  const [values, setValues] = useState<Record<string, CapabilityValue>>({});
   const [modeId, setModeId] = useState("");
   const [uploadedAssets, setUploadedAssets] = useState<UploadedGenerationAsset[]>([]);
   const [uploadingRole, setUploadingRole] = useState<string | null>(null);
@@ -225,14 +256,16 @@ export function GenerationPanel(props: {
   const [mediaError, setMediaError] = useState<string | null>(null);
 
   useEffect(() => {
-    setOfferingId(offerings[0]?.id ?? "");
-  }, [offerings]);
+    setOfferingId(
+      configuredOffering?.id ?? (props.configuredOfferingId ? "" : (offerings[0]?.id ?? "")),
+    );
+  }, [configuredOffering?.id, offerings, props.configuredOfferingId]);
 
   useEffect(() => {
     const defaultMode =
       schema?.assetModes?.find((candidate) => candidate.id === "text") ?? schema?.assetModes?.[0];
     setModeId(defaultMode?.id ?? "");
-    setValues(normalizeValuesForMode(schema?.fields ?? [], defaultMode, {}));
+    setValues(schema ? normalizeCapabilityValues(schema, defaultMode, {}) : {});
     setUploadedAssets([]);
     setAssetError(null);
     setParentJobId("");
@@ -243,8 +276,8 @@ export function GenerationPanel(props: {
 
   const selectedMode = schema?.assetModes?.find((candidate) => candidate.id === modeId);
   const effectiveFields = useMemo(
-    () => (schema?.fields ?? []).map((field) => fieldForMode(field, selectedMode)),
-    [schema?.fields, selectedMode],
+    () => (schema ? effectiveCapabilityFields(schema, selectedMode, values) : []),
+    [schema, selectedMode, values],
   );
   const generationAssets = uploadedAssets.map((asset) => asset.input);
   const assetViolation = assetModeViolation(selectedMode, generationAssets, parentJobId);
@@ -283,11 +316,15 @@ export function GenerationPanel(props: {
     mutationFn: () => api.cancelJob(props.token, jobId!),
     onSuccess: (nextJob) => queryClient.setQueryData(["generation-job", nextJob.id], nextJob),
   });
+  const saveOffering = useMutation({
+    mutationFn: async (nextOffering: Offering) => props.onOfferingChange?.(nextOffering),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["projects"] }),
+  });
   const currentJob = job.data ?? submit.data;
   const availability = props.catalog.availability.find(
     (candidate) => candidate.offeringId === offering?.id && candidate.operation === props.operation,
   );
-  const available = availability?.available ?? true;
+  const available = Boolean(offering && schema && availability?.available);
 
   async function uploadAssets(role: CapabilityAssetMode["roles"][number], files: FileList | null) {
     if (!files?.length) return;
@@ -380,7 +417,7 @@ export function GenerationPanel(props: {
           </p>
         </div>
       </header>
-      {offerings.length === 0 || !offering || !schema ? (
+      {offerings.length === 0 ? (
         <div className="capability-unavailable" role="status">
           当前目录没有已实现的{isImage ? "图像" : "视频"}能力。
         </div>
@@ -389,9 +426,16 @@ export function GenerationPanel(props: {
           <label>
             <span>模型服务</span>
             <select
-              value={offering.id}
-              onChange={(event) => setOfferingId(event.currentTarget.value)}
+              value={offering?.id ?? ""}
+              onChange={(event) => {
+                const nextOffering = offerings.find(
+                  (candidate) => candidate.id === event.currentTarget.value,
+                );
+                setOfferingId(event.currentTarget.value);
+                if (nextOffering) saveOffering.mutate(nextOffering);
+              }}
             >
+              {!offering ? <option value="">请选择可用模型</option> : null}
               {offerings.map((candidate) => (
                 <option key={candidate.id} value={candidate.id}>
                   {candidate.providerId} / {candidate.providerModelId}
@@ -399,7 +443,18 @@ export function GenerationPanel(props: {
               ))}
             </select>
           </label>
-          {schema.assetModes && schema.assetModes.length > 0 ? (
+          {configuredOfferingUnavailable ? (
+            <p className="capability-unavailable" role="alert">
+              项目保存的模型 {props.configuredOfferingId}{" "}
+              不在当前生成目录中，请明确选择一个可用模型。
+            </p>
+          ) : null}
+          {saveOffering.error ? (
+            <p className="form-error" role="alert">
+              模型选择保存失败：{saveOffering.error.message}
+            </p>
+          ) : null}
+          {schema?.assetModes && schema.assetModes.length > 0 ? (
             <label>
               <span>生成模式</span>
               <select
@@ -409,7 +464,7 @@ export function GenerationPanel(props: {
                     (candidate) => candidate.id === event.currentTarget.value,
                   );
                   setModeId(event.currentTarget.value);
-                  setValues((current) => normalizeValuesForMode(schema.fields, nextMode, current));
+                  setValues((current) => normalizeCapabilityValues(schema, nextMode, current));
                   setUploadedAssets([]);
                   setAssetError(null);
                   setParentJobId("");
@@ -423,20 +478,51 @@ export function GenerationPanel(props: {
               </select>
             </label>
           ) : null}
-          <div className="generation-fields">
-            {effectiveFields
-              .filter((field) => field.kind !== "assets" && !field.advanced)
-              .map((field) => (
-                <CapabilityFieldControl
-                  key={field.path}
-                  field={field}
-                  value={values[field.path] ?? initialFieldValue(field)}
-                  onChange={(value) =>
-                    setValues((current) => ({ ...current, [field.path]: value }))
-                  }
-                />
-              ))}
-          </div>
+          {schema ? (
+            <div className="generation-fields">
+              {effectiveFields
+                .filter((field) => field.kind !== "assets" && !field.advanced)
+                .map((field) => (
+                  <CapabilityFieldControl
+                    key={field.path}
+                    field={field}
+                    value={values[field.path]}
+                    onChange={(value) =>
+                      setValues((current) =>
+                        normalizeCapabilityValues(schema, selectedMode, {
+                          ...current,
+                          [field.path]: value,
+                        }),
+                      )
+                    }
+                  />
+                ))}
+            </div>
+          ) : null}
+          {schema && effectiveFields.some((field) => field.kind !== "assets" && field.advanced) ? (
+            <details className="advanced-generation-fields">
+              <summary>高级参数</summary>
+              <div className="generation-fields">
+                {effectiveFields
+                  .filter((field) => field.kind !== "assets" && field.advanced)
+                  .map((field) => (
+                    <CapabilityFieldControl
+                      key={field.path}
+                      field={field}
+                      value={values[field.path]}
+                      onChange={(value) =>
+                        setValues((current) =>
+                          normalizeCapabilityValues(schema, selectedMode, {
+                            ...current,
+                            [field.path]: value,
+                          }),
+                        )
+                      }
+                    />
+                  ))}
+              </div>
+            </details>
+          ) : null}
           {selectedMode?.requiresContinuation ? (
             <label>
               <span>父任务 ID</span>
@@ -537,6 +623,10 @@ export function GenerationPanel(props: {
               className="button primary"
               disabled={
                 !available ||
+                !offering ||
+                !schema ||
+                saveOffering.isPending ||
+                Boolean(saveOffering.error) ||
                 submit.isPending ||
                 Boolean(currentJob && !isTerminalJob(currentJob)) ||
                 Boolean(assetViolation) ||

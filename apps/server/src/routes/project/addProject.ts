@@ -3,6 +3,10 @@ import u from "@/utils";
 import { z } from "zod";
 import { success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
+import {
+  generationSelectionColumns,
+  generationSelectionSchema,
+} from "@/providers/catalog/generationSelection";
 const router = legacyHttp.Router();
 export const projectModelIdSchema = z.string().regex(/^[a-z0-9_-]+:.+$/i);
 export const projectImageQualitySchema = z.enum(["1K", "2K", "4K"]);
@@ -22,6 +26,7 @@ export default router.post(
     videoModel: projectModelIdSchema,
     imageQuality: projectImageQualitySchema,
     mode: z.string(),
+    videoGenerationSelection: generationSelectionSchema.optional(),
   }),
   async (req, res) => {
     const {
@@ -36,10 +41,12 @@ export default router.post(
       videoModel,
       imageQuality,
       mode,
+      videoGenerationSelection,
     } = req.body;
 
+    const id = Date.now();
     await u.db("o_project").insert({
-      id: Date.now(),
+      id,
       projectType,
       name,
       intro,
@@ -53,8 +60,9 @@ export default router.post(
       createTime: Date.now(),
       imageQuality,
       mode,
+      ...(videoGenerationSelection ? generationSelectionColumns(videoGenerationSelection) : {}),
     });
 
-    res.status(200).send(success({ message: "新增项目成功" }));
+    res.status(200).send(success({ message: "新增项目成功", id }));
   },
 );

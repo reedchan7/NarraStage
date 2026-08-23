@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises";
 import type { FilesUploadPort, OperationContext, OperationRequest } from "@/providers/ports";
 import {
   fileUploadInputSchema,
@@ -35,11 +36,9 @@ export class DeepSeekFilesAdapter implements FilesUploadPort {
       if ("source" in input && !owned) throw new Error("provider.asset_resolver_unavailable");
       const bytes =
         "source" in input
-          ? Buffer.from(
-              await (
-                owned!.source.kind === "path" ? Bun.file(owned!.source.path) : owned!.source.blob
-              ).arrayBuffer(),
-            )
+          ? owned!.source.kind === "path"
+            ? await readFile(owned!.source.path)
+            : Buffer.from(await owned!.source.blob.arrayBuffer())
           : decodeDeepSeekBase64(input.dataBase64);
       const byteLength = "source" in input ? owned!.byteLength : input.byteLength;
       const mediaType = "source" in input ? owned!.mimeType : input.mediaType;
