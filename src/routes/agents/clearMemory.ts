@@ -14,7 +14,7 @@ export default router.post(
     type: z.enum(["message", "summary", "all"]).optional(),
   }),
   async (req, res) => {
-    const { projectId, episodesId,agentType, type = "all" } = req.body;
+    const { projectId, episodesId, agentType, type = "all" } = req.body;
     const isolationKey = `${projectId}:${agentType}${episodesId ? `:${episodesId}` : ""}`;
 
     if (type === "all") {

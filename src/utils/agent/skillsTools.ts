@@ -44,13 +44,15 @@ function ensureNonEmptyBody(body: string, fallback: string): string {
 export function parseFrontmatter(content: string): { name: string; description: string } {
   const match = content.match(/^\uFEFF?---[ \t]*\r?\n([\s\S]*?)\r?\n---[ \t]*(?:\r?\n|$)/);
   if (!match?.[1]) {
-    throw new Error(`技能文件缺少有效的 frontmatter，确保以 --- 包裹并包含 name 和 description 字段。${content}`);
+    throw new Error(
+      `技能文件缺少有效的 frontmatter，确保以 --- 包裹并包含 name 和 description 字段。${content}`,
+    );
   }
 
   const result: Record<string, string> = {};
   const lines = match[1].split(/\r?\n/);
 
-  for (let i = 0; i < lines.length; ) {
+  for (let i = 0; i < lines.length;) {
     const line = lines[i];
     const trimmed = line.trim();
 
@@ -112,7 +114,9 @@ export function parseFrontmatter(content: string): { name: string; description: 
   }
 
   if (!result.name || !result.description) {
-    throw new Error(`技能文件缺少必要字段: name 或 description，确保 frontmatter 包含这两个字段。${content}`);
+    throw new Error(
+      `技能文件缺少必要字段: name 或 description，确保 frontmatter 包含这两个字段。${content}`,
+    );
   }
 
   return { name: result.name, description: result.description };
@@ -127,7 +131,8 @@ export async function useSkill(input: SkillInput) {
   for (const skill of mainSkill) {
     const skillPath = path.join(rootDir, skill + ".md");
     if (!fs.existsSync(skillPath)) throw new Error(`主技能文件不存在: ${skillPath}`);
-    if (!isPathInside(skillPath, normalizedRootDir)) throw new Error(`技能名称无效：检测到路径穿越。${skillPath}`);
+    if (!isPathInside(skillPath, normalizedRootDir))
+      throw new Error(`技能名称无效：检测到路径穿越。${skillPath}`);
     const content = await fs.promises.readFile(skillPath, "utf-8");
     const parsed = parseFrontmatter(content);
     mainSkills.push({ path: skillPath, ...parsed });
@@ -135,7 +140,8 @@ export async function useSkill(input: SkillInput) {
 
   const resolveSafeSkillDir = (dir: string): string | null => {
     const resolvedDir = path.resolve(normalizedRootDir, dir);
-    const isSafeDir = resolvedDir === normalizedRootDir || isPathInside(resolvedDir, normalizedRootDir);
+    const isSafeDir =
+      resolvedDir === normalizedRootDir || isPathInside(resolvedDir, normalizedRootDir);
     return isSafeDir ? resolvedDir : null;
   };
 
@@ -151,7 +157,9 @@ export async function useSkill(input: SkillInput) {
     dirs.flatMap((dir) => {
       const safeDir = resolveSafeSkillDir(dir);
       if (!safeDir) return [];
-      return getMdFiles(safeDir, recursive).map((file) => toUnixPath(path.relative(normalizedRootDir, file)));
+      return getMdFiles(safeDir, recursive).map((file) =>
+        toUnixPath(path.relative(normalizedRootDir, file)),
+      );
     });
 
   const skillPaths: SkillPaths = {
@@ -160,12 +168,19 @@ export async function useSkill(input: SkillInput) {
     tertiarySkills: collectMdFiles(attachedSkills, true),
   };
 
-  return { prompt: buildSkillPrompt(mainSkills), tools: createSkillTools(mainSkills, skillPaths), skillPaths };
+  return {
+    prompt: buildSkillPrompt(mainSkills),
+    tools: createSkillTools(mainSkills, skillPaths),
+    skillPaths,
+  };
 }
 
 export function buildSkillPrompt(skills: { name: string; description: string }[]): string {
   const skillEntries = skills
-    .map((s) => `  <skill>\n    <name>${s.name}</name>\n    <description>${s.description}</description>\n  </skill>`)
+    .map(
+      (s) =>
+        `  <skill>\n    <name>${s.name}</name>\n    <description>${s.description}</description>\n  </skill>`,
+    )
     .join("\n");
   return `## Skills
 以下技能提供了专业任务的专用指令。
@@ -177,7 +192,11 @@ ${skillEntries}
 </available_skills>`;
 }
 
-export function createSkillTools(skills: { name: string; description: string }[], skillPaths: SkillPaths, rootDir: string = getPath("skills")) {
+export function createSkillTools(
+  skills: { name: string; description: string }[],
+  skillPaths: SkillPaths,
+  rootDir: string = getPath("skills"),
+) {
   const activated = new Set<string>(); // 已激活技能集合，防止重复加载
   const skillsRootDir = path.resolve(rootDir);
   const skillNames = skills.map((s) => s.name);
@@ -208,7 +227,10 @@ export function createSkillTools(skills: { name: string; description: string }[]
         }
         activated.add(name);
         console.log(`⚡[主技能] ✓ 技能 "${name}" 已激活`);
-        const body = ensureNonEmptyBody(raw.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/, ""), "该技能文件无正文内容。");
+        const body = ensureNonEmptyBody(
+          raw.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/, ""),
+          "该技能文件无正文内容。",
+        );
         let content = "";
         content = `<skill_content name="${name}">\n`;
         content += body + "\n\n";
@@ -225,11 +247,14 @@ export function createSkillTools(skills: { name: string; description: string }[]
       },
     }),
     read_skill_file: tool({
-      description: "读取已激活技能目录下的资源文件。传入 activate_skill 返回的 skill_resources 中的文件路径。",
+      description:
+        "读取已激活技能目录下的资源文件。传入 activate_skill 返回的 skill_resources 中的文件路径。",
       inputSchema: jsonSchema<{ filePath: string }>(
         z
           .object({
-            filePath: z.string().describe("资源文件的相对路径，来自 activate_skill 返回的 skill_resources"),
+            filePath: z
+              .string()
+              .describe("资源文件的相对路径，来自 activate_skill 返回的 skill_resources"),
           })
           .toJSONSchema(),
       ),

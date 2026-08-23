@@ -27,7 +27,7 @@ if (!fs.existsSync(dbPath)) {
 }
 
 const db = knex({
-  client: "better-sqlite3",
+  client: "sqlite3",
   connection: {
     filename: dbPath,
   },
@@ -40,7 +40,10 @@ const db = knex({
   if (process.env.NODE_ENV == "dev") initKnexType(db);
 })();
 
-const dbClient = Object.assign(<TName extends TableName>(table: TName) => db<RowType<TName>, RowType<TName>[]>(table), db);
+const dbClient = Object.assign(
+  <TName extends TableName>(table: TName) => db<RowType<TName>, RowType<TName>[]>(table),
+  db,
+);
 dbClient.schema = db.schema;
 export default dbClient;
 
@@ -62,7 +65,9 @@ async function initKnexType(knexDb: any) {
   // 清除上次的注释头
   let declBody = declarations.replace(/^\/\*[\s\S]*?\*\/\s*/, "");
   declBody = declBody.replace(/(\n\s*)\/\*([^*][\s\S]*?)\*\//g, "$1/**$2*/");
-  const tableInterfaces = dbObject.schemas.flatMap((schema) => schema.tables.map((table) => table.interfaceName));
+  const tableInterfaces = dbObject.schemas.flatMap((schema) =>
+    schema.tables.map((table) => table.interfaceName),
+  );
   const aggregateTypes = `
 export interface DB {
 ${tableInterfaces.map((name) => `  ${JSON.stringify(name)}: ${name};`).join("\n")}

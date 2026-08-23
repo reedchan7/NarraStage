@@ -5,7 +5,7 @@ import { error, success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
 import { useSkill } from "@/utils/agent/skillsTools";
 import { tool, jsonSchema } from "ai";
-import { o_script } from "@/types/database";
+import type { o_script } from "@/types/database";
 
 const router = express.Router();
 
@@ -86,7 +86,10 @@ export default router.post(
       if (!newAssets.length && !existingRefs.length) return;
 
       // 查询已有资产
-      const existingAssets = await u.db("o_assets").where("projectId", projectId).select("id", "name");
+      const existingAssets = await u
+        .db("o_assets")
+        .where("projectId", projectId)
+        .select("id", "name");
       const existingMap = new Map(existingAssets.map((a) => [a.name!, a.id!]));
 
       // 插入新资产（不在已有列表中的）
@@ -131,7 +134,9 @@ export default router.post(
       }
 
       // 去重：相同 scriptId + assetId 只保留一条
-      const uniqueRows = [...new Map(scriptAssetRows.map((r) => [`${r.scriptId}_${r.assetId}`, r])).values()];
+      const uniqueRows = [
+        ...new Map(scriptAssetRows.map((r) => [`${r.scriptId}_${r.assetId}`, r])).values(),
+      ];
 
       // 先删除本批 scriptId 的旧关联，再插入新的
       await u.db("o_scriptAssets").whereIn("scriptId", batchScriptIds).delete();
@@ -155,10 +160,19 @@ export default router.post(
             const script = scriptMap.get(scriptId);
             if (!script) {
               errors.push({ scriptId, error: "未找到对应剧本" });
-              await u.db("o_script").where("id", scriptId).where("projectId", projectId).update({ extractState: -1, errorReason: "未找到对应剧本" });
+              await u
+                .db("o_script")
+                .where("id", scriptId)
+                .where("projectId", projectId)
+                .update({ extractState: -1, errorReason: "未找到对应剧本" });
             } else {
               // 查看状态是否为等待提取，仅对等待提取进行生成
-              const item = await u.db("o_script").where("projectId", projectId).where("id", scriptId).select("extractState").first();
+              const item = await u
+                .db("o_script")
+                .where("projectId", projectId)
+                .where("id", scriptId)
+                .select("extractState")
+                .first();
               if (item?.extractState == 2) {
                 validScripts.push({ id: scriptId, script });
               }
@@ -172,12 +186,18 @@ export default router.post(
           extractState: 0, // 正在提取
         });
         // 查询当前项目已有的资产列表，提供给 AI 参考
-        const existingAssets = await u.db("o_assets").where("projectId", projectId).select("name", "type");
+        const existingAssets = await u
+          .db("o_assets")
+          .where("projectId", projectId)
+          .select("name", "type");
         const existingAssetsList = existingAssets.map((a) => `${a.name}(${a.type})`).join("、");
 
         // 拼接多集剧本内容，每集用分隔标记
         const scriptsContent = validScripts
-          .map(({ id, script }) => `===== 【剧本ID: ${id}】${script.name || ""} =====\n${script.content}`)
+          .map(
+            ({ id, script }) =>
+              `===== 【剧本ID: ${id}】${script.name || ""} =====\n${script.content}`,
+          )
           .join("\n\n");
 
         let collectedNew: NewAsset[] = [];
@@ -185,15 +205,22 @@ export default router.post(
         try {
           const resultTool = tool({
             description: "返回结果时必须调用这个工具",
-            inputSchema: jsonSchema<{ newAssets: NewAsset[]; existingAssetRefs: ExistingAssetRef[] }>(
+            inputSchema: jsonSchema<{
+              newAssets: NewAsset[];
+              existingAssetRefs: ExistingAssetRef[];
+            }>(
               z
                 .object({
                   newAssets: z
                     .array(NewAssetSchema)
-                    .describe("新发现的资产列表（不在已有资产列表中的），需要完整的 prompt、name、desc、type 和使用该资产的 scriptIds"),
+                    .describe(
+                      "新发现的资产列表（不在已有资产列表中的），需要完整的 prompt、name、desc、type 和使用该资产的 scriptIds",
+                    ),
                   existingAssetRefs: z
                     .array(ExistingAssetRefSchema)
-                    .describe("已有资产的引用列表（在已有资产列表中已存在的），只需给出资产名称和使用该资产的 scriptIds"),
+                    .describe(
+                      "已有资产的引用列表（在已有资产列表中已存在的），只需给出资产名称和使用该资产的 scriptIds",
+                    ),
                 })
                 .toJSONSchema(),
             ),
@@ -249,7 +276,11 @@ export default router.post(
         if (!collectedNew.length && !collectedExisting.length) {
           for (const { id } of validScripts) {
             errors.push({ scriptId: id, error: "AI 未返回任何资产" });
-            await u.db("o_script").where("id", id).where("projectId", projectId).update({ extractState: -1, errorReason: "AI 未返回任何资产" });
+            await u
+              .db("o_script")
+              .where("id", id)
+              .where("projectId", projectId)
+              .update({ extractState: -1, errorReason: "AI 未返回任何资产" });
           }
           return;
         }

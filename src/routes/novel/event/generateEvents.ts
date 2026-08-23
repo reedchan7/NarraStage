@@ -24,12 +24,20 @@ export default router.post(
     if (allChapters.length === 0) {
       return res.status(400).send(success("没有对应章节"));
     }
-    await u.db("o_novel").where("projectId", projectId).whereIn("id", novelIds).update({ eventState: 0, event: null });
+    await u
+      .db("o_novel")
+      .where("projectId", projectId)
+      .whereIn("id", novelIds)
+      .update({ eventState: 0, event: null });
     novel.emitter.on("item", async (item) => {
       await u
         .db("o_novel")
         .where("id", item.id)
-        .update({ event: item.event, eventState: item.event ? 1 : -1, errorReason: item?.errorReason ?? null });
+        .update({
+          event: item.event,
+          eventState: item.event ? 1 : -1,
+          errorReason: item?.errorReason ?? null,
+        });
     });
     novel.start(allChapters, projectId);
 

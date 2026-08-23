@@ -46,15 +46,18 @@ export default (nsp: Namespace) => {
       thinlLevel: 0,
     };
 
-    socket.on("updateContext", (data: { isolationKey: string; projectId: number; scriptId: number }, callback) => {
-      isolationKey = data.isolationKey;
-      resTool = new ResTool(socket, {
-        projectId: data.projectId,
-        scriptId: data.scriptId,
-      });
-      console.log("[productionAgent] 上下文已更新:", isolationKey);
-      callback?.({ success: true });
-    });
+    socket.on(
+      "updateContext",
+      (data: { isolationKey: string; projectId: number; scriptId: number }, callback) => {
+        isolationKey = data.isolationKey;
+        resTool = new ResTool(socket, {
+          projectId: data.projectId,
+          scriptId: data.scriptId,
+        });
+        console.log("[productionAgent] 上下文已更新:", isolationKey);
+        callback?.({ success: true });
+      },
+    );
 
     socket.on("chat", async (data: { content: string }) => {
       const { content } = data;

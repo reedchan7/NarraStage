@@ -16,7 +16,7 @@ export default router.post(
     const data = await u.db("o_project").where("id", projectId).first();
     const video = data?.videoModel?.split(":");
     const vemdor = await u.vendor.getModelList(video?.[0]!);
-    const trackId = Date.now()
+    const trackId = Date.now();
     await u.db("o_videoTrack").insert({
       id: trackId,
       projectId,

@@ -57,7 +57,9 @@ export default router.post(
         ...parent,
         sonAssets: childAssetsWithSrc.filter((child) => child.assetsId === parent.id),
         src: parent.filePath && (await filterTypeGetFileUrl(parent.filePath!, parent.type)),
-        ...(parent.type == "audio" ? { sex: parent.describe?.split("|")[0], describe: parent.describe?.split("|")[1] } : {}),
+        ...(parent.type == "audio"
+          ? { sex: parent.describe?.split("|")[0], describe: parent.describe?.split("|")[1] }
+          : {}),
       })),
     );
 

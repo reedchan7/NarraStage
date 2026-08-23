@@ -3,7 +3,12 @@ import { z } from "zod";
 import { tool, jsonSchema } from "ai";
 import u from "@/utils";
 import Memory from "@/utils/agent/memory";
-import { createSkillTools, parseFrontmatter, scanSkills, useSkill } from "@/utils/agent/skillsTools";
+import {
+  createSkillTools,
+  parseFrontmatter,
+  scanSkills,
+  useSkill,
+} from "@/utils/agent/skillsTools";
 import useTools from "@/agents/productionAgent/tools";
 import ResTool from "@/socket/resTool";
 import * as fs from "fs";
@@ -68,7 +73,11 @@ export async function runDecisionAI(ctx: AgentContext) {
 
   const mem = buildMemPrompt(await memory.get(text));
 
-  const { fullStream } = await u.Ai.Text("productionAgent:decisionAgent", ctx.thinkConfig.think, ctx.thinkConfig.thinlLevel).stream({
+  const { fullStream } = await u.Ai.Text(
+    "productionAgent:decisionAgent",
+    ctx.thinkConfig.think,
+    ctx.thinkConfig.thinlLevel,
+  ).stream({
     messages: [
       { role: "system", content: prompt },
       { role: "assistant", content: mem + "\n" + modelInfo },
@@ -117,7 +126,11 @@ async function createSubAgent(parentCtx: AgentContext) {
     parentCtx.msg.complete();
     const subMsg = resTool.newMessage("assistant", name);
 
-    const { fullStream } = await u.Ai.Text(key, parentCtx.thinkConfig.think, parentCtx.thinkConfig.thinlLevel).stream({
+    const { fullStream } = await u.Ai.Text(
+      key,
+      parentCtx.thinkConfig.think,
+      parentCtx.thinkConfig.thinlLevel,
+    ).stream({
       system,
       messages: messages ?? [{ role: "user", content: prompt }],
       abortSignal,
@@ -245,7 +258,8 @@ async function createSubAgent(parentCtx: AgentContext) {
       const skill = path.join(u.getPath("skills"), "production_execution_director_plan.md");
       const systemPrompt = await fs.promises.readFile(skill, "utf-8");
 
-      const addPrompt = "\n你必须使用如下XML格式写入工作区：\n```\n<scriptPlan>内容</scriptPlan>\n```";
+      const addPrompt =
+        "\n你必须使用如下XML格式写入工作区：\n```\n<scriptPlan>内容</scriptPlan>\n```";
 
       return runAgent({
         key: "productionAgent:directorPlanAgent",
@@ -294,7 +308,10 @@ async function createSubAgent(parentCtx: AgentContext) {
   //   mainSkills.push({ path: skillPath, ...parsed });
   // }
 
-  const productionSkills = await useProductionSkills(projectInfo?.artStyle!, projectInfo?.directorManual!);
+  const productionSkills = await useProductionSkills(
+    projectInfo?.artStyle!,
+    projectInfo?.directorManual!,
+  );
 
   //分镜面板写入
   const run_sub_agent_storyboard_panel = tool({
@@ -330,7 +347,8 @@ async function createSubAgent(parentCtx: AgentContext) {
       const skill = path.join(u.getPath("skills"), "production_execution_storyboard_table.md");
       const systemPrompt = await fs.promises.readFile(skill, "utf-8");
 
-      const addPrompt = "\n你必须使用如下XML格式写入工作区：\n```\n<storyboardTable>内容</storyboardTable>\n```";
+      const addPrompt =
+        "\n你必须使用如下XML格式写入工作区：\n```\n<storyboardTable>内容</storyboardTable>\n```";
 
       return runAgent({
         key: "productionAgent:storyboardTableAgent",
@@ -377,7 +395,10 @@ async function createSubAgent(parentCtx: AgentContext) {
 async function createArtSkills(artName: string, storyName: string) {
   const artWorkerPath = u.getPath(["skills", "art_skills", artName, "driector_skills"]);
   const storyWorkerPath = u.getPath(["skills", "story_skills", storyName, "driector_skills"]);
-  const skillList = [...(await scanSkills(artWorkerPath + "/*.md")), ...(await scanSkills(storyWorkerPath + "/*.md"))];
+  const skillList = [
+    ...(await scanSkills(artWorkerPath + "/*.md")),
+    ...(await scanSkills(storyWorkerPath + "/*.md")),
+  ];
   const mainSkills: { path: string; name: string; description: string }[] = [];
   for (const skillPath of skillList) {
     if (!fs.existsSync(skillPath)) throw new Error(`主技能文件不存在: ${skillPath}`);
@@ -390,7 +411,11 @@ async function createArtSkills(artName: string, storyName: string) {
 以下技能提供了专业任务的专用指令。
 当任务与某个技能的描述匹配时，调用 activate_skill 工具并传入技能名称来加载完整指令。
 ${buildSkillPrompt(mainSkills)}`,
-    tools: createSkillTools(mainSkills, { mainSkill: mainSkills, secondarySkills: [], tertiarySkills: [] }),
+    tools: createSkillTools(mainSkills, {
+      mainSkill: mainSkills,
+      secondarySkills: [],
+      tertiarySkills: [],
+    }),
   };
   return res;
 }
@@ -455,7 +480,10 @@ function removeAllXmlTags(text: string): string {
 
 export function buildSkillPrompt(skills: { name: string; description: string }[]): string {
   const skillEntries = skills
-    .map((s) => `  <skill>\n    <name>${s.name}</name>\n    <description>${s.description}</description>\n  </skill>`)
+    .map(
+      (s) =>
+        `  <skill>\n    <name>${s.name}</name>\n    <description>${s.description}</description>\n  </skill>`,
+    )
     .join("\n");
   return `
 <available_skills>
@@ -484,7 +512,11 @@ async function useProductionSkills(artName: string, storyName: string) {
 以下技能提供了专业任务的专用指令。
 当任务与某个技能的描述匹配时，调用 activate_skill 工具并传入技能名称来加载完整指令。
 ${buildSkillPrompt(mainSkills)}`,
-    tools: createSkillTools(mainSkills, { mainSkill: mainSkills, secondarySkills: [], tertiarySkills: [] }),
+    tools: createSkillTools(mainSkills, {
+      mainSkill: mainSkills,
+      secondarySkills: [],
+      tertiarySkills: [],
+    }),
   };
   return res;
 }

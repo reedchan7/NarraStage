@@ -1,33 +1,26 @@
 {
   "compilerOptions": {
-    "ignoreDeprecations": "5.0",
     "target": "ESNext",
-    "module": "CommonJS",
-    "moduleResolution": "Node",
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "noImplicitAny": true,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["ESNext"],
     "strict": true,
+    "noEmit": true,
+    "isolatedModules": true,
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noUncheckedSideEffectImports": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
-    "sourceMap": false,
-    "outDir": "build",
-    "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "src/*"
-      ]
+      "@/*": ["./src/*"]
     },
-    "incremental": true,
-    "typeRoots": [
-      "./node_modules/@types",
-      "./src/types"
-    ],
-    "resolveJsonModule": true
+    "types": ["bun"],
+    "resolveJsonModule": true,
+    "allowImportingTsExtensions": false
   },
-  "exclude": [
-    "node_modules",
-    "data/**/*.ts",
-    "dist",
-    "build"
-  ]
+  "exclude": ["node_modules", "data/**/*.ts", "dist", "build"]
 }

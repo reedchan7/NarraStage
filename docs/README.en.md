@@ -73,7 +73,7 @@
   </p>
   <p align="center">
     <img src="https://ziadoua.github.io/m3-Markdown-Badges/badges/TypeScript/typescript2.svg" alt="TypeScript" />&nbsp;
-    <img src="https://ziadoua.github.io/m3-Markdown-Badges/badges/NodeJS/nodejs2.svg" alt="Node.js" />&nbsp;
+    <img src="https://ziadoua.github.io/m3-Markdown-Badges/badges/Bun/bun2.svg" alt="Bun" />&nbsp;
     <img src="https://ziadoua.github.io/m3-Markdown-Badges/badges/Docker/docker2.svg" alt="Docker" />&nbsp;
     <img src="https://ziadoua.github.io/m3-Markdown-Badges/badges/Electron/electron2.svg" alt="Electron" />
   </p>
@@ -288,8 +288,9 @@ Build directly from existing local source code, suitable for developers or users
 git clone https://github.com/HBAI-Ltd/Toonflow-app.git
 cd Toonflow-app
 
-# Build and start locally using docker-compose
-yarn docker:local
+# Build and start locally using Makefile
+make docker-build
+make docker-run
 
 # Or build manually
 docker build -t toonflow .
@@ -322,7 +323,7 @@ docker run -d -p <local_port>:10588 -v <local_data_path>:/app/data toonflow
 #### I. Server Environment Requirements
 
 - **OS**: Ubuntu 20.04+ / CentOS 7+
-- **Node.js**: 24.x (recommended, minimum 23.11.1+)
+- **Bun**: 1.4.1 (minimum 1.4.0)
 - **Memory**: 2GB+
 
 #### II. Server Deployment
@@ -330,12 +331,12 @@ docker run -d -p <local_port>:10588 -v <local_data_path>:/app/data toonflow
 ##### 1. Install Environment
 
 ```bash
-# Install Node.js
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+# Install Bun 1.4.1
+curl -fsSL https://bun.com/install | bash
 source ~/.bashrc
-nvm install 24
-# Install Yarn and PM2
-npm install -g yarn pm2
+bun --version
+# Install PM2
+bun add --global pm2
 ```
 
 ##### 2. Deploy the Project
@@ -346,8 +347,8 @@ npm install -g yarn pm2
 cd /opt
 git clone https://github.com/HBAI-Ltd/Toonflow-app.git
 cd Toonflow-app
-yarn install
-yarn build
+bun install
+bun run build
 ```
 
 **Clone from Gitee (recommended for China):**
@@ -356,8 +357,8 @@ yarn build
 cd /opt
 git clone https://gitee.com/HBAI-Ltd/Toonflow-app.git
 cd Toonflow-app
-yarn install
-yarn build
+bun install
+bun run build
 ```
 
 ##### 3. Configure PM2
@@ -368,6 +369,7 @@ Create `pm2.json` file:
 {
   "name": "toonflow-app",
   "script": "data/serve/app.js",
+  "interpreter": "bun",
   "instances": "max",
   "exec_mode": "cluster",
   "env": {
@@ -474,8 +476,8 @@ If you need to deploy or customize the frontend separately, please refer to the 
 
 | Category      | Technology                                                                                    |
 | ------------- | --------------------------------------------------------------------------------------------- |
-| Runtime       | Node.js 23.11.1+                                                                              |
-| Language      | TypeScript 5.x                                                                                |
+| Runtime       | Bun 1.4.1                                                                              |
+| Language      | TypeScript 7.0.2                                                                                |
 | Backend       | Express 5                                                                                     |
 | Database      | SQLite (better-sqlite3 / knex)                                                                |
 | AI Integration| Vercel AI SDK (OpenAI / Anthropic / Google / DeepSeek / Zhipu / MiniMax / Tongyi Qianwen / xAI)|
@@ -487,8 +489,8 @@ If you need to deploy or customize the frontend separately, please refer to the 
 
 ## Development Environment Setup
 
-- **Node.js**: Version 23.11.1 or higher
-- **Yarn**: Recommended as package manager
+- **Bun**: Version 1.4.0 or higher (1.4.1 recommended)
+- **Package manager**: Bun 1.4.1
 
 ## Quick Start Project
 
@@ -513,7 +515,7 @@ If you need to deploy or customize the frontend separately, please refer to the 
    Run the following command in the project root to install dependencies:
 
    ```bash
-   yarn install
+   bun install
    ```
 
 3. **Start Development Environment**
@@ -523,7 +525,7 @@ If you need to deploy or customize the frontend separately, please refer to the 
    - **Method 1: Start backend only**
 
      ```bash
-     yarn dev
+     bun run dev
      ```
 
      > ⚠️ This command starts only the backend API service (port 10588), **without the frontend**. Accessing `http://localhost:10588` will only call API endpoints, not display the full UI. To use the frontend, either run the frontend project separately or use the GUI mode below.
@@ -531,7 +533,7 @@ If you need to deploy or customize the frontend separately, please refer to the 
    - **Method 2: Start Electron Desktop Client**
 
      ```bash
-     yarn dev:gui
+     bun run dev:gui
      ```
 
      > This command starts both the backend service and the Electron desktop window with a built-in frontend page, ready to use out of the box. Ideal for developers who want the full experience.
@@ -539,35 +541,35 @@ If you need to deploy or customize the frontend separately, please refer to the 
    - **Method 3: Production Mode**
 
      ```bash
-     yarn start
+     bun run start
      ```
 
-     > Runs the compiled service in production mode (requires `yarn build` first).
+     > Runs the compiled service in production mode (requires `bun run build` first).
 
 4. **Package the Project**
 
    - Compile and generate TypeScript files:
 
      ```bash
-     yarn build
+     bun run build
      ```
 
    - Package as Windows executable:
 
      ```bash
-     yarn dist:win
+     bun run dist:win
      ```
 
    - Package as macOS executable:
 
      ```bash
-     yarn dist:mac
+     bun run dist:mac
      ```
 
    - Package as Linux executable:
 
      ```bash
-     yarn dist:linux
+     bun run dist:linux
      ```
 
 5. **Code Quality Check**
@@ -575,7 +577,7 @@ If you need to deploy or customize the frontend separately, please refer to the 
    - Run global syntax and lint checks:
 
      ```bash
-     yarn lint
+     bun run check
      ```
 
 6. **AI Debug Panel (Optional)**
@@ -583,7 +585,7 @@ If you need to deploy or customize the frontend separately, please refer to the 
    Launch a visual debugging tool for the AI SDK to facilitate debugging AI calls:
 
    ```bash
-   yarn debug:ai
+   bun run debug:ai
    ```
 
 ## Frontend Development

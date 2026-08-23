@@ -58,9 +58,10 @@ class Logger {
     if (this.writing) return;
     this.writing = true;
     try {
-      let str = typeof chunk === "string" ? chunk : chunk?.toString?.("utf-8") ?? "";
+      let str = typeof chunk === "string" ? chunk : (chunk?.toString?.("utf-8") ?? "");
       str = str.replace(/\x1B\[\d*m/g, ""); // 去除 ANSI 颜色码
-      if (str.trim() && this.stream && !this.stream.destroyed) this.stream.write(str.endsWith("\n") ? str : str + "\n");
+      if (str.trim() && this.stream && !this.stream.destroyed)
+        this.stream.write(str.endsWith("\n") ? str : str + "\n");
     } finally {
       this.writing = false;
     }

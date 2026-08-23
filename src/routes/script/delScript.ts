@@ -16,7 +16,11 @@ export default router.post(
     const scriptData = await u.db("o_script").whereIn("id", ids);
     if (scriptData && scriptData.length) {
       const scriptProjectId = new Set(scriptData.map((item) => item.projectId));
-      await u.db("o_agentWorkData").whereIn("projectId", Array.from(scriptProjectId)).whereIn("episodesId", ids).delete();
+      await u
+        .db("o_agentWorkData")
+        .whereIn("projectId", Array.from(scriptProjectId))
+        .whereIn("episodesId", ids)
+        .delete();
     }
     const storyboardData = await u.db("o_storyboard").whereIn("scriptId", ids);
     if (storyboardData.length) {

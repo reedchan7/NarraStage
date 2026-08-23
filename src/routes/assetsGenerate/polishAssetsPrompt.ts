@@ -5,7 +5,6 @@ import { error, success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
 const router = express.Router();
 
-
 type ItemType = "characters" | "props" | "scenes";
 
 //润色提示词
@@ -21,7 +20,11 @@ export default router.post(
   async (req, res) => {
     const { assetsId, projectId, type, name, describe } = req.body;
     //获取风格
-    const project = await u.db("o_project").where("id", projectId).select("artStyle", "type", "intro").first();
+    const project = await u
+      .db("o_project")
+      .where("id", projectId)
+      .select("artStyle", "type", "intro")
+      .first();
     //如果没有找到对应的项目，返回错误
     if (!project) return res.status(500).send(success({ message: "项目为空" }));
 
@@ -30,7 +33,16 @@ export default router.post(
     //查询资产是否是衍生资产
     const assetsData = await u.db("o_assets").where("id", assetsId).select("assetsId").first();
     if (!assetsData) return { code: 500, message: "资产不存在" };
-    const typeConfig: Record<string, { promptKey: string; itemType: ItemType; label: string; nameLabel: string; visualManual: string }> = {
+    const typeConfig: Record<
+      string,
+      {
+        promptKey: string;
+        itemType: ItemType;
+        label: string;
+        nameLabel: string;
+        visualManual: string;
+      }
+    > = {
       role: {
         promptKey: "role-polish",
         itemType: "characters",
@@ -58,7 +70,11 @@ export default router.post(
     if (!config) return res.status(500).send(error("不支持的类型"));
     if (!config.visualManual) return res.status(500).send(error("视觉手册未定义"));
     //获取到视觉手册
-    const visualManual = await u.getArtPrompt(project.artStyle as string, "art_skills", config.visualManual);
+    const visualManual = await u.getArtPrompt(
+      project.artStyle as string,
+      "art_skills",
+      config.visualManual,
+    );
     if (!visualManual) return res.status(500).send(error("视觉手册未定义"));
     const systemPrompt = visualManual;
     try {
@@ -76,7 +92,10 @@ export default router.post(
       })) as any;
 
       if (!_output) return res.status(500).send("失败");
-      await u.db("o_assets").where("id", assetsId).update({ prompt: _output, promptState: "已完成" });
+      await u
+        .db("o_assets")
+        .where("id", assetsId)
+        .update({ prompt: _output, promptState: "已完成" });
 
       res.status(200).send(success({ prompt: _output, assetsId }));
     } catch (e: any) {

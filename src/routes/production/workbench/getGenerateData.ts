@@ -37,7 +37,11 @@ export default router.post(
   }),
   async (req, res) => {
     const { projectId, scriptId } = req.body;
-    const projectData = await u.db("o_project").where("id", projectId).select("id", "videoModel", "mode").first();
+    const projectData = await u
+      .db("o_project")
+      .where("id", projectId)
+      .select("id", "videoModel", "mode")
+      .first();
 
     if (!projectData?.videoModel) {
       return res.status(400).json(success("项目未配置视频模型"));
@@ -50,7 +54,10 @@ export default router.post(
     }
     const isRef = Array.isArray(videoMode) ? true : false;
 
-    const storyboardList = await u.db("o_storyboard").where({ scriptId, projectId }).orderBy("index", "asc");
+    const storyboardList = await u
+      .db("o_storyboard")
+      .where({ scriptId, projectId })
+      .orderBy("index", "asc");
     await Promise.all(
       storyboardList.map(async (i) => {
         i.filePath = i.filePath ? await u.oss.getSmallImageUrl(i.filePath) : "";
@@ -85,7 +92,9 @@ export default router.post(
     // 解析 videoMode 中 audioReference 的数量，例如 'audioReference:3' => 3
     const audioReferenceCount = (() => {
       if (!Array.isArray(videoMode)) return 0;
-      const item = (videoMode as string[]).find((v) => v.toLowerCase().startsWith("audioreference:"));
+      const item = (videoMode as string[]).find((v) =>
+        v.toLowerCase().startsWith("audioreference:"),
+      );
       if (!item) return 0;
       const num = parseInt(item.split(":")[1], 10);
       return isNaN(num) ? 0 : num;
@@ -100,7 +109,10 @@ export default router.post(
         .whereIn("o_assets2Storyboard.storyboardId", storyIds as number[])
         .select("o_assets.*", "o_image.filePath", "o_assets2Storyboard.storyboardId");
 
-      const queryAudioIds = [...assetDatas.map((i) => i.id!), ...assetDatas.map((i) => i.assetsId!)].filter(Boolean);
+      const queryAudioIds = [
+        ...assetDatas.map((i) => i.id!),
+        ...assetDatas.map((i) => i.assetsId!),
+      ].filter(Boolean);
       const assets2AudioData = await u
         .db("o_assetsRole2Audio")
         .leftJoin("o_assets", "o_assets.assetsId", "o_assetsRole2Audio.assetsAudioId")
@@ -201,7 +213,14 @@ export default router.post(
             .map(async (v) => ({
               id: v.id!,
               src: v.filePath ? await u.oss.getFileUrl(v.filePath) : "",
-              state: v.state === "已完成" ? "已完成" : v.state === "生成中" ? "生成中" : v.state === "生成失败" ? "生成失败" : "未生成",
+              state:
+                v.state === "已完成"
+                  ? "已完成"
+                  : v.state === "生成中"
+                    ? "生成中"
+                    : v.state === "生成失败"
+                      ? "生成失败"
+                      : "未生成",
               errorReason: v?.errorReason ?? "",
             })),
         ),

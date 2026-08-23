@@ -4,7 +4,7 @@ import { z } from "zod";
 import { v4 as uuidv4 } from "uuid";
 import { success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
-import { ReferenceList } from "@/utils/ai";
+import type { ReferenceList } from "@/utils/ai";
 const router = express.Router();
 
 type Type = "imageReference" | "startImage" | "endImage" | "videoReference" | "audioReference";
@@ -57,14 +57,25 @@ export default router.post(
 
     // 为每个 track 预处理数据并插入数据库，返回任务列表
     const tasks = await Promise.all(
-      (trackData as { uploadData: { id: number; sources: string }[]; trackId: number; prompt: string; duration: number }[]).map(async (track) => {
+      (
+        trackData as {
+          uploadData: { id: number; sources: string }[];
+          trackId: number;
+          prompt: string;
+          duration: number;
+        }[]
+      ).map(async (track) => {
         const { uploadData, trackId, prompt, duration } = track;
 
         // 查询出图片数据
         const images = await Promise.all(
           uploadData.map(async (item) => {
             if (item.sources === "storyboard") {
-              const filePath = await u.db("o_storyboard").where("id", item.id).select("filePath").first();
+              const filePath = await u
+                .db("o_storyboard")
+                .where("id", item.id)
+                .select("filePath")
+                .first();
               return { path: filePath?.filePath, sources: "storyBoard" };
             }
             if (item.sources === "assets") {
@@ -99,7 +110,10 @@ export default router.post(
       const base64 = await Promise.all(
         images.map(async (item) => {
           if (!item) return null;
-          return { base64: await u.oss.getImageBase64(item.path), type: item.sources == "audio" ? "audio" : "image" };
+          return {
+            base64: await u.oss.getImageBase64(item.path),
+            type: item.sources == "audio" ? "audio" : "image",
+          };
         }),
       );
       const relatedObjects = { projectId, videoId, scriptId, type: "视频" };

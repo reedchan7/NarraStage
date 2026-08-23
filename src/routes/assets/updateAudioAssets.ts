@@ -58,11 +58,15 @@ export default router.post(
     // 删除不在 assetsItem 中的子项
     const existingItems = await u.db("o_assets").where("assetsId", id).select("id");
     const existingIds = existingItems.map((i: { id?: number }) => i.id!);
-    const incomingIds = assetsItem.filter((i: { id?: number }) => i.id).map((i: { id?: number }) => i.id);
+    const incomingIds = assetsItem
+      .filter((i: { id?: number }) => i.id)
+      .map((i: { id?: number }) => i.id);
     const toDeleteIds = existingIds.filter((eid: number) => !incomingIds.includes(eid));
     if (toDeleteIds.length > 0) {
       const deleteItems = await u.db("o_assets").whereIn("id", toDeleteIds).select("imageId");
-      const deleteImageIds = deleteItems.map((i: { imageId?: number | null }) => i.imageId!).filter(Boolean);
+      const deleteImageIds = deleteItems
+        .map((i: { imageId?: number | null }) => i.imageId!)
+        .filter(Boolean);
       // 先将 o_assets.imageId 置空，解除外键约束，再删除 o_image，最后删除 o_assets
       await u.db("o_assets").whereIn("id", toDeleteIds).update({ imageId: null });
       if (deleteImageIds.length > 0) {

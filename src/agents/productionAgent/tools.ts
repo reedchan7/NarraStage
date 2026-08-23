@@ -1,4 +1,5 @@
-import { tool, jsonSchema, Tool } from "ai";
+import { tool, jsonSchema } from "ai";
+import type { Tool } from "ai";
 import { z } from "zod";
 import _ from "lodash";
 import ResTool from "@/socket/resTool";
@@ -52,9 +53,14 @@ export const flowDataSchema = z.object({
 
 export type FlowData = z.infer<typeof flowDataSchema>;
 
-const keySchema = z.enum(Object.keys(flowDataSchema.shape) as [keyof FlowData, ...Array<keyof FlowData>]);
+const keySchema = z.enum(
+  Object.keys(flowDataSchema.shape) as [keyof FlowData, ...Array<keyof FlowData>],
+);
 const flowDataKeyLabels = Object.fromEntries(
-  Object.entries(flowDataSchema.shape).map(([key, schema]) => [key, (schema as z.ZodTypeAny).description ?? key]),
+  Object.entries(flowDataSchema.shape).map(([key, schema]) => [
+    key,
+    (schema as z.ZodTypeAny).description ?? key,
+  ]),
 ) as Record<keyof FlowData, string>;
 
 interface ToolConfig {
@@ -98,8 +104,12 @@ export default (toolCpnfig: ToolConfig) => {
       execute: async ({ key }) => {
         const thinking = msg.thinking(`正在获取${flowDataKeyLabels[key]}工作区数据...`);
 
-        const flowData: FlowData = await new Promise((resolve) => socket.emit("getFlowData", { key }, (res: any) => resolve(res)));
-        thinking.appendText(`获取到${flowDataKeyLabels[key]}:\n` + JSON.stringify(flowData[key], null, 2));
+        const flowData: FlowData = await new Promise((resolve) =>
+          socket.emit("getFlowData", { key }, (res: any) => resolve(res)),
+        );
+        thinking.appendText(
+          `获取到${flowDataKeyLabels[key]}:\n` + JSON.stringify(flowData[key], null, 2),
+        );
         thinking.updateTitle(`获取${flowDataKeyLabels[key]}完成`);
         thinking.complete();
         if (workMap[key] && JSON.stringify(workMap[key]) === JSON.stringify(flowData[key])) {
@@ -125,13 +135,18 @@ export default (toolCpnfig: ToolConfig) => {
       execute: async (raw) => {
         // 容错：LLM 偶尔传 "null" 字符串或空串，统一规范为 null
         const idRaw = raw.id as unknown;
-        const normalizedId = idRaw === "null" || idRaw === "" || idRaw === undefined ? null : (idRaw as number | null);
+        const normalizedId =
+          idRaw === "null" || idRaw === "" || idRaw === undefined ? null : (idRaw as number | null);
         const deriveAsset = { ...raw, id: normalizedId };
 
         const thinking = msg.thinking("正在操作资产...");
         const { projectId, scriptId } = resTool.data;
         const startTime = Date.now();
-        const parentAssets = await u.db("o_assets").where("id", deriveAsset.assetsId).select("id", "type").first();
+        const parentAssets = await u
+          .db("o_assets")
+          .where("id", deriveAsset.assetsId)
+          .select("id", "type")
+          .first();
         if (!parentAssets) return "关联的资产不存在";
 
         const data = {
@@ -152,7 +167,9 @@ export default (toolCpnfig: ToolConfig) => {
           await u.db("o_scriptAssets").insert({ scriptId, assetId: insertedId });
           thinking.appendText(`已新增衍生资产，ID: ${insertedId}\n`);
         }
-        const res = await new Promise((resolve) => socket.emit("addDeriveAsset", data, (res: any) => resolve(res)));
+        const res = await new Promise((resolve) =>
+          socket.emit("addDeriveAsset", data, (res: any) => resolve(res)),
+        );
         thinking.updateTitle("资产操作完成");
         thinking.complete();
         return res ?? "操作成功";
@@ -174,7 +191,9 @@ export default (toolCpnfig: ToolConfig) => {
         await u.db("o_assets").where("id", id).del();
         await u.db("o_scriptAssets").where({ scriptId, assetId: id }).del();
         thinking.appendText(`已删除衍生资产，ID: ${id}\n`);
-        const res = await new Promise((resolve) => socket.emit("delDeriveAsset", { assetsId, id }, (res: any) => resolve(res)));
+        const res = await new Promise((resolve) =>
+          socket.emit("delDeriveAsset", { assetsId, id }, (res: any) => resolve(res)),
+        );
         thinking.updateTitle("资产操作完成");
         thinking.complete();
         return res ?? "删除成功";
@@ -191,7 +210,9 @@ export default (toolCpnfig: ToolConfig) => {
       ),
       execute: async ({ ids }) => {
         const thinking = msg.thinking("正在生成衍生资产...");
-        new Promise((resolve) => socket.emit("generateDeriveAsset", { ids }, (res: any) => resolve(res)))
+        new Promise((resolve) =>
+          socket.emit("generateDeriveAsset", { ids }, (res: any) => resolve(res)),
+        )
           .then((res) => {
             thinking.appendText(`已生成衍生资产，ID: ${JSON.stringify(res, null, 2)}\n`);
             thinking.updateTitle("衍生资产开始完成");
@@ -252,7 +273,11 @@ export default (toolCpnfig: ToolConfig) => {
       }>(
         z
           .object({
-            videoDesc: z.string().describe("画面描述、场景、关联资产名称、时长、景别、运镜、角色动作、情绪、光影氛围、台词、音效、关联资产ID"),
+            videoDesc: z
+              .string()
+              .describe(
+                "画面描述、场景、关联资产名称、时长、景别、运镜、角色动作、情绪、光影氛围、台词、音效、关联资产ID",
+              ),
             prompt: z.string().nullable().describe("分镜图片提示词"),
             track: z.string().describe("分组"),
             duration: z.number().describe("视频推荐时间"),
@@ -295,5 +320,7 @@ export default (toolCpnfig: ToolConfig) => {
     }),
   };
 
-  return toolsNames ? Object.fromEntries(Object.entries(tools).filter(([n]) => toolsNames.includes(n))) : tools;
+  return toolsNames
+    ? Object.fromEntries(Object.entries(tools).filter(([n]) => toolsNames.includes(n)))
+    : tools;
 };

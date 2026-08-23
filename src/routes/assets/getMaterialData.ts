@@ -39,11 +39,15 @@ export default router.post(
       .db("o_videoTrack")
       .where("o_videoTrack.scriptId", scriptId)
       .andWhere("o_videoTrack.projectId", projectId)
-      .select("o_videoTrack.id as trackId","o_videoTrack.videoId");
+      .select("o_videoTrack.id as trackId", "o_videoTrack.videoId");
     // 按轨道分组处理视频
     const video = await Promise.all(
       trackRows.map(async (track) => {
-        const videoItems = await u.db("o_video").where("o_video.videoTrackId", track.trackId).andWhere("o_video.state", "生成成功").select("*");
+        const videoItems = await u
+          .db("o_video")
+          .where("o_video.videoTrackId", track.trackId)
+          .andWhere("o_video.state", "生成成功")
+          .select("*");
         const videoList = await Promise.all(
           videoItems.map(async (v) => ({
             id: v.id,

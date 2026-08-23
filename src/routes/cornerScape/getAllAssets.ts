@@ -32,7 +32,9 @@ export default router.post(
       .modify((qb) => {
         if (type && type.length > 0) qb.whereIn("o_assets.type", type);
       })
-      .orderByRaw(`CASE o_assets.type WHEN 'role' THEN 1 WHEN 'scene' THEN 2 WHEN 'tool' THEN 3 ELSE 4 END`);
+      .orderByRaw(
+        `CASE o_assets.type WHEN 'role' THEN 1 WHEN 'scene' THEN 2 WHEN 'tool' THEN 3 ELSE 4 END`,
+      );
     const assets2AudioData = await u
       .db("o_assetsRole2Audio")
       .leftJoin("o_assets", "o_assets.id", "o_assetsRole2Audio.assetsAudioId")
@@ -48,7 +50,11 @@ export default router.post(
     });
     const result = await Promise.all(
       data.map(async (parent: any) => {
-        const historyImages = await u.db("o_image").where("assetsId", parent.id).andWhere("state", "已完成").select("id", "filePath");
+        const historyImages = await u
+          .db("o_image")
+          .where("assetsId", parent.id)
+          .andWhere("state", "已完成")
+          .select("id", "filePath");
         const historyImagesWithUrl = await Promise.all(
           historyImages.map(async (img: any) => ({
             id: img.id,

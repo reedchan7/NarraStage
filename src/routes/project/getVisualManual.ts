@@ -35,7 +35,9 @@ async function readAllImages(imagesDir: string) {
   try {
     const ossPath = u.getPath(path.join("skills", "art_skills", imagesDir, "images"));
     const files = fs.readdirSync(ossPath);
-    const images = files.filter((f) => /\.(png|jpe?g|gif|webp|svg)$/i.test(f)).map((f) => path.join("art_skills", imagesDir, "images", f));
+    const images = files
+      .filter((f) => /\.(png|jpe?g|gif|webp|svg)$/i.test(f))
+      .map((f) => path.join("art_skills", imagesDir, "images", f));
     if (images.length) {
       return Promise.all(images.map(async (i) => await u.oss.getFileUrl(i, "skills")));
     } else {

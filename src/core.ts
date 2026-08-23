@@ -6,7 +6,9 @@ import crypto from "crypto";
 function fileNameToRoutePath(fileName: string): string {
   let routePath = fileName.replace(/\.(ts)$/, "");
   routePath = routePath.split(path.sep).join("/");
-  routePath = routePath.replace(/\[([^\]]+)\]/g, (_, p1: string) => (p1.startsWith("...") ? "*" : `:${p1}`));
+  routePath = routePath.replace(/\[([^\]]+)\]/g, (_, p1: string) =>
+    p1.startsWith("...") ? "*" : `:${p1}`,
+  );
   if (routePath === "index") return "/";
   routePath = routePath.replace(/\/index$/, "");
   routePath = "/" + routePath.replace(/\/+/g, "/").replace(/\/$/, "");
@@ -34,7 +36,9 @@ export default async function generateRouter(): Promise<void> {
     const routePath = fileNameToRoutePath(routeKey);
     routeModulePairs.push({ routePath, varName, entry });
   });
-  const routerData = JSON.stringify(routeModulePairs.map(({ routePath, varName }) => ({ routePath, varName })));
+  const routerData = JSON.stringify(
+    routeModulePairs.map(({ routePath, varName }) => ({ routePath, varName })),
+  );
   const hash = crypto.createHash("md5").update(routerData).digest("hex");
 
   let content = `// @routes-hash ${hash}\nimport { Express } from "express";\n\n`;

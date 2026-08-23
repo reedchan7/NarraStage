@@ -6,7 +6,11 @@ import { validateFields } from "@/middleware/middleware";
 import { z } from "zod";
 const router = express.Router();
 
-export function setToken(payload: string | object, expiresIn: string | number, secret: string): string {
+export function setToken(
+  payload: string | object,
+  expiresIn: string | number,
+  secret: string,
+): string {
   if (!payload || typeof secret !== "string" || !secret) {
     throw new Error("参数不合法");
   }
@@ -38,7 +42,9 @@ export default router.post(
         tokenData?.value as string,
       );
 
-      return res.status(200).send(success({ token: "Bearer " + token, name: data!.name, id: data!.id }, "登录成功"));
+      return res
+        .status(200)
+        .send(success({ token: "Bearer " + token, name: data!.name, id: data!.id }, "登录成功"));
     } else {
       return res.status(400).send(error("用户名或密码错误"));
     }

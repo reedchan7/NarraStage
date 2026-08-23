@@ -43,7 +43,9 @@ class Memory {
   }
 
   private async generateSummary(contents: string[]): Promise<string> {
-    const { summaryMaxLength } = await this.getConfigData({ summaryMaxLength: DEFAULTS.summaryMaxLength });
+    const { summaryMaxLength } = await this.getConfigData({
+      summaryMaxLength: DEFAULTS.summaryMaxLength,
+    });
     const { text } = await u.Ai.Text(this.agentType as any).invoke({
       system: `你是一个记忆压缩助手。请将以下多条记忆内容压缩为一段简洁的摘要，不超过${summaryMaxLength}个字符。只输出摘要内容，不要加任何前缀或解释。`,
       messages: [{ role: "user", content: contents.map((c, i) => `${i + 1}. ${c}`).join("\n") }],
@@ -51,7 +53,10 @@ class Memory {
     return text.slice(0, Number(summaryMaxLength));
   }
 
-  private async judgeSummaryRelevance(keyword: string, summaries: { id: string; content: string }[]): Promise<string[]> {
+  private async judgeSummaryRelevance(
+    keyword: string,
+    summaries: { id: string; content: string }[],
+  ): Promise<string[]> {
     const list = summaries.map((s) => `[${s.id}] ${s.content}`).join("\n");
     const { text } = await u.Ai.Text(this.agentType as any).invoke({
       system:
@@ -83,8 +88,14 @@ class Memory {
     return result;
   }
 
-  async add(role: string = "user", content: string, options?: { name?: string; createTime?: number }) {
-    const { messagesPerSummary } = await this.getConfigData({ messagesPerSummary: DEFAULTS.messagesPerSummary });
+  async add(
+    role: string = "user",
+    content: string,
+    options?: { name?: string; createTime?: number },
+  ) {
+    const { messagesPerSummary } = await this.getConfigData({
+      messagesPerSummary: DEFAULTS.messagesPerSummary,
+    });
     const id = uuidv4();
     const embedding = await getEmbedding(content);
     const isolationKey = this.isolationKey;
@@ -103,7 +114,10 @@ class Memory {
     } as any);
 
     // 检查未总结消息数量
-    const unsummarized = await u.db("memories").where({ isolationKey, type: "message", summarized: 0 }).orderBy("createTime", "asc");
+    const unsummarized = await u
+      .db("memories")
+      .where({ isolationKey, type: "message", summarized: 0 })
+      .orderBy("createTime", "asc");
 
     if (unsummarized.length >= Number(messagesPerSummary)) {
       const batch = unsummarized.slice(0, Number(messagesPerSummary));
@@ -147,7 +161,11 @@ class Memory {
     shortTerm.reverse(); // 最旧在前
 
     // summaries: 最近的 summary
-    const summaries = await u.db("memories").where({ isolationKey, type: "summary" }).orderBy("createTime", "desc").limit(Number(summaryLimit));
+    const summaries = await u
+      .db("memories")
+      .where({ isolationKey, type: "summary" })
+      .orderBy("createTime", "desc")
+      .limit(Number(summaryLimit));
     summaries.reverse();
 
     // rag: 向量搜索所有 messages
@@ -156,7 +174,13 @@ class Memory {
     const ragResults = vectorSearch(allMessages, queryEmbedding, Number(ragLimit));
 
     return {
-      shortTerm: shortTerm.map((m: any) => ({ id: m.id, role: m.role, name: m.name, content: m.content, createTime: m.createTime })),
+      shortTerm: shortTerm.map((m: any) => ({
+        id: m.id,
+        role: m.role,
+        name: m.name,
+        content: m.content,
+        createTime: m.createTime,
+      })),
       summaries: summaries.map((s) => ({
         id: s.id,
         content: s.content,
@@ -168,13 +192,19 @@ class Memory {
   }
 
   async deepRetrieve(keyword: string) {
-    const { deepRetrieveSummaryLimit } = await this.getConfigData({ deepRetrieveSummaryLimit: DEFAULTS.deepRetrieveSummaryLimit });
+    const { deepRetrieveSummaryLimit } = await this.getConfigData({
+      deepRetrieveSummaryLimit: DEFAULTS.deepRetrieveSummaryLimit,
+    });
 
     const isolationKey = this.isolationKey;
     // 步骤1: 向量搜索 summary
     const queryEmbedding = await getEmbedding(keyword);
     const allSummaries = await u.db("memories").where({ isolationKey, type: "summary" });
-    const topSummaries = vectorSearch(allSummaries, queryEmbedding, Number(deepRetrieveSummaryLimit));
+    const topSummaries = vectorSearch(
+      allSummaries,
+      queryEmbedding,
+      Number(deepRetrieveSummaryLimit),
+    );
 
     if (topSummaries.length === 0) return [];
 
@@ -188,7 +218,9 @@ class Memory {
 
     // 步骤3: 展开查询原始 messages
     const relevantSummaries = topSummaries.filter((s) => relevantIds.includes(s.id!));
-    const messageIds = relevantSummaries.flatMap((s) => JSON.parse(s.relatedMessageIds || "[]") as string[]);
+    const messageIds = relevantSummaries.flatMap(
+      (s) => JSON.parse(s.relatedMessageIds || "[]") as string[],
+    );
 
     if (messageIds.length === 0) return [];
 

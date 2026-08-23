@@ -50,7 +50,10 @@ export async function runDecisionAI(ctx: AgentContext) {
 
   const projectData = await u.db("o_project").where("id", resTool.data.projectId).first();
 
-  const novelData = await u.db("o_novel").where("projectId", resTool.data.projectId).select("chapterIndex");
+  const novelData = await u
+    .db("o_novel")
+    .where("projectId", resTool.data.projectId)
+    .select("chapterIndex");
 
   const projectInfo = [
     "## 项目信息",
@@ -62,7 +65,11 @@ export async function runDecisionAI(ctx: AgentContext) {
     `章节数量：${novelData.length}章`,
   ].join("\n");
 
-  const { fullStream } = await u.Ai.Text("scriptAgent:decisionAgent", ctx.thinkConfig.think, ctx.thinkConfig.thinlLevel).stream({
+  const { fullStream } = await u.Ai.Text(
+    "scriptAgent:decisionAgent",
+    ctx.thinkConfig.think,
+    ctx.thinkConfig.thinlLevel,
+  ).stream({
     messages: [
       { role: "system", content: prompt },
       { role: "assistant", content: projectInfo + "\n" + mem },
@@ -112,7 +119,11 @@ function createSubAgent(parentCtx: AgentContext) {
     parentCtx.msg.complete();
     const subMsg = resTool.newMessage("assistant", name);
 
-    const { fullStream } = await u.Ai.Text(key, parentCtx.thinkConfig.think, parentCtx.thinkConfig.thinlLevel).stream({
+    const { fullStream } = await u.Ai.Text(
+      key,
+      parentCtx.thinkConfig.think,
+      parentCtx.thinkConfig.thinlLevel,
+    ).stream({
       system,
       messages: messages ?? [{ role: "user", content: prompt }],
       abortSignal,
@@ -145,7 +156,8 @@ function createSubAgent(parentCtx: AgentContext) {
       const skill = path.join(u.getPath("skills"), "script_execution_skeleton.md");
       const systemPrompt = await fs.promises.readFile(skill, "utf-8");
 
-      const formatPrompt = "\n你必须使用如下XML格式写入工作区：\n<storySkeleton>故事骨架内容</storySkeleton>";
+      const formatPrompt =
+        "\n你必须使用如下XML格式写入工作区：\n<storySkeleton>故事骨架内容</storySkeleton>";
 
       return runAgent({
         key: "scriptAgent:storySkeletonAgent",
@@ -165,7 +177,8 @@ function createSubAgent(parentCtx: AgentContext) {
       const skill = path.join(u.getPath("skills"), "script_execution_adaptation.md");
       const systemPrompt = await fs.promises.readFile(skill, "utf-8");
 
-      const formatPrompt = "\n你必须使用如下XML格式写入工作区：\n<adaptationStrategy>改编策略内容</adaptationStrategy>";
+      const formatPrompt =
+        "\n你必须使用如下XML格式写入工作区：\n<adaptationStrategy>改编策略内容</adaptationStrategy>";
 
       return runAgent({
         key: "scriptAgent:adaptationStrategyAgent",
@@ -185,12 +198,20 @@ function createSubAgent(parentCtx: AgentContext) {
       const skill = path.join(u.getPath("skills"), "script_execution_script.md");
       const systemPrompt = await fs.promises.readFile(skill, "utf-8");
 
-      const scriptList = await u.db("o_script").where("projectId", resTool.data.projectId).select("id", "name");
-      const scriptPrompt = ["## 可用剧本(ID:名称)", scriptList.map((s: any) => `${s.id}:${(s.name || "").replace(/[,:]/g, "")}`).join(","), ""].join(
-        "\n",
-      );
+      const scriptList = await u
+        .db("o_script")
+        .where("projectId", resTool.data.projectId)
+        .select("id", "name");
+      const scriptPrompt = [
+        "## 可用剧本(ID:名称)",
+        scriptList.map((s: any) => `${s.id}:${(s.name || "").replace(/[,:]/g, "")}`).join(","),
+        "",
+      ].join("\n");
 
-      const novelData = await u.db("o_novel").where("projectId", resTool.data.projectId).select("chapterIndex");
+      const novelData = await u
+        .db("o_novel")
+        .where("projectId", resTool.data.projectId)
+        .select("chapterIndex");
 
       const formatPrompt = `\n你必须使用如下XML格式写入工作区：\nXML不得添加任何额外标签<scriptItem name="剧本名称">剧本内容</scriptItem><scriptItem name="剧本名称">剧本内容</scriptItem><scriptItem name="剧本名称">剧本内容</scriptItem>`;
 

@@ -20,7 +20,12 @@ export default router.post(
     const { path: folderPath } = req.body;
     const platform = process.platform;
     const target = u.getPath(folderPath);
-    const cmd = platform === "win32" ? `explorer "${target}"` : platform === "darwin" ? `open "${target}"` : `xdg-open "${target}"`;
+    const cmd =
+      platform === "win32"
+        ? `explorer "${target}"`
+        : platform === "darwin"
+          ? `open "${target}"`
+          : `xdg-open "${target}"`;
     exec(cmd, (err) => {
       if (err) {
         return res.status(200).send(error(err.message));

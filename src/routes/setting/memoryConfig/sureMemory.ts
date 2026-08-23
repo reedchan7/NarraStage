@@ -19,8 +19,16 @@ export default router.post(
     modelDtype: z.string(),
   }),
   async (req, res) => {
-    const { messagesPerSummary, shortTermLimit, summaryMaxLength, summaryLimit, ragLimit, deepRetrieveSummaryLimit, modelOnnxFile, modelDtype } =
-      req.body;
+    const {
+      messagesPerSummary,
+      shortTermLimit,
+      summaryMaxLength,
+      summaryLimit,
+      ragLimit,
+      deepRetrieveSummaryLimit,
+      modelOnnxFile,
+      modelDtype,
+    } = req.body;
 
     const upsert = async (key: string, value: string) => {
       const exists = await u.db("o_setting").where("key", key).first();

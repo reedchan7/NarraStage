@@ -73,7 +73,7 @@
   </p>
   <p align="center">
     <img src="https://ziadoua.github.io/m3-Markdown-Badges/badges/TypeScript/typescript2.svg" alt="TypeScript" />&nbsp;
-    <img src="https://ziadoua.github.io/m3-Markdown-Badges/badges/NodeJS/nodejs2.svg" alt="Node.js" />&nbsp;
+    <img src="https://ziadoua.github.io/m3-Markdown-Badges/badges/Bun/bun2.svg" alt="Bun" />&nbsp;
     <img src="https://ziadoua.github.io/m3-Markdown-Badges/badges/Docker/docker2.svg" alt="Docker" />&nbsp;
     <img src="https://ziadoua.github.io/m3-Markdown-Badges/badges/Electron/electron2.svg" alt="Electron" />
   </p>
@@ -288,8 +288,9 @@ https://github.com/user-attachments/assets/2d9fddac-dfdf-4640-b030-b09d7f7287e9
 git clone https://github.com/HBAI-Ltd/Toonflow-app.git
 cd Toonflow-app
 
-# ใช้ docker-compose สร้างและเริ่มในพื้นที่
-yarn docker:local
+# ใช้ Makefile สร้างและเริ่มในพื้นที่
+make docker-build
+make docker-run
 
 # หรือสร้างด้วยตนเอง
 docker build -t toonflow .
@@ -322,7 +323,7 @@ docker run -d -p <พอร์ตท้องถิ่น>:10588 -v <เส้�
 #### 1. ข้อกำหนดสภาพแวดล้อมเซิร์ฟเวอร์
 
 - **ระบบ**: Ubuntu 20.04+ / CentOS 7+
-- **Node.js**: 24.x (แนะนำ ขั้นต่ำ 23.11.1+)
+- **Bun**: 1.4.1 (ขั้นต่ำ 1.4.0)
 - **หน่วยความจำ**: 2GB+
 
 #### 2. การปรับใช้เซิร์ฟเวอร์
@@ -330,12 +331,12 @@ docker run -d -p <พอร์ตท้องถิ่น>:10588 -v <เส้�
 ##### 1. ติดตั้งสภาพแวดล้อม
 
 ```bash
-# ติดตั้ง Node.js
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+# Install Bun 1.4.1
+curl -fsSL https://bun.com/install | bash
 source ~/.bashrc
-nvm install 24
-# ติดตั้ง Yarn และ PM2
-npm install -g yarn pm2
+bun --version
+# Install PM2
+bun add --global pm2
 ```
 
 ##### 2. ปรับใช้โปรเจกต์
@@ -346,8 +347,8 @@ npm install -g yarn pm2
 cd /opt
 git clone https://github.com/HBAI-Ltd/Toonflow-app.git
 cd Toonflow-app
-yarn install
-yarn build
+bun install
+bun run build
 ```
 
 **Clone จาก Gitee (แนะนำสำหรับในประเทศจีน):**
@@ -356,8 +357,8 @@ yarn build
 cd /opt
 git clone https://gitee.com/HBAI-Ltd/Toonflow-app.git
 cd Toonflow-app
-yarn install
-yarn build
+bun install
+bun run build
 ```
 
 ##### 3. กำหนดค่า PM2
@@ -368,6 +369,7 @@ yarn build
 {
   "name": "toonflow-app",
   "script": "data/serve/app.js",
+  "interpreter": "bun",
   "instances": "max",
   "exec_mode": "cluster",
   "env": {
@@ -474,8 +476,8 @@ pm2 monit             # แผงตรวจสอบ
 
 | ประเภท       | เทคโนโลยี                                                                                      |
 | ---------- | ----------------------------------------------------------------------------------------- |
-| รันไทม์     | Node.js 23.11.1+                                                                          |
-| ภาษา       | TypeScript 5.x                                                                            |
+| รันไทม์     | Bun 1.4.1                                                                          |
+| ภาษา       | TypeScript 7.0.2                                                                            |
 | เฟรมเวิร์กแบ็กเอนด์   | Express 5                                                                                 |
 | ฐานข้อมูล     | SQLite (better-sqlite3 / knex)                                                           |
 | การรวม AI    | Vercel AI SDK (OpenAI / Anthropic / Google / DeepSeek / Zhipu / MiniMax / Tongyi Qianwen / xAI) |
@@ -487,8 +489,8 @@ pm2 monit             # แผงตรวจสอบ
 
 ## การเตรียมสภาพแวดล้อมการพัฒนา
 
-- **Node.js**: เวอร์ชัน 23.11.1 ขึ้นไป
-- **Yarn**: แนะนำให้ใช้เป็นตัวจัดการแพ็คเกจของโปรเจกต์
+- **Bun**: เวอร์ชันขั้นต่ำ 1.4.0 (แนะนำ 1.4.1)
+- **ตัวจัดการแพ็กเกจ**: Bun 1.4.1
 
 ## การเริ่มต้นโปรเจกต์อย่างรวดเร็ว
 
@@ -513,7 +515,7 @@ pm2 monit             # แผงตรวจสอบ
    โปรดรันคำสั่งต่อไปนี้ในไดเรกทอรีรากของโปรเจกต์เพื่อติดตั้ง dependencies:
 
    ```bash
-   yarn install
+   bun install
    ```
 
 3. **เริ่มสภาพแวดล้อมการพัฒนา**
@@ -523,7 +525,7 @@ pm2 monit             # แผงตรวจสอบ
    - **วิธีที่ 1: เริ่มเฉพาะบริการแบ็กเอนด์**
 
      ```bash
-     yarn dev
+     bun run dev
      ```
 
      > ⚠️ คำสั่งนี้เริ่มเฉพาะบริการ API แบ็กเอนด์ (พอร์ต 10588) **ไม่มีหน้าส่วนหน้า** การเข้าถึง `http://localhost:10588` โดยตรงจะเรียกใช้接口 API ได้เท่านั้น ไม่สามารถเห็นอินเทอร์เฟซเว็บที่สมบูรณ์ได้ หากต้องการใช้หน้าส่วนหน้าพร้อมกัน โปรดใช้ร่วมกับโปรเจกต์ส่วนหน้าที่แยกต่างหาก หรือใช้โหมด GUI ด้านล่าง
@@ -531,7 +533,7 @@ pm2 monit             # แผงตรวจสอบ
    - **วิธีที่ 2: เริ่มไคลเอนต์เดสก์ท็อป Electron**
 
      ```bash
-     yarn dev:gui
+     bun run dev:gui
      ```
 
      > คำสั่งนี้จะเริ่มบริการแบ็กเอนด์และหน้าต่างเดสก์ท็อป Electron พร้อมกัน มีหน้าส่วนหน้าในตัว พร้อมใช้งานทันที ไม่ต้องกำหนดค่าเพิ่มเติม เหมาะสำหรับนักพัฒนาที่ต้องการสัมผัสประสบการณ์ฟังก์ชันทั้งหมดอย่างสมบูรณ์
@@ -539,35 +541,35 @@ pm2 monit             # แผงตรวจสอบ
    - **วิธีที่ 3: เริ่มโหมดการผลิต**
 
      ```bash
-     yarn start
+     bun run start
      ```
 
-     > รันบริการที่ compile แล้วโดยตรงในโหมดการผลิต (ต้องรัน `yarn build` ก่อน)
+     > รันบริการที่ compile แล้วโดยตรงในโหมดการผลิต (ต้องรัน `bun run build` ก่อน)
 
 4. **การแพ็คเกจโปรเจกต์**
 
    - Compile และสร้างไฟล์ TypeScript:
 
      ```bash
-     yarn build
+     bun run build
      ```
 
    - แพ็คเกจเป็นโปรแกรมที่รันได้บน Windows:
 
      ```bash
-     yarn dist:win
+     bun run dist:win
      ```
 
    - แพ็คเกจเป็นโปรแกรมที่รันได้บน Mac:
 
      ```bash
-     yarn dist:mac
+     bun run dist:mac
      ```
 
    - แพ็คเกจเป็นโปรแกรมที่รันได้บน Linux:
 
      ```bash
-     yarn dist:linux
+     bun run dist:linux
      ```
 
 5. **การตรวจสอบคุณภาพโค้ด**
@@ -575,7 +577,7 @@ pm2 monit             # แผงตรวจสอบ
    - ตรวจสอบไวยากรณ์และมาตรฐานโดยรวม:
 
      ```bash
-     yarn lint
+     bun run check
      ```
 
 6. **แผงดีบัก AI (ไม่บังคับ)**
@@ -583,7 +585,7 @@ pm2 monit             # แผงตรวจสอบ
    เริ่มเครื่องมือดีบัก可视化ของ AI SDK เพื่อความสะดวกในการดีบักการเรียก AI:
 
    ```bash
-   yarn debug:ai
+   bun run debug:ai
    ```
 
 ## การพัฒนาส่วนหน้า

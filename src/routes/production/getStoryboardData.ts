@@ -13,7 +13,10 @@ export default router.post(
   }),
   async (req, res) => {
     const { scriptId, projectId } = req.body;
-    const storyboardData = await u.db("o_storyboard").where({ scriptId, projectId }).orderBy("index", "asc");
+    const storyboardData = await u
+      .db("o_storyboard")
+      .where({ scriptId, projectId })
+      .orderBy("index", "asc");
     const data = await Promise.all(
       storyboardData.map(async (i) => {
         return {
@@ -32,10 +35,18 @@ export default router.post(
       .leftJoin("o_assets", "o_assets2Storyboard.assetId", "o_assets.id")
       .leftJoin("o_image", "o_assets.imageId", "o_image.id")
       .whereIn("o_assets2Storyboard.storyboardId", storyboardIds)
-      .select("o_assets2Storyboard.storyboardId", "o_assets.id as assetId", "o_assets.name", "o_assets.type", "o_image.filePath as avatar");
+      .select(
+        "o_assets2Storyboard.storyboardId",
+        "o_assets.id as assetId",
+        "o_assets.name",
+        "o_assets.type",
+        "o_image.filePath as avatar",
+      );
 
     // 按 storyboardId 分组，生成 characters 列表
-    const storyboardCharactersMap = storyboardConfigs.reduce<Record<number, { name: string; type: string; avatar?: string }[]>>((acc, cur) => {
+    const storyboardCharactersMap = storyboardConfigs.reduce<
+      Record<number, { name: string; type: string; avatar?: string }[]>
+    >((acc, cur) => {
       const storyboardId = cur.storyboardId as number;
       if (!acc[storyboardId]) {
         acc[storyboardId] = [];

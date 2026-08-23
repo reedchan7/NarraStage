@@ -1,7 +1,8 @@
-import { app, BrowserWindow, protocol, systemPreferences } from "electron";
-import path from "path";
-import fs from "fs";
-import Module from "module";
+import { app, BrowserWindow, protocol, shell, systemPreferences } from "electron";
+import fs from "node:fs";
+import { registerHooks } from "node:module";
+import path from "node:path";
+import { pathToFileURL } from "node:url";
 
 // 加速 Electron 启动：跳过 GPU 信息收集，减少初始化耗时
 app.commandLine.appendSwitch("disable-gpu-shader-disk-cache");
@@ -73,50 +74,22 @@ function initializeData(): void {
   }
 }
 
-//获取全部依赖路径，优先从 unpacked 加载原生模块，其他模块从 asar 加载
-function getNodeModulesPaths(): string[] {
-  const paths: string[] = [];
-  if (app.isPackaged) {
-    // external 依赖（原生模块）在 unpacked 目录
-    const unpackedNodeModules = path.join(process.resourcesPath, "app.asar.unpacked", "node_modules");
-    if (fs.existsSync(unpackedNodeModules)) {
-      paths.push(unpackedNodeModules);
-    }
-    // 普通依赖在 asar 内
-    const asarNodeModules = path.join(process.resourcesPath, "app.asar", "node_modules");
-    paths.push(asarNodeModules);
-  } else {
-    paths.push(path.join(process.cwd(), "node_modules"));
-  }
-  return paths;
-}
+const externalDependencies = new Map(
+  ["@huggingface/transformers", "onnxruntime-node", "sharp", "sqlite3"].map((specifier) => [
+    specifier,
+    import.meta.resolve(specifier),
+  ]),
+);
 
-//动态加载
-function requireWithCustomPaths(modulePath: string): any {
-  const appNodeModulesPaths = getNodeModulesPaths();
-  // 保存原始方法
-  const originalNodeModulePaths = (Module as any)._nodeModulePaths;
-  // 临时修改模块路径解析
-  (Module as any)._nodeModulePaths = function (from: string): string[] {
-    const paths = originalNodeModulePaths.call(this, from);
-    // 将主程序的 node_modules 添加到前面
-    for (let i = appNodeModulesPaths.length - 1; i >= 0; i--) {
-      const p = appNodeModulesPaths[i];
-      if (!paths.includes(p)) {
-        paths.unshift(p);
-      }
+registerHooks({
+  resolve(specifier, context, nextResolve) {
+    const url = externalDependencies.get(specifier);
+    if (url) {
+      return { shortCircuit: true, url };
     }
-    return paths;
-  };
-  try {
-    // 清除缓存确保加载最新
-    delete require.cache[require.resolve(modulePath)];
-    return require(modulePath);
-  } finally {
-    // 恢复原始方法
-    (Module as any)._nodeModulePaths = originalNodeModulePaths;
-  }
-}
+    return nextResolve(specifier, context);
+  },
+});
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -173,6 +146,9 @@ protocol.registerSchemesAsPrivileged([
 
 app.whenReady().then(async () => {
   try {
+    process.env.TOONFLOW_DATA_DIR = app.isPackaged
+      ? path.join(app.getPath("userData"), "data")
+      : path.join(process.cwd(), "data");
     let servePath: string;
     if (app.isPackaged) {
       // 生产环境：让出主线程一次，确保 loading 窗口渲染后再做耗时文件拷贝
@@ -180,11 +156,9 @@ app.whenReady().then(async () => {
       initializeData();
       servePath = path.join(app.getPath("userData"), "data", "serve", "app.js");
     } else {
-      // 开发环境：直接加载源码（tsx 通过 -r tsx 注册了 require 钩子）
-      servePath = path.join(process.cwd(), "src", "app.ts");
+      servePath = path.join(process.cwd(), "data", "serve", "app.js");
     }
-    // 使用自定义路径加载模块
-    const mod = requireWithCustomPaths(servePath);
+    const mod = await import(pathToFileURL(servePath).href);
     closeServeFn = mod.closeServe;
     const port = await mod.default(true);
     process.env.PORT = port;
@@ -234,7 +208,6 @@ app.whenReady().then(async () => {
           const search = url.searchParams;
           const targetUrl = search.get("url");
           if (targetUrl) {
-            const { shell } = require("electron");
             shell.openExternal(targetUrl);
             return { ok: true };
           } else {

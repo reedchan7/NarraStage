@@ -1,10 +1,5 @@
 // 判断是否为打包后的 Electron 环境
 const isElectron = typeof process.versions?.electron !== "undefined";
-let isPackaged = false;
-if (isElectron) {
-  const { app } = require("electron");
-  isPackaged = app.isPackaged;
-}
 
 //加载环境变量（打包环境默认使用 prod）
 const env = process.env.NODE_ENV;

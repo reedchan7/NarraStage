@@ -1,22 +1,26 @@
-FROM node:24-bookworm-slim
+FROM oven/bun:canary-slim@sha256:dac90cc91f43a2535bbd32883c72c435377f15add75813393bd308e93e376d82
 
 WORKDIR /app
 
-RUN npm config set registry https://registry.npmmirror.com/ && \
-    yarn config set registry https://registry.npmmirror.com/
+RUN test "$(bun --version)" = "1.4.1"
 
-# Copy the repository contents into the image and install all dependencies
+# The container only runs the backend, so development-only Electron packages
+# are excluded from the install.
+COPY package.json bun.lock ./
+COPY scripts/prepare.ts ./scripts/prepare.ts
+RUN apt-get update && \
+    apt-get install --yes --no-install-recommends g++ make python3 && \
+    bun install --frozen-lockfile --production --registry=https://registry.npmmirror.com && \
+    apt-get purge --yes --auto-remove g++ make python3 && \
+    rm -rf /var/lib/apt/lists/*
+
 COPY . .
 
-# The container only runs the backend dev server, so strip Electron-only
-# packages before installing to avoid downloading desktop binaries.
-RUN node -e "const fs=require('fs');const pkg=JSON.parse(fs.readFileSync('package.json','utf8'));for(const section of ['dependencies','devDependencies']){if(!pkg[section]) continue;for(const name of ['custom-electron-titlebar','electron','electron-builder','electron-rebuild','electronmon']) delete pkg[section][name];}fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2)+'\n');" && \
-    yarn install --frozen-lockfile && \
-    yarn cache clean
-
-ENV NODE_ENV=dev
+ENV NODE_ENV=prod
 ENV PORT=10588
+
+RUN bun scripts/build.ts
 
 EXPOSE 10588
 
-CMD ["yarn", "dev"]
+CMD ["bun", "data/serve/app.js"]

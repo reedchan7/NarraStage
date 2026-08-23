@@ -23,7 +23,20 @@ export default router.post(
     mode: z.string(),
   }),
   async (req, res) => {
-    const { id, name, intro, type, artStyle, videoRatio, directorManual, imageModel, videoModel, imageQuality, projectType, mode } = req.body;
+    const {
+      id,
+      name,
+      intro,
+      type,
+      artStyle,
+      videoRatio,
+      directorManual,
+      imageModel,
+      videoModel,
+      imageQuality,
+      projectType,
+      mode,
+    } = req.body;
 
     await u.db("o_project").where("id", id).update({
       name,

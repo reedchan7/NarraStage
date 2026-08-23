@@ -65,12 +65,13 @@
   </p>
   <p align="center">
     <img src="https://ziadoua.github.io/m3-Markdown-Badges/badges/TypeScript/typescript2.svg" alt="TypeScript" />&nbsp;
-    <img src="https://ziadoua.github.io/m3-Markdown-Badges/badges/NodeJS/nodejs2.svg" alt="Node.js" />&nbsp;
+    <img src="https://ziadoua.github.io/m3-Markdown-Badges/badges/Bun/bun2.svg" alt="Bun" />&nbsp;
     <img src="https://ziadoua.github.io/m3-Markdown-Badges/badges/Docker/docker2.svg" alt="Docker" />&nbsp;
     <img src="https://ziadoua.github.io/m3-Markdown-Badges/badges/Electron/electron2.svg" alt="Electron" />
   </p>
-  
-  > 🚀 **一站式短剧工程**：从文本到角色，从分镜到视频，0门槛全流程AI化，创作效率提升10倍+！
+
+> 🚀 **一站式短剧工程**：从文本到角色，从分镜到视频，0门槛全流程AI化，创作效率提升10倍+！
+
 </div>
 
 <div align="center">
@@ -280,8 +281,9 @@ https://github.com/user-attachments/assets/2d9fddac-dfdf-4640-b030-b09d7f7287e9
 git clone https://github.com/HBAI-Ltd/Toonflow-app.git
 cd Toonflow-app
 
-# 使用 docker-compose 本地构建并启动
-yarn docker:local
+# 使用 Makefile 本地构建并启动
+make docker-build
+make docker-run
 
 # 或者手动构建
 docker build -t toonflow .
@@ -314,7 +316,7 @@ docker run -d -p <本地端口>:10588 -v <本地数据路径>:/app/data toonflow
 #### 一、服务器环境要求
 
 - **系统**：Ubuntu 20.04+ / CentOS 7+
-- **Node.js**：24.x（推荐，最低 23.11.1+）
+- **Bun**：1.4.1（最低 1.4.0）
 - **内存**：2GB+
 
 #### 二、服务器部署
@@ -322,12 +324,12 @@ docker run -d -p <本地端口>:10588 -v <本地数据路径>:/app/data toonflow
 ##### 1. 安装环境
 
 ```bash
-# 安装 Node.js
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+# Install Bun 1.4.1
+curl -fsSL https://bun.com/install | bash
 source ~/.bashrc
-nvm install 24
-# 安装 Yarn 和 PM2
-npm install -g yarn pm2
+bun --version
+# Install PM2
+bun add --global pm2
 ```
 
 ##### 2. 部署项目
@@ -338,8 +340,8 @@ npm install -g yarn pm2
 cd /opt
 git clone https://github.com/HBAI-Ltd/Toonflow-app.git
 cd Toonflow-app
-yarn install
-yarn build
+bun install
+bun run build
 ```
 
 **从 Gitee 克隆（国内推荐）：**
@@ -348,8 +350,8 @@ yarn build
 cd /opt
 git clone https://gitee.com/HBAI-Ltd/Toonflow-app.git
 cd Toonflow-app
-yarn install
-yarn build
+bun install
+bun run build
 ```
 
 ##### 3. 配置 PM2
@@ -360,6 +362,7 @@ yarn build
 {
   "name": "toonflow-app",
   "script": "data/serve/app.js",
+  "interpreter": "bun",
   "instances": "max",
   "exec_mode": "cluster",
   "env": {
@@ -466,8 +469,8 @@ pm2 monit             # 监控面板
 
 | 类别       | 技术                                                                                      |
 | ---------- | ----------------------------------------------------------------------------------------- |
-| 运行时     | Node.js 23.11.1+                                                                          |
-| 语言       | TypeScript 5.x                                                                            |
+| 运行时     | Bun 1.4.1                                                                                 |
+| 语言       | TypeScript 7.0.2                                                                          |
 | 后端框架   | Express 5                                                                                 |
 | 数据库     | SQLite（better-sqlite3 / knex）                                                           |
 | AI 集成    | Vercel AI SDK（OpenAI / Anthropic / Google / DeepSeek / 智谱 / MiniMax / 通义千问 / xAI） |
@@ -479,8 +482,8 @@ pm2 monit             # 监控面板
 
 ## 开发环境准备
 
-- **Node.js**：版本要求 23.11.1 及以上
-- **Yarn**：推荐作为项目包管理器
+- **Bun**：最低版本 1.4.0，推荐 1.4.1
+- **包管理器**：Bun 1.4.1
 
 ## 快速启动项目
 
@@ -505,7 +508,7 @@ pm2 monit             # 监控面板
    请先在项目根目录下执行以下命令以安装依赖项：
 
    ```bash
-   yarn install
+   bun install
    ```
 
 3. **启动开发环境**
@@ -514,7 +517,7 @@ pm2 monit             # 监控面板
    - **方式一：仅启动后端服务**
 
      ```bash
-     yarn dev
+     bun run dev
      ```
 
      > ⚠️ 此命令仅启动后端 API 服务（端口 10588），**不包含前端页面**。直接访问 `http://localhost:10588` 只能调用 API 接口，无法看到完整的网页界面。如需同时使用前端页面，请配合前端项目单独启动，或使用下方的 GUI 模式。
@@ -522,7 +525,7 @@ pm2 monit             # 监控面板
    - **方式二：启动 Electron 桌面客户端**
 
      ```bash
-     yarn dev:gui
+     bun run dev:gui
      ```
 
      > 此命令会同时启动后端服务和 Electron 桌面窗口，自带内置前端页面，开箱即用，无需额外配置。适合想要完整体验所有功能的开发者。
@@ -530,41 +533,41 @@ pm2 monit             # 监控面板
    - **方式三：生产模式启动**
 
      ```bash
-     yarn start
+     bun run start
      ```
 
-     > 以生产模式直接运行编译后的服务（需先执行 `yarn build`）。
+     > 以生产模式直接运行编译后的服务（需先执行 `bun run build`）。
 
 4. **项目打包**
    - 编译并生成 TypeScript 文件：
 
      ```bash
-     yarn build
+     bun run build
      ```
 
    - 打包为 Windows 平台可执行程序：
 
      ```bash
-     yarn dist:win
+     bun run dist:win
      ```
 
    - 打包为 Mac 平台可执行程序：
 
      ```bash
-     yarn dist:mac
+     bun run dist:mac
      ```
 
    - 打包为 Linux 平台可执行程序：
 
      ```bash
-     yarn dist:linux
+     bun run dist:linux
      ```
 
 5. **代码质量检查**
    - 进行全局语法和规范检查：
 
      ```bash
-     yarn lint
+     bun run check
      ```
 
 6. **AI 调试面板（可选）**
@@ -572,7 +575,7 @@ pm2 monit             # 监控面板
    启动 AI SDK 的可视化调试工具，方便调试 AI 调用：
 
    ```bash
-   yarn debug:ai
+   bun run debug:ai
    ```
 
 ## 前端开发

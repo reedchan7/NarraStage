@@ -73,7 +73,7 @@
   </p>
   <p align="center">
     <img src="https://ziadoua.github.io/m3-Markdown-Badges/badges/TypeScript/typescript2.svg" alt="TypeScript" />&nbsp;
-    <img src="https://ziadoua.github.io/m3-Markdown-Badges/badges/NodeJS/nodejs2.svg" alt="Node.js" />&nbsp;
+    <img src="https://ziadoua.github.io/m3-Markdown-Badges/badges/Bun/bun2.svg" alt="Bun" />&nbsp;
     <img src="https://ziadoua.github.io/m3-Markdown-Badges/badges/Docker/docker2.svg" alt="Docker" />&nbsp;
     <img src="https://ziadoua.github.io/m3-Markdown-Badges/badges/Electron/electron2.svg" alt="Electron" />
   </p>
@@ -288,8 +288,9 @@ Sử dụng mã nguồn có sẵn tại địa phương để xây dựng trực
 git clone https://github.com/HBAI-Ltd/Toonflow-app.git
 cd Toonflow-app
 
-# Sử dụng docker-compose để xây dựng và khởi động cục bộ
-yarn docker:local
+# Sử dụng Makefile để xây dựng và khởi động cục bộ
+make docker-build
+make docker-run
 
 # Hoặc xây dựng thủ công
 docker build -t toonflow .
@@ -322,7 +323,7 @@ docker run -d -p <cổng_local>:10588 -v <đường_dẫn_dữ_liệu_local>:/ap
 #### I. Yêu cầu môi trường máy chủ
 
 - **Hệ thống**: Ubuntu 20.04+ / CentOS 7+
-- **Node.js**: 24.x (khuyến nghị, tối thiểu 23.11.1+)
+- **Bun**: 1.4.1 (tối thiểu 1.4.0)
 - **Bộ nhớ**: 2GB+
 
 #### II. Triển khai máy chủ
@@ -330,12 +331,12 @@ docker run -d -p <cổng_local>:10588 -v <đường_dẫn_dữ_liệu_local>:/ap
 ##### 1. Cài đặt môi trường
 
 ```bash
-# Cài đặt Node.js
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+# Install Bun 1.4.1
+curl -fsSL https://bun.com/install | bash
 source ~/.bashrc
-nvm install 24
-# Cài đặt Yarn và PM2
-npm install -g yarn pm2
+bun --version
+# Install PM2
+bun add --global pm2
 ```
 
 ##### 2. Triển khai dự án
@@ -346,8 +347,8 @@ npm install -g yarn pm2
 cd /opt
 git clone https://github.com/HBAI-Ltd/Toonflow-app.git
 cd Toonflow-app
-yarn install
-yarn build
+bun install
+bun run build
 ```
 
 **Clone từ Gitee (khuyến nghị cho nội địa Trung Quốc):**
@@ -356,8 +357,8 @@ yarn build
 cd /opt
 git clone https://gitee.com/HBAI-Ltd/Toonflow-app.git
 cd Toonflow-app
-yarn install
-yarn build
+bun install
+bun run build
 ```
 
 ##### 3. Cấu hình PM2
@@ -368,6 +369,7 @@ Tạo tệp `pm2.json`:
 {
   "name": "toonflow-app",
   "script": "data/serve/app.js",
+  "interpreter": "bun",
   "instances": "max",
   "exec_mode": "cluster",
   "env": {
@@ -474,8 +476,8 @@ Nếu cần triển khai riêng lẻ hoặc tùy chỉnh giao diện frontend, v
 
 | Danh mục | Công nghệ |
 | ---------- | ----------------------------------------------------------------------------------------- |
-| Môi trường chạy | Node.js 23.11.1+ |
-| Ngôn ngữ | TypeScript 5.x |
+| Môi trường chạy | Bun 1.4.1 |
+| Ngôn ngữ | TypeScript 7.0.2 |
 | Backend Framework | Express 5 |
 | Cơ sở dữ liệu | SQLite (better-sqlite3 / knex) |
 | Tích hợp AI | Vercel AI SDK (OpenAI / Anthropic / Google / DeepSeek / Zhipu / MiniMax / Tongyi Qianwen / xAI) |
@@ -487,8 +489,8 @@ Nếu cần triển khai riêng lẻ hoặc tùy chỉnh giao diện frontend, v
 
 ## Chuẩn bị môi trường phát triển
 
-- **Node.js**: Yêu cầu phiên bản 23.11.1 trở lên
-- **Yarn**: Khuyến nghị sử dụng làm trình quản lý gói cho dự án
+- **Bun**: Tối thiểu 1.4.0 (khuyến nghị 1.4.1)
+- **Trình quản lý gói**: Bun 1.4.1
 
 ## Khởi động nhanh dự án
 
@@ -513,7 +515,7 @@ Nếu cần triển khai riêng lẻ hoặc tùy chỉnh giao diện frontend, v
    Vui lòng thực hiện lệnh sau trong thư mục gốc của dự án để cài đặt các phụ thuộc:
 
    ```bash
-   yarn install
+   bun install
    ```
 
 3. **Khởi động môi trường phát triển**
@@ -523,7 +525,7 @@ Nếu cần triển khai riêng lẻ hoặc tùy chỉnh giao diện frontend, v
    - **Cách 1: Chỉ khởi động dịch vụ backend**
 
      ```bash
-     yarn dev
+     bun run dev
      ```
 
      > ⚠️ Lệnh này chỉ khởi động dịch vụ API backend (cổng 10588), **không bao gồm trang frontend**. Truy cập trực tiếp `http://localhost:10588` chỉ có thể gọi các API, không thấy được giao diện web đầy đủ. Nếu muốn sử dụng đồng thời trang frontend, vui lòng kết hợp với dự án frontend khởi động riêng, hoặc sử dụng chế độ GUI bên dưới.
@@ -531,7 +533,7 @@ Nếu cần triển khai riêng lẻ hoặc tùy chỉnh giao diện frontend, v
    - **Cách 2: Khởi động ứng dụng desktop Electron**
 
      ```bash
-     yarn dev:gui
+     bun run dev:gui
      ```
 
      > Lệnh này sẽ đồng thời khởi động dịch vụ backend và cửa sổ desktop Electron, có sẵn trang frontend tích hợp, dùng ngay, không cần cấu hình thêm. Phù hợp với nhà phát triển muốn trải nghiệm đầy đủ tất cả chức năng.
@@ -539,35 +541,35 @@ Nếu cần triển khai riêng lẻ hoặc tùy chỉnh giao diện frontend, v
    - **Cách 3: Khởi động chế độ sản xuất**
 
      ```bash
-     yarn start
+     bun run start
      ```
 
-     > Chạy trực tiếp dịch vụ đã biên dịch ở chế độ sản xuất (cần thực hiện `yarn build` trước).
+     > Chạy trực tiếp dịch vụ đã biên dịch ở chế độ sản xuất (cần thực hiện `bun run build` trước).
 
 4. **Đóng gói dự án**
 
    - Biên dịch và tạo tệp TypeScript:
 
      ```bash
-     yarn build
+     bun run build
      ```
 
    - Đóng gói thành chương trình thực thi cho Windows:
 
      ```bash
-     yarn dist:win
+     bun run dist:win
      ```
 
    - Đóng gói thành chương trình thực thi cho Mac:
 
      ```bash
-     yarn dist:mac
+     bun run dist:mac
      ```
 
    - Đóng gói thành chương trình thực thi cho Linux:
 
      ```bash
-     yarn dist:linux
+     bun run dist:linux
      ```
 
 5. **Kiểm tra chất lượng mã**
@@ -575,7 +577,7 @@ Nếu cần triển khai riêng lẻ hoặc tùy chỉnh giao diện frontend, v
    - Thực hiện kiểm tra cú pháp và quy tắc toàn cục:
 
      ```bash
-     yarn lint
+     bun run check
      ```
 
 6. **Bảng điều khiển gỡ lỗi AI (Tùy chọn)**
@@ -583,7 +585,7 @@ Nếu cần triển khai riêng lẻ hoặc tùy chỉnh giao diện frontend, v
    Khởi động công cụ gỡ lỗi trực quan của AI SDK, tiện lợi cho việc gỡ lỗi các cuộc gọi AI:
 
    ```bash
-   yarn debug:ai
+   bun run debug:ai
    ```
 
 ## Phát triển Frontend

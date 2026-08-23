@@ -73,7 +73,7 @@
   </p>
   <p align="center">
     <img src="https://ziadoua.github.io/m3-Markdown-Badges/badges/TypeScript/typescript2.svg" alt="TypeScript" />&nbsp;
-    <img src="https://ziadoua.github.io/m3-Markdown-Badges/badges/NodeJS/nodejs2.svg" alt="Node.js" />&nbsp;
+    <img src="https://ziadoua.github.io/m3-Markdown-Badges/badges/Bun/bun2.svg" alt="Bun" />&nbsp;
     <img src="https://ziadoua.github.io/m3-Markdown-Badges/badges/Docker/docker2.svg" alt="Docker" />&nbsp;
     <img src="https://ziadoua.github.io/m3-Markdown-Badges/badges/Electron/electron2.svg" alt="Electron" />
   </p>
@@ -288,8 +288,9 @@ https://github.com/user-attachments/assets/2d9fddac-dfdf-4640-b030-b09d7f7287e9
 git clone https://github.com/HBAI-Ltd/Toonflow-app.git
 cd Toonflow-app
 
-# docker-compose でローカルビルド＆起動
-yarn docker:local
+# Makefile でローカルビルド＆起動
+make docker-build
+make docker-run
 
 # または手動ビルド
 docker build -t toonflow .
@@ -322,7 +323,7 @@ docker run -d -p <ローカルポート>:10588 -v <ローカルデータパス>:
 #### 一、サーバー環境要件
 
 - **OS**：Ubuntu 20.04+ / CentOS 7+
-- **Node.js**：24.x（推奨、最低23.11.1以上）
+- **Bun**：1.4.1（最低 1.4.0）
 - **メモリ**：2GB以上
 
 #### 二、サーバーデプロイ
@@ -330,12 +331,12 @@ docker run -d -p <ローカルポート>:10588 -v <ローカルデータパス>:
 ##### 1. 環境インストール
 
 ```bash
-# Node.js のインストール
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+# Install Bun 1.4.1
+curl -fsSL https://bun.com/install | bash
 source ~/.bashrc
-nvm install 24
-# Yarn と PM2 のインストール
-npm install -g yarn pm2
+bun --version
+# Install PM2
+bun add --global pm2
 ```
 
 ##### 2. プロジェクトのデプロイ
@@ -346,8 +347,8 @@ npm install -g yarn pm2
 cd /opt
 git clone https://github.com/HBAI-Ltd/Toonflow-app.git
 cd Toonflow-app
-yarn install
-yarn build
+bun install
+bun run build
 ```
 
 **Gitee からクローン（国内ユーザー向け）：**
@@ -356,8 +357,8 @@ yarn build
 cd /opt
 git clone https://gitee.com/HBAI-Ltd/Toonflow-app.git
 cd Toonflow-app
-yarn install
-yarn build
+bun install
+bun run build
 ```
 
 ##### 3. PM2 の設定
@@ -368,6 +369,7 @@ yarn build
 {
   "name": "toonflow-app",
   "script": "data/serve/app.js",
+  "interpreter": "bun",
   "instances": "max",
   "exec_mode": "cluster",
   "env": {
@@ -474,8 +476,8 @@ pm2 monit             # モニタリングパネル
 
 | カテゴリ     | 技術                                                                                      |
 | ------------ | ----------------------------------------------------------------------------------------- |
-| ランタイム   | Node.js 23.11.1+                                                                          |
-| 言語         | TypeScript 5.x                                                                            |
+| ランタイム   | Bun 1.4.1                                                                          |
+| 言語         | TypeScript 7.0.2                                                                            |
 | バックエンド | Express 5                                                                                 |
 | データベース | SQLite（better-sqlite3 / knex）                                                           |
 | AI統合       | Vercel AI SDK（OpenAI / Anthropic / Google / DeepSeek / 智谱 / MiniMax / 通义千问 / xAI） |
@@ -487,8 +489,8 @@ pm2 monit             # モニタリングパネル
 
 ## 開発環境の準備
 
-- **Node.js**：バージョン23.11.1以上
-- **Yarn**：プロジェクトのパッケージマネージャーとして推奨
+- **Bun**：最低 1.4.0（1.4.1 推奨）
+- **パッケージマネージャー**：Bun 1.4.1
 
 ## プロジェクトのクイックスタート
 
@@ -513,7 +515,7 @@ pm2 monit             # モニタリングパネル
    プロジェクトルートで以下のコマンドを実行して依存関係をインストールしてください：
 
    ```bash
-   yarn install
+   bun install
    ```
 
 3. **開発環境の起動**
@@ -523,7 +525,7 @@ pm2 monit             # モニタリングパネル
    - **方法1：バックエンドサービスのみ起動**
 
      ```bash
-     yarn dev
+     bun run dev
      ```
 
      > ⚠️ このコマンドはバックエンドAPIサービスのみ起動（ポート10588）し、**フロントエンドページは含みません**。`http://localhost:10588` に直接アクセスするとAPIインターフェースのみ呼び出せ、完全なWebインターフェースは表示されません。フロントエンドページも使用する場合は、フロントエンドプロジェクトを別途起動するか、下記のGUIモードを使用してください。
@@ -531,7 +533,7 @@ pm2 monit             # モニタリングパネル
    - **方法2：Electron デスクトップクライアントの起動**
 
      ```bash
-     yarn dev:gui
+     bun run dev:gui
      ```
 
      > このコマンドはバックエンドサービスとElectronデスクトップウィンドウを同時に起動します。組み込みのフロントエンドページが含まれており、追加設定なしで即座に使用できます。全機能を完全に体験したい開発者に適しています。
@@ -539,35 +541,35 @@ pm2 monit             # モニタリングパネル
    - **方法3：本番モードでの起動**
 
      ```bash
-     yarn start
+     bun run start
      ```
 
-     > 本番モードでコンパイル済みのサービスを直接実行します（事前に `yarn build` が必要です）。
+     > 本番モードでコンパイル済みのサービスを直接実行します（事前に `bun run build` が必要です）。
 
 4. **プロジェクトのパッケージング**
 
    - TypeScriptファイルのコンパイルと生成：
 
      ```bash
-     yarn build
+     bun run build
      ```
 
    - Windows プラットフォーム用実行可能プログラムのパッケージング：
 
      ```bash
-     yarn dist:win
+     bun run dist:win
      ```
 
    - Mac プラットフォーム用実行可能プログラムのパッケージング：
 
      ```bash
-     yarn dist:mac
+     bun run dist:mac
      ```
 
    - Linux プラットフォーム用実行可能プログラムのパッケージング：
 
      ```bash
-     yarn dist:linux
+     bun run dist:linux
      ```
 
 5. **コード品質チェック**
@@ -575,7 +577,7 @@ pm2 monit             # モニタリングパネル
    - グローバルな構文と規約のチェック：
 
      ```bash
-     yarn lint
+     bun run check
      ```
 
 6. **AI デバッグパネル（オプション）**
@@ -583,7 +585,7 @@ pm2 monit             # モニタリングパネル
    AI SDKの可視化デバッグツールを起動し、AI呼び出しをデバッグしやすくします：
 
    ```bash
-   yarn debug:ai
+   bun run debug:ai
    ```
 
 ## フロントエンド開発

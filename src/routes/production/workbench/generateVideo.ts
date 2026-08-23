@@ -4,7 +4,7 @@ import { z } from "zod";
 import { v4 as uuidv4 } from "uuid";
 import { success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
-import { ReferenceList } from "@/utils/ai";
+import type { ReferenceList } from "@/utils/ai";
 const router = express.Router();
 
 type Type = "imageReference" | "startImage" | "endImage" | "videoReference" | "audioReference";
@@ -38,7 +38,18 @@ export default router.post(
     trackId: z.number(),
   }),
   async (req, res) => {
-    const { scriptId, projectId, prompt, uploadData, model, duration, resolution, audio, mode, trackId } = req.body;
+    const {
+      scriptId,
+      projectId,
+      prompt,
+      uploadData,
+      model,
+      duration,
+      resolution,
+      audio,
+      mode,
+      trackId,
+    } = req.body;
     let modeData = [];
     if (Array.isArray(mode)) {
     } else if (typeof mode === "string" && mode.startsWith('["') && mode.endsWith('"]')) {
@@ -53,7 +64,11 @@ export default router.post(
     const images = await Promise.all(
       uploadData.map(async (item: UploadItem) => {
         if (item.sources === "storyboard") {
-          const filePath = await u.db("o_storyboard").where("id", item.id).select("filePath").first();
+          const filePath = await u
+            .db("o_storyboard")
+            .where("id", item.id)
+            .select("filePath")
+            .first();
           return { path: filePath?.filePath, sources: "storyBoard" };
         }
         if (item.sources === "assets") {
@@ -71,7 +86,10 @@ export default router.post(
     const base64 = await Promise.all(
       images.map(async (item) => {
         if (!item) return null;
-        return { base64: await u.oss.getImageBase64(item.path), type: item.sources == "audio" ? "audio" : "image" };
+        return {
+          base64: await u.oss.getImageBase64(item.path),
+          type: item.sources == "audio" ? "audio" : "image",
+        };
       }),
     );
     //新增

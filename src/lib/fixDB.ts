@@ -4,7 +4,7 @@ import fs from "fs";
 import { Knex } from "knex";
 import db from "@/utils/db";
 import { transform } from "sucrase";
-import rawVendorData from "./vendor.json";
+import rawVendorData from "@/lib/vendor";
 
 const vendorData = rawVendorData as Record<string, string>;
 
@@ -68,7 +68,10 @@ export default async (knex: Knex): Promise<void> => {
   await addColumn("o_assets", "audioBindState", "integer");
   await addColumn("o_modelPrompt", "fileName", "string");
   await addColumn("o_modelPrompt", "path", "string");
-  const vendorDataSelect = await u.db("o_vendorConfig").whereIn("id", ["deepseek", "atlascloud"]).select("*");
+  const vendorDataSelect = await u
+    .db("o_vendorConfig")
+    .whereIn("id", ["deepseek", "atlascloud"])
+    .select("*");
   if (!vendorDataSelect.find((i) => i.id == "deepseek")) {
     await u.db("o_vendorConfig").insert({
       id: "deepseek",
@@ -113,7 +116,11 @@ export default async (knex: Knex): Promise<void> => {
     { key: "scriptAgent:decisionAgent", name: "剧本Agent:决策层", desc: "决策层" },
     { key: "scriptAgent:supervisionAgent", name: "剧本Agent:监督层", desc: "监督层" },
     { key: "scriptAgent:storySkeletonAgent", name: "剧本Agent:故事骨架", desc: "故事骨架生成" },
-    { key: "scriptAgent:adaptationStrategyAgent", name: "剧本Agent:改编策略", desc: "改编策略生成" },
+    {
+      key: "scriptAgent:adaptationStrategyAgent",
+      name: "剧本Agent:改编策略",
+      desc: "改编策略生成",
+    },
     { key: "scriptAgent:scriptAgent", name: "剧本Agent:剧本生成", desc: "剧本生成" },
     { key: "productionAgent:decisionAgent", name: "生产Agent:决策层", desc: "决策层" },
     { key: "productionAgent:supervisionAgent", name: "生产Agent:监督层", desc: "监督层" },
@@ -121,8 +128,16 @@ export default async (knex: Knex): Promise<void> => {
     { key: "productionAgent:generateAssetsAgent", name: "生产Agent:生成资产", desc: "生成资产" },
     { key: "productionAgent:directorPlanAgent", name: "生产Agent:导演规划", desc: "导演规划" },
     { key: "productionAgent:storyboardGenAgent", name: "生产Agent:分镜生成", desc: "分镜生成" },
-    { key: "productionAgent:storyboardPanelAgent", name: "生产Agent:分镜面板", desc: "分镜面板生成" },
-    { key: "productionAgent:storyboardTableAgent", name: "生产Agent:分镜表格", desc: "分镜表格生成" },
+    {
+      key: "productionAgent:storyboardPanelAgent",
+      name: "生产Agent:分镜面板",
+      desc: "分镜面板生成",
+    },
+    {
+      key: "productionAgent:storyboardTableAgent",
+      name: "生产Agent:分镜表格",
+      desc: "分镜表格生成",
+    },
   ];
   for (const agent of advancedAgentList) {
     const exists = await db("o_agentDeploy").where("key", agent.key).select("*").first();

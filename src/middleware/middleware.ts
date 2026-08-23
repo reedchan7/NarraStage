@@ -1,5 +1,6 @@
-import { Request, Response, NextFunction } from "express";
-import { z, ZodTypeAny } from "zod";
+import type { NextFunction, Request, Response } from "express";
+import { z } from "zod";
+import type { ZodTypeAny } from "zod";
 
 import { zhCN } from "zod/locales";
 
@@ -15,7 +16,9 @@ export function validateFields(
     const data = req[source];
     const parseResult = schema.safeParse(data);
     if (!parseResult.success) {
-      const errors = parseResult.error.issues.map((issue) => `字段 ${issue.path.join(".")} ${issue.message}`);
+      const errors = parseResult.error.issues.map(
+        (issue) => `字段 ${issue.path.join(".")} ${issue.message}`,
+      );
       console.error(errors);
       return res.status(400).json({ message: "参数错误", errors });
     }

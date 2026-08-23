@@ -1,4 +1,4 @@
-import { VM } from "vm2";
+import { createContext, Script } from "node:vm";
 import sharp from "sharp";
 import axios from "axios";
 import { createOpenAI } from "@ai-sdk/openai";
@@ -44,15 +44,14 @@ export default function runCode(code: string, vendor?: Record<string, any>) {
   if (vendor !== undefined) {
     sandbox.vendor = vendor;
   }
-  const vm = new VM({
-    timeout: 0,
-    sandbox,
-    compiler: "javascript",
-    eval: false,
-    wasm: false,
+  const context = createContext(sandbox, {
+    codeGeneration: {
+      strings: false,
+      wasm: false,
+    },
   });
 
-  vm.run(code);
+  new Script(code, { filename: "vendor-adapter.js" }).runInContext(context);
 
   return exports as Record<string, any>;
 }
@@ -73,7 +72,11 @@ export async function zipImage(completeBase64: string, size: number): Promise<st
   return "data:image/jpeg;base64," + output.toString("base64");
 }
 
-export async function zipImageResolution(completeBase64: string, width: number, height: number): Promise<string> {
+export async function zipImageResolution(
+  completeBase64: string,
+  width: number,
+  height: number,
+): Promise<string> {
   const buffer = Buffer.from(completeBase64.split(",")[1], "base64");
   const out = await sharp(buffer).resize(width, height).toBuffer();
   return `data:image/jpeg;base64,${out.toString("base64")}`;
@@ -190,7 +193,12 @@ function base64ToBuffer(base64: string): Buffer {
 /**
  * 压缩Buffer到指定大小以内
  */
-async function compressToSize(imageBuffer: Buffer, maxBytes: number, originalWidth: number, originalHeight: number): Promise<Buffer> {
+async function compressToSize(
+  imageBuffer: Buffer,
+  maxBytes: number,
+  originalWidth: number,
+  originalHeight: number,
+): Promise<Buffer> {
   let quality = 90;
   let scale = 1;
 
@@ -198,7 +206,10 @@ async function compressToSize(imageBuffer: Buffer, maxBytes: number, originalWid
     const targetWidth = Math.round(originalWidth * scale);
     const targetHeight = Math.round(originalHeight * scale);
 
-    const resultBuffer = await sharp(imageBuffer).resize(targetWidth, targetHeight, { fit: "fill" }).jpeg({ quality }).toBuffer();
+    const resultBuffer = await sharp(imageBuffer)
+      .resize(targetWidth, targetHeight, { fit: "fill" })
+      .jpeg({ quality })
+      .toBuffer();
 
     if (resultBuffer.length <= maxBytes) {
       return resultBuffer;

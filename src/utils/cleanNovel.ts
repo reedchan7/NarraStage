@@ -1,5 +1,5 @@
 import { EventEmitter } from "events";
-import { o_novel } from "@/types/database";
+import type { o_novel } from "@/types/database";
 import u from "@/utils";
 import { stripThink } from "@/utils/stripThink";
 export interface EventType {
@@ -81,7 +81,9 @@ class CleanNovel {
     };
 
     // 启动最多 concurrency 个并发任务
-    const workers = Array.from({ length: Math.min(this.concurrency, allChapters.length) }, () => runNext());
+    const workers = Array.from({ length: Math.min(this.concurrency, allChapters.length) }, () =>
+      runNext(),
+    );
 
     await Promise.all(workers);
 

@@ -5,6 +5,8 @@ import sharp from "sharp";
 import { validateFields } from "@/middleware/middleware";
 const router = express.Router();
 
+type OverlayOptions = Parameters<ReturnType<typeof sharp>["composite"]>[0][number];
+
 export default router.post(
   "/",
   validateFields({
@@ -12,7 +14,10 @@ export default router.post(
   }),
   async (req, res) => {
     const { storyboardIds } = req.body;
-    const storyboardImage = await u.db("o_storyboard").whereIn("id", storyboardIds).select("id", "filePath");
+    const storyboardImage = await u
+      .db("o_storyboard")
+      .whereIn("id", storyboardIds)
+      .select("id", "filePath");
 
     // 按 storyboardIds 顺序构建 filePath 映射
     const filePathMap: Record<number, string> = {};
@@ -33,7 +38,9 @@ export default router.post(
     );
 
     // 过滤掉无效图片
-    const validImages = loaded.filter((img): img is NonNullable<typeof img> => img !== null && img.width > 0 && img.height > 0);
+    const validImages = loaded.filter(
+      (img): img is NonNullable<typeof img> => img !== null && img.width > 0 && img.height > 0,
+    );
     if (validImages.length === 0) {
       res.status(204).end();
       return;
@@ -56,7 +63,7 @@ export default router.post(
     const canvasHeight = rowHeights.reduce((a, b) => a + b, 0);
 
     // 为每张图片生成带标号的合成层
-    const compositeInputs: sharp.OverlayOptions[] = [];
+    const compositeInputs: OverlayOptions[] = [];
 
     for (let i = 0; i < validImages.length; i++) {
       const img = validImages[i];

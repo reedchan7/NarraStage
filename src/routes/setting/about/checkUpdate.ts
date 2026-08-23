@@ -9,6 +9,12 @@ import path from "path";
 
 declare const __APP_VERSION__: string | undefined;
 
+interface VersionInfo {
+  version: string;
+  time: string;
+  data: Record<string, Array<{ type: string; url: string }>>;
+}
+
 const APP_VERSION: string = (() => {
   if (typeof __APP_VERSION__ !== "undefined") {
     return __APP_VERSION__;
@@ -30,7 +36,7 @@ export default router.post(
 
     const getUrl = url ?? "https://toonflow.oss-cn-beijing.aliyuncs.com/update.json";
 
-    const versionInfo = await fetch(getUrl).then((res) => res.json());
+    const versionInfo = (await fetch(getUrl).then((res) => res.json())) as VersionInfo;
     if (!versionInfo) return res.status(400).send(error("无法获取版本信息"));
     const { version: tagger, time, data } = versionInfo;
 
@@ -51,22 +57,53 @@ export default router.post(
     //对比Major
     if (taggerList[0] > currentVersionList[0]) {
       if (!installerItem) return res.status(400).send(error("该源暂无适用于当前系统的安装包"));
-      return res
-        .status(200)
-        .send(success({ needUpdate: true, latestVersion: tagger, reinstall: true, time, url: installerItem.url, version: tagger }));
+      return res.status(200).send(
+        success({
+          needUpdate: true,
+          latestVersion: tagger,
+          reinstall: true,
+          time,
+          url: installerItem.url,
+          version: tagger,
+        }),
+      );
     }
     //对比Minor
     if (taggerList[1] > currentVersionList[1]) {
       if (!installerItem) return res.status(400).send(error("该源暂无适用于当前系统的安装包"));
-      return res
-        .status(200)
-        .send(success({ needUpdate: true, latestVersion: tagger, reinstall: true, time, url: installerItem.url, version: tagger }));
+      return res.status(200).send(
+        success({
+          needUpdate: true,
+          latestVersion: tagger,
+          reinstall: true,
+          time,
+          url: installerItem.url,
+          version: tagger,
+        }),
+      );
     }
     //Patch
     if (taggerList[2] > currentVersionList[2]) {
       if (!zipItem) return res.status(400).send(error("该源暂无增量更新包"));
-      return res.status(200).send(success({ needUpdate: true, latestVersion: tagger, reinstall: false, time, url: zipItem.url, version: tagger }));
+      return res.status(200).send(
+        success({
+          needUpdate: true,
+          latestVersion: tagger,
+          reinstall: false,
+          time,
+          url: zipItem.url,
+          version: tagger,
+        }),
+      );
     }
-    return res.status(200).send(success({ needUpdate: false, latestVersion: tagger, reinstall: false, time, version: tagger }));
+    return res.status(200).send(
+      success({
+        needUpdate: false,
+        latestVersion: tagger,
+        reinstall: false,
+        time,
+        version: tagger,
+      }),
+    );
   },
 );

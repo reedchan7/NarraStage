@@ -23,7 +23,11 @@ export default router.post(
       projectId: number;
       episodesId: number;
     } = req.body;
-    const sqlData = await u.db("o_agentWorkData").where("projectId", String(projectId)).andWhere("episodesId", String(episodesId)).first();
+    const sqlData = await u
+      .db("o_agentWorkData")
+      .where("projectId", String(projectId))
+      .andWhere("episodesId", String(episodesId))
+      .first();
     if (data.storyboard && data.storyboard.length) {
       const filterDatas = data?.storyboard.filter((i) => !i.id);
       if (!filterDatas.length) {

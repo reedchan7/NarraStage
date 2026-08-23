@@ -37,7 +37,11 @@ export default router.post(
             .select("videoDesc", "prompt", "track", "duration", "shouldGenerateImage")
             .first();
           // 查询分镜关联的资产ID
-          const assetRows = await u.db("o_assets2Storyboard").where("storyboardId", item.id).orderBy("rowid").select("assetId");
+          const assetRows = await u
+            .db("o_assets2Storyboard")
+            .where("storyboardId", item.id)
+            .orderBy("rowid")
+            .select("assetId");
           const associateAssetsIds = assetRows.map((row: any) => row.assetId);
           return {
             ...storyboard,
@@ -89,7 +93,12 @@ export default router.post(
       .db("o_assets")
       .whereIn("o_assets.id", assetsNotAudioIds)
       .join("o_assetsRole2Audio", "o_assetsRole2Audio.assetsAudioId", "o_assets.assetsId")
-      .select("o_assets.assetsId", "o_assets.id", "o_assetsRole2Audio.assetsAudioId", "o_assetsRole2Audio.assetsRoleId");
+      .select(
+        "o_assets.assetsId",
+        "o_assets.id",
+        "o_assetsRole2Audio.assetsAudioId",
+        "o_assetsRole2Audio.assetsRoleId",
+      );
 
     const assetsAudioRecord: Record<number, number> = {};
     assets2Audio.forEach((i) => {
@@ -101,7 +110,11 @@ export default router.post(
     const videoPrompt = await u.db("o_prompt").where("type", "videoPromptGeneration").first();
     let videoPromptGeneration = "" as string | undefined;
 
-    const modelPromptData = await u.db("o_modelPrompt").where("vendorId", id).where("model", modelData).first();
+    const modelPromptData = await u
+      .db("o_modelPrompt")
+      .where("vendorId", id)
+      .where("model", modelData)
+      .first();
     //查询到 有绑定对应视频提示词
     if (modelPromptData) {
       const modelPromptRoot = u.getPath(["modelPrompt"]);
@@ -126,7 +139,11 @@ export default router.post(
       } else if (/seedance.*2[.\-]0/i.test(modelData)) {
         // seedance 2.0 / 2-0 系列
         fileName = "seedance2Multi-parameterMode.md";
-      } else if (mode === "startEndRequired" || mode === "endFrameOptional" || mode === "startFrameOptional") {
+      } else if (
+        mode === "startEndRequired" ||
+        mode === "endFrameOptional" ||
+        mode === "startFrameOptional"
+      ) {
         // body.mode 为首尾帧相关 => 通用首尾帧模式
         fileName = "universalFirstAndLastFrameMode.md";
       } else if (typeof mode === "string" && mode.startsWith('["') && mode.endsWith('"]')) {
@@ -160,7 +177,10 @@ export default router.post(
 
           **资产信息**（角色、场景、道具、音频):${assets
             .filter((i) => i.filePath)
-            .map((i) => `[${i.id},${i.type},${i.name} ${assetsAudioRecord[i.id] ? `audio:${assetsAudioRecord[i.id]}` : ""} ] `)
+            .map(
+              (i) =>
+                `[${i.id},${i.type},${i.name} ${assetsAudioRecord[i.id] ? `audio:${assetsAudioRecord[i.id]}` : ""} ] `,
+            )
             .join("，")},
           **分镜信息**：${storyboard.map(
             (i) => `<storyboardItem

@@ -1,24 +1,20 @@
-import esbuild from "esbuild";
-import fs from "fs";
-import path from "path";
-
 // 打包默认使用 prod 环境变量
 if (!process.env.NODE_ENV) {
   process.env.NODE_ENV = "prod";
 }
 
-const pkg = JSON.parse(fs.readFileSync(path.resolve("package.json"), "utf8"));
-
-const external = [
+const externalDependencies = [
   "electron",
+  "@rmp135/sql-ts",
   "@huggingface/transformers",
   "onnxruntime-node",
-  "vm2",
   "sqlite3",
   "better-sqlite3",
   "sharp",
   "mysql",
   "mysql2",
+  "mariadb",
+  "mariadb/callback",
   "pg",
   "pg-query-stream",
   "oracledb",
@@ -27,59 +23,57 @@ const external = [
 ];
 
 // 后端服务打包配置
-const appBuildConfig: esbuild.BuildOptions = {
-  entryPoints: ["src/app.ts"],
-  bundle: true,
+const appBuildConfig: Bun.BuildConfig = {
+  entrypoints: ["src/app.ts"],
   minify: false,
-  format: "cjs",
-  allowOverwrite: true,
-  outfile: `data/serve/app.js`,
-  platform: "node",
-  target: "esnext",
-  tsconfig: "./tsconfig.json",
-  alias: {
-    "@": "./src",
-  },
+  format: "esm",
+  outdir: "data/serve",
+  naming: "app.js",
+  target: "node",
   sourcemap: false,
-  external,
-  define: {
-    __APP_VERSION__: JSON.stringify(pkg.version),
-  },
+  external: externalDependencies,
 };
 
 // Electron 主进程打包配置
-const mainBuildConfig: esbuild.BuildOptions = {
-  entryPoints: ["scripts/main.ts"],
-  bundle: true,
+const mainBuildConfig: Bun.BuildConfig = {
+  entrypoints: ["scripts/main.ts"],
   minify: false,
-  format: "cjs",
-  outfile: `build/main.js`,
-  allowOverwrite: true,
-  platform: "node",
-  target: "esnext",
-  tsconfig: "./tsconfig.json",
-  alias: {
-    "@": "./src",
-  },
+  format: "esm",
+  outdir: "build",
+  naming: "main.js",
+  target: "node",
   sourcemap: false,
-  external,
-  define: {
-    __APP_VERSION__: JSON.stringify(pkg.version),
-  },
+  external: externalDependencies,
 };
 
-(async () => {
-  try {
-    console.log("🔨 开始构建...\n");
+export async function build(): Promise<void> {
+  const pkg = await Bun.file("package.json").json();
+  const version = JSON.stringify(pkg.version);
+  appBuildConfig.define = { __APP_VERSION__: version };
+  mainBuildConfig.define = { __APP_VERSION__: version };
 
-    // 并行构建
-    await Promise.all([esbuild.build(appBuildConfig), esbuild.build(mainBuildConfig)]);
+  console.log("🔨 开始构建...\n");
 
-    console.log("✅ 后端服务构建完成: build/app.js");
-    console.log("✅ Electron主进程构建完成: build/main.js");
-    console.log("\n🎉 所有构建任务完成!\n");
-  } catch (err) {
-    console.error("❌ 构建失败:", err);
-    process.exit(1);
+  const results = await Promise.all([Bun.build(appBuildConfig), Bun.build(mainBuildConfig)]);
+  const failedResults = results.filter((result) => !result.success);
+
+  if (failedResults.length > 0) {
+    for (const result of failedResults) {
+      for (const log of result.logs) {
+        console.error(log);
+      }
+    }
+    throw new Error("构建失败");
   }
-})();
+
+  console.log("✅ 后端服务构建完成: data/serve/app.js");
+  console.log("✅ Electron主进程构建完成: build/main.js");
+  console.log("\n🎉 所有构建任务完成!\n");
+}
+
+if (import.meta.main) {
+  build().catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
+}

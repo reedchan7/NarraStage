@@ -1,4 +1,5 @@
-import { tool, jsonSchema, Tool } from "ai";
+import { tool, jsonSchema } from "ai";
+import type { Tool } from "ai";
 import u from "@/utils";
 import { z } from "zod";
 import _ from "lodash";
@@ -18,7 +19,10 @@ export type planData = z.infer<typeof planData>;
 
 const keySchema = z.enum(Object.keys(planData.shape) as [keyof planData, ...Array<keyof planData>]);
 const planDataKeyLabels = Object.fromEntries(
-  Object.entries(planData.shape).map(([key, schema]) => [key, (schema as z.ZodTypeAny).description ?? key]),
+  Object.entries(planData.shape).map(([key, schema]) => [
+    key,
+    (schema as z.ZodTypeAny).description ?? key,
+  ]),
 ) as Record<keyof planData, string>;
 
 interface ToolConfig {
@@ -46,10 +50,20 @@ export default (toolCpnfig: ToolConfig) => {
         const data = await u
           .db("o_novel")
           .where("projectId", resTool.data.projectId)
-          .select("id", "chapterIndex as index", "reel", "chapter", "chapterData", "event", "eventState")
+          .select(
+            "id",
+            "chapterIndex as index",
+            "reel",
+            "chapter",
+            "chapterData",
+            "event",
+            "eventState",
+          )
           .whereIn("chapterIndex", chapterIndexs);
         thinking.appendText("正在查询章节编号: " + chapterIndexs.join(","));
-        const eventString = data.map((i: any) => [`第${i.index}章，标题:${i.chapter}，事件:${i.event}`].join("\n")).join("\n");
+        const eventString = data
+          .map((i: any) => [`第${i.index}章，标题:${i.chapter}，事件:${i.event}`].join("\n"))
+          .join("\n");
         thinking.appendText("查询结果:\n" + eventString);
         thinking.updateTitle("查询章节事件完成");
         thinking.complete();
@@ -68,7 +82,9 @@ export default (toolCpnfig: ToolConfig) => {
       execute: async ({ key }) => {
         console.log("[tools] get_planData", key);
         const thinking = msg.thinking(`正在获取${planDataKeyLabels[key]}工作区数据...`);
-        const planData: planData = await new Promise((resolve) => socket.emit("getPlanData", { key }, (res: any) => resolve(res)));
+        const planData: planData = await new Promise((resolve) =>
+          socket.emit("getPlanData", { key }, (res: any) => resolve(res)),
+        );
         thinking.appendText(`获取到${planDataKeyLabels[key]}:\n` + planData[key]);
         thinking.updateTitle(`获取${planDataKeyLabels[key]}完成`);
         thinking.complete();
@@ -77,17 +93,22 @@ export default (toolCpnfig: ToolConfig) => {
     }),
     get_novel_text: tool({
       description: "获取小说章节原始文本内容",
-      inputSchema: jsonSchema<{ chapterIndex: string }>(
+      inputSchema: jsonSchema<{ chapterIndex: number }>(
         z
           .object({
-            chapterIndex: z.string().describe("章节编号"),
+            chapterIndex: z.number().describe("章节编号"),
           })
           .toJSONSchema(),
       ),
       execute: async ({ chapterIndex }) => {
         console.log("[tools] get_novel_text", "[tools] get_novel_text", chapterIndex);
         const thinking = msg.thinking(`正在获取小说章节原文...`);
-        const data = await u.db("o_novel").where("projectId", resTool.data.projectId).where({ chapterIndex }).select("chapterData").first();
+        const data = await u
+          .db("o_novel")
+          .where("projectId", resTool.data.projectId)
+          .where({ chapterIndex })
+          .select("chapterData")
+          .first();
         const text = data && data?.chapterData ? data.chapterData : "";
         thinking.appendText(`获取到原文:\n` + text);
         thinking.updateTitle(`获取小说章节原文完成`);
@@ -108,7 +129,10 @@ export default (toolCpnfig: ToolConfig) => {
         console.log("[tools] get_script_content", "[tools] get_script_content", ids);
         const thinking = msg.thinking(`正在获取脚本内容...`);
         const data = await u.db("o_script").whereIn("id", ids).select("content", "name");
-        const text = data && data.length ? data.map((d) => `<scriptItem name="${d.name}">${d.content}</scriptItem>`).join("\n") : "";
+        const text =
+          data && data.length
+            ? data.map((d) => `<scriptItem name="${d.name}">${d.content}</scriptItem>`).join("\n")
+            : "";
         thinking.appendText(`获取到脚本内容:\n` + JSON.stringify(data, null, 2));
         thinking.updateTitle(`获取脚本内容完成`);
         thinking.complete();
@@ -116,5 +140,7 @@ export default (toolCpnfig: ToolConfig) => {
       },
     }),
   };
-  return toolsNames ? Object.fromEntries(Object.entries(tools).filter(([n]) => toolsNames.includes(n))) : tools;
+  return toolsNames
+    ? Object.fromEntries(Object.entries(tools).filter(([n]) => toolsNames.includes(n)))
+    : tools;
 };

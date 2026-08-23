@@ -13,7 +13,10 @@ export default router.post(
   }),
   async (req, res) => {
     const { projectId, scriptId } = req.body;
-    const storyboardList = await u.db("o_storyboard").where({ scriptId, projectId }).orderBy("index", "asc");
+    const storyboardList = await u
+      .db("o_storyboard")
+      .where({ scriptId, projectId })
+      .orderBy("index", "asc");
     const videoList = await u.db("o_video").whereIn(
       "videoTrackId",
       storyboardList.map((s) => s.trackId),

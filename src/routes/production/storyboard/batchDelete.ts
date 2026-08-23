@@ -14,7 +14,11 @@ export default router.post(
   async (req, res) => {
     const { ids, projectId } = req.body;
     if (!ids.length) return res.status(400).send(error("请先选择分镜"));
-    const storyboardDataList = await u.db("o_storyboard").whereIn("id", ids).where("projectId", projectId).select("id", "track", "trackId", "flowId");
+    const storyboardDataList = await u
+      .db("o_storyboard")
+      .whereIn("id", ids)
+      .where("projectId", projectId)
+      .select("id", "track", "trackId", "flowId");
     if (!storyboardDataList.length) return res.status(400).send(error("当前选择分镜不存在"));
     const flowIds = storyboardDataList.map((i) => i.flowId);
     const storyBoardIds = storyboardDataList.map((i) => i.id);

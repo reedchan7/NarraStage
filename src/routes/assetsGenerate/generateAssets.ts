@@ -75,7 +75,11 @@ export default router.post("/", validateFields(requestSchema), async (req, res) 
   const { projectId, model, resolution, id, type, name, prompt, base64 } = req.body;
 
   // 1. 查询项目 & 获取类型配置
-  const project = await u.db("o_project").where("id", projectId).select("artStyle", "type", "intro").first();
+  const project = await u
+    .db("o_project")
+    .where("id", projectId)
+    .select("artStyle", "type", "intro")
+    .first();
   if (!project) return res.status(500).send(success({ message: "项目为空" }));
 
   const cfg = assetTypeConfig[type as AssetType];

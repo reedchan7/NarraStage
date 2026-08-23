@@ -1,7 +1,8 @@
 // import "./logger";
 import "./err";
 import "./env";
-import express, { Request, Response, NextFunction } from "express";
+import express from "express";
+import type { NextFunction, Request, Response } from "express";
 import { Server } from "socket.io";
 import http from "node:http";
 import expressWs from "express-ws";
@@ -14,7 +15,8 @@ import u from "@/utils";
 import jwt from "jsonwebtoken";
 import socketInit from "@/socket/index";
 import { isEletron } from "@/utils/getPath";
-import { ensureThumbnail, ThumbnailSize } from "@/utils/image";
+import { ensureThumbnail } from "@/utils/image";
+import type { ThumbnailSize } from "@/utils/image";
 
 const app = express();
 const server = http.createServer(app);
@@ -28,7 +30,7 @@ async function checkPermissions() {
     fs.writeFileSync(testFile, "test");
     fs.unlinkSync(testFile);
   } catch (e) {
-    const { dialog, app } = require("electron");
+    const { dialog, app } = await import("electron");
     const { response } = await dialog.showMessageBox({
       type: "warning",
       title: "权限不足",

@@ -43,7 +43,15 @@ const vendorConfigSchema = z.object({
         type: z.literal("video"),
         mode: z.array(
           z.union([
-            z.enum(["singleImage", "startEndRequired", "endFrameOptional", "startFrameOptional", "text", "audioReference", "videoReference"]),
+            z.enum([
+              "singleImage",
+              "startEndRequired",
+              "endFrameOptional",
+              "startFrameOptional",
+              "text",
+              "audioReference",
+              "videoReference",
+            ]),
             z.array(z.string().regex(/^(videoReference|imageReference|audioReference):\d+$/)),
           ]),
         ),
@@ -71,14 +79,19 @@ export default router.post(
       const jsCode = transform(tsCode, { transforms: ["typescript"] }).code;
       const exports = u.vm(jsCode);
       if (!exports) return res.status(400).send(success("脚本文件必须导出对象"));
-      if (!exports.textRequest) return res.status(400).send(success("脚本文件必须导出文本请求对象"));
-      if (!exports.imageRequest) return res.status(400).send(success("脚本文件必须导出图像请求对象"));
-      if (!exports.videoRequest) return res.status(400).send(success("脚本文件必须导出视频请求对象"));
+      if (!exports.textRequest)
+        return res.status(400).send(success("脚本文件必须导出文本请求对象"));
+      if (!exports.imageRequest)
+        return res.status(400).send(success("脚本文件必须导出图像请求对象"));
+      if (!exports.videoRequest)
+        return res.status(400).send(success("脚本文件必须导出视频请求对象"));
       if (!exports.vendor) return res.status(400).send(success("脚本文件必须导出vendor对象"));
       const vendor = exports.vendor;
       const result = vendorConfigSchema.safeParse(vendor);
       if (!result.success) {
-        const errorMsg = result.error.issues.map((e) => `${e.path.join(".")}: ${e.message}`).join("; ");
+        const errorMsg = result.error.issues
+          .map((e) => `${e.path.join(".")}: ${e.message}`)
+          .join("; ");
         return res.status(400).send(error(`vendor配置校验失败: ${errorMsg}`));
       }
       await u

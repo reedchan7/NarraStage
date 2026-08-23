@@ -68,7 +68,13 @@ class MessageBuilder {
   private messageName?: string;
   private messageDatetime: string;
 
-  constructor(socket: Socket, messageId: string, role: "assistant" | "user" | "system", name?: string, datetime?: string) {
+  constructor(
+    socket: Socket,
+    messageId: string,
+    role: "assistant" | "user" | "system",
+    name?: string,
+    datetime?: string,
+  ) {
     this.socket = socket;
     this.messageId = messageId;
     this.messageRole = role;
@@ -409,7 +415,12 @@ class AutoThinkingTextStream extends ContentStream<string> {
   private thinkingBuffer = "";
   private thinkingStartTime: number = 0;
 
-  constructor(socket: Socket, messageId: string, contentId: string, messageBuilder: MessageBuilder) {
+  constructor(
+    socket: Socket,
+    messageId: string,
+    contentId: string,
+    messageBuilder: MessageBuilder,
+  ) {
     super(socket, messageId, contentId, "text");
     this.messageBuilder = messageBuilder;
   }
@@ -537,7 +548,10 @@ class AutoThinkingTextStream extends ContentStream<string> {
     if (this.thinkingStream) {
       const elapsed = ((Date.now() - this.thinkingStartTime) / 1000).toFixed(1);
       this.thinkingStream.updateTitle(`思考完毕（${elapsed}秒）`);
-      this.thinkingStream.complete({ title: `思考完毕（${elapsed}秒）`, text: this.thinkingBuffer });
+      this.thinkingStream.complete({
+        title: `思考完毕（${elapsed}秒）`,
+        text: this.thinkingBuffer,
+      });
       this.thinkingStream = null;
       this.thinkingBuffer = "";
     }
@@ -691,4 +705,11 @@ class ReasoningBuilder {
 }
 
 export default ResTool;
-export { MessageBuilder, ContentStream, ThinkingStream, SearchStream, ToolCallStream, ReasoningBuilder };
+export {
+  MessageBuilder,
+  ContentStream,
+  ThinkingStream,
+  SearchStream,
+  ToolCallStream,
+  ReasoningBuilder,
+};

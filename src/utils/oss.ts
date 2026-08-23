@@ -151,7 +151,10 @@ class OSS {
     await fs.mkdir(path.dirname(absPath), { recursive: true });
     // 如果 data 是 string，则视为 base64 编码，先解码再写入
     // 自动去除可能存在的 Data URL 前缀（如 "data:image/png;base64,"）
-    const buffer = typeof data === "string" ? Buffer.from(data.replace(/^data:[^;]+;base64,/, ""), "base64") : data;
+    const buffer =
+      typeof data === "string"
+        ? Buffer.from(data.replace(/^data:[^;]+;base64,/, ""), "base64")
+        : data;
     await fs.writeFile(absPath, buffer);
   }
 

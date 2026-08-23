@@ -13,7 +13,10 @@ export default router.post(
   }),
   async (req, res) => {
     const { assetsIds } = req.body;
-    const assets2AudioData = await u.db("o_assetsRole2Audio").whereIn("assetsRoleId", assetsIds).select("assetsAudioId", "assetsRoleId");
+    const assets2AudioData = await u
+      .db("o_assetsRole2Audio")
+      .whereIn("assetsRoleId", assetsIds)
+      .select("assetsAudioId", "assetsRoleId");
 
     if (assets2AudioData.length) {
       const assetsData = await u

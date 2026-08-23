@@ -73,7 +73,7 @@
   </p>
   <p align="center">
     <img src="https://ziadoua.github.io/m3-Markdown-Badges/badges/TypeScript/typescript2.svg" alt="TypeScript" />&nbsp;
-    <img src="https://ziadoua.github.io/m3-Markdown-Badges/badges/NodeJS/nodejs2.svg" alt="Node.js" />&nbsp;
+    <img src="https://ziadoua.github.io/m3-Markdown-Badges/badges/Bun/bun2.svg" alt="Bun" />&nbsp;
     <img src="https://ziadoua.github.io/m3-Markdown-Badges/badges/Docker/docker2.svg" alt="Docker" />&nbsp;
     <img src="https://ziadoua.github.io/m3-Markdown-Badges/badges/Electron/electron2.svg" alt="Electron" />
   </p>
@@ -288,8 +288,9 @@ https://github.com/user-attachments/assets/2d9fddac-dfdf-4640-b030-b09d7f7287e9
 git clone https://github.com/HBAI-Ltd/Toonflow-app.git
 cd Toonflow-app
 
-# Локальная сборка и запуск через docker-compose
-yarn docker:local
+# Локальная сборка и запуск через Makefile
+make docker-build
+make docker-run
 
 # Или соберите вручную
 docker build -t toonflow .
@@ -322,7 +323,7 @@ docker run -d -p <локальный_порт>:10588 -v <локальный_пу
 #### 1. Требования к серверу
 
 - **ОС**: Ubuntu 20.04+ / CentOS 7+
-- **Node.js**: 24.x (рекомендуется, минимум 23.11.1+)
+- **Bun**: 1.4.1 (минимум 1.4.0)
 - **Память**: 2GB+
 
 #### 2. Развёртывание на сервере
@@ -330,12 +331,12 @@ docker run -d -p <локальный_порт>:10588 -v <локальный_пу
 ##### 1. Установка окружения
 
 ```bash
-# Установка Node.js
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+# Install Bun 1.4.1
+curl -fsSL https://bun.com/install | bash
 source ~/.bashrc
-nvm install 24
-# Установка Yarn и PM2
-npm install -g yarn pm2
+bun --version
+# Install PM2
+bun add --global pm2
 ```
 
 ##### 2. Развёртывание проекта
@@ -346,8 +347,8 @@ npm install -g yarn pm2
 cd /opt
 git clone https://github.com/HBAI-Ltd/Toonflow-app.git
 cd Toonflow-app
-yarn install
-yarn build
+bun install
+bun run build
 ```
 
 **Клонирование с Gitee (рекомендуется для Китая):**
@@ -356,8 +357,8 @@ yarn build
 cd /opt
 git clone https://gitee.com/HBAI-Ltd/Toonflow-app.git
 cd Toonflow-app
-yarn install
-yarn build
+bun install
+bun run build
 ```
 
 ##### 3. Настройка PM2
@@ -368,6 +369,7 @@ yarn build
 {
   "name": "toonflow-app",
   "script": "data/serve/app.js",
+  "interpreter": "bun",
   "instances": "max",
   "exec_mode": "cluster",
   "env": {
@@ -474,8 +476,8 @@ pm2 monit             # Панель мониторинга
 
 | Категория          | Технологии                                                                               |
 | ------------------ | ---------------------------------------------------------------------------------------- |
-| Среда выполнения   | Node.js 23.11.1+                                                                         |
-| Язык               | TypeScript 5.x                                                                           |
+| Среда выполнения   | Bun 1.4.1                                                                         |
+| Язык               | TypeScript 7.0.2                                                                           |
 | Бэкенд-фреймворк   | Express 5                                                                                |
 | База данных        | SQLite (better-sqlite3 / knex)                                                           |
 | AI-интеграция      | Vercel AI SDK (OpenAI / Anthropic / Google / DeepSeek / Zhipu / MiniMax / Tongyi / xAI)  |
@@ -487,8 +489,8 @@ pm2 monit             # Панель мониторинга
 
 ## Подготовка среды разработки
 
-- **Node.js**: версия 23.11.1 и выше
-- **Yarn**: рекомендуется в качестве менеджера пакетов
+- **Bun**: версия 1.4.0 и выше (рекомендуется 1.4.1)
+- **Менеджер пакетов**: Bun 1.4.1
 
 ## Быстрый запуск проекта
 
@@ -513,7 +515,7 @@ pm2 monit             # Панель мониторинга
    Выполните следующую команду в корневой директории проекта для установки зависимостей:
 
    ```bash
-   yarn install
+   bun install
    ```
 
 3. **Запуск среды разработки**
@@ -523,7 +525,7 @@ pm2 monit             # Панель мониторинга
    - **Способ 1: Запуск только бэкенда**
 
      ```bash
-     yarn dev
+     bun run dev
      ```
 
      > ⚠️ Эта команда запускает только бэкенд-сервис API (порт 10588), **не включая фронтенд**. При прямом обращении к `http://localhost:10588` будут доступны только API, но не полный веб-интерфейс. Для одновременного использования фронтенда запустите его отдельно или используйте режим GUI ниже.
@@ -531,7 +533,7 @@ pm2 monit             # Панель мониторинга
    - **Способ 2: Запуск Electron-клиента**
 
      ```bash
-     yarn dev:gui
+     bun run dev:gui
      ```
 
      > Эта команда одновременно запускает бэкенд и окно Electron Desktop со встроенным фронтендом — готовое решение «из коробки», не требующее дополнительных настроек. Подходит для разработчиков, желающих опробовать все функции.
@@ -539,35 +541,35 @@ pm2 monit             # Панель мониторинга
    - **Способ 3: Запуск в production-режиме**
 
      ```bash
-     yarn start
+     bun run start
      ```
 
-     > Запуск предварительно скомпилированного сервиса в production-режиме (требуется предварительно выполнить `yarn build`).
+     > Запуск предварительно скомпилированного сервиса в production-режиме (требуется предварительно выполнить `bun run build`).
 
 4. **Сборка проекта**
 
    - Компиляция TypeScript-файлов:
 
      ```bash
-     yarn build
+     bun run build
      ```
 
    - Сборка исполняемого файла для Windows:
 
      ```bash
-     yarn dist:win
+     bun run dist:win
      ```
 
    - Сборка исполняемого файла для macOS:
 
      ```bash
-     yarn dist:mac
+     bun run dist:mac
      ```
 
    - Сборка исполняемого файла для Linux:
 
      ```bash
-     yarn dist:linux
+     bun run dist:linux
      ```
 
 5. **Проверка качества кода**
@@ -575,7 +577,7 @@ pm2 monit             # Панель мониторинга
    - Глобальная проверка синтаксиса и соответствия стандартам:
 
      ```bash
-     yarn lint
+     bun run check
      ```
 
 6. **Отладочная панель AI (опционально)**
@@ -583,7 +585,7 @@ pm2 monit             # Панель мониторинга
    Запуск визуального инструмента отладки AI SDK для удобства отладки AI-вызовов:
 
    ```bash
-   yarn debug:ai
+   bun run debug:ai
    ```
 
 ## Разработка фронтенда

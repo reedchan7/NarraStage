@@ -32,7 +32,13 @@ export default router.post(
       };
 
       // 安全校验：不允许包含路径分隔符、纯数字，防止越级删除或误删项目目录
-      if (name.includes("/") || name.includes("\\") || name === "." || name === ".." || /^\d+$/.test(name)) {
+      if (
+        name.includes("/") ||
+        name.includes("\\") ||
+        name === "." ||
+        name === ".." ||
+        /^\d+$/.test(name)
+      ) {
         res.status(400).send(error("名称不能包含路径分隔符或为纯数字"));
         return;
       }
@@ -86,7 +92,11 @@ export default router.post(
         existingFiles = allFiles.filter((f) => /\.(png|jpe?g|gif|webp|svg)$/i.test(f));
       } catch {}
 
-      const retainedFileNames = new Set(images.filter((item) => item.startsWith("http")).map((url) => path.basename(new URL(url).pathname)));
+      const retainedFileNames = new Set(
+        images
+          .filter((item) => item.startsWith("http"))
+          .map((url) => path.basename(new URL(url).pathname)),
+      );
 
       for (const file of existingFiles) {
         if (!retainedFileNames.has(file)) {

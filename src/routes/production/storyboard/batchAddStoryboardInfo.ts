@@ -48,7 +48,8 @@ export default router.post(
       item.id = id;
     }
     const lastStoryboard = await u.db("o_storyboard").where("scriptId", scriptId);
-    if (!lastStoryboard || !lastStoryboard.length) return res.status(400).send(error("未查到分镜数据"));
+    if (!lastStoryboard || !lastStoryboard.length)
+      return res.status(400).send(error("未查到分镜数据"));
     //根据track分组
     const storyboardGroupByTrack: Record<string, number[]> = {};
     lastStoryboard.forEach((item: any) => {
@@ -68,7 +69,11 @@ export default router.post(
         .reduce((sum: number, item: any) => sum + Number(item.duration), 0);
 
       // 查找该scriptId下是否已有相同track名称且已分配trackId的分镜记录
-      const existingStoryboard = await u.db("o_storyboard").where({ scriptId, track }).whereNotNull("trackId").first();
+      const existingStoryboard = await u
+        .db("o_storyboard")
+        .where({ scriptId, track })
+        .whereNotNull("trackId")
+        .first();
 
       let trackId: number;
       if (existingStoryboard?.trackId) {
@@ -77,7 +82,7 @@ export default router.post(
         await u.db("o_videoTrack").where("id", trackId).update({ duration: trackDuration });
       } else {
         // 不存在，新建videoTrack
-        const newTrackId = Date.now()
+        const newTrackId = Date.now();
         await u.db("o_videoTrack").insert({
           id: newTrackId,
           scriptId,
@@ -93,7 +98,12 @@ export default router.post(
     const storyboardData = await Promise.all(
       lastStoryboard.map(async (i) => {
         return {
-          associateAssetsIds: await u.db("o_assets2Storyboard").where("storyboardId", i.id).orderBy("rowid").select("assetId").pluck("assetId"),
+          associateAssetsIds: await u
+            .db("o_assets2Storyboard")
+            .where("storyboardId", i.id)
+            .orderBy("rowid")
+            .select("assetId")
+            .pluck("assetId"),
           src: i.filePath ? await u.oss.getSmallImageUrl(i.filePath) : "",
           id: i.id,
           trackId: i.trackId,
@@ -102,7 +112,7 @@ export default router.post(
           state: i.state,
           scriptId: i.scriptId,
           reason: i.reason,
-          videoDesc: i.videoDesc
+          videoDesc: i.videoDesc,
         };
       }),
     );

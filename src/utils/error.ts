@@ -18,7 +18,8 @@ export function normalizeError(error: unknown): NormalizedError {
   if (isAxiosError(error)) {
     return {
       name: "AxiosError",
-      message: error.response?.data?.error?.message || error.response?.data?.message || error.message,
+      message:
+        error.response?.data?.error?.message || error.response?.data?.message || error.message,
       code: error.code,
       status: error.response?.status,
       stack: error.stack,

@@ -17,5 +17,5 @@ export default router.post(
     const data = await u.db("o_project").where("id", id).select("*");
 
     res.status(200).send(success(data));
-  }
+  },
 );

@@ -39,18 +39,32 @@ export default router.post(
     // 分页查询：每个事件对应多个 chapterIndex，用 GROUP_CONCAT 聚合
     const rows = await baseQuery
       .clone()
-      .select("e.id", "e.name as eventName", "e.detail", "e.createTime", db.raw("GROUP_CONCAT(n.chapterIndex) as chapterIndexes"))
+      .select(
+        "e.id",
+        "e.name as eventName",
+        "e.detail",
+        "e.createTime",
+        db.raw("GROUP_CONCAT(n.chapterIndex) as chapterIndexes"),
+      )
       .groupBy("e.id")
       .limit(limit)
       .offset(offset);
 
-    const list = rows.map((e: { id: number; eventName: string; detail: string; createTime: number; chapterIndexes: string | null }) => ({
-      id: e.id,
-      eventName: e.eventName,
-      detail: e.detail,
-      createTime: e.createTime,
-      chapters: e.chapterIndexes ? e.chapterIndexes.split(",").map(Number) : [],
-    }));
+    const list = rows.map(
+      (e: {
+        id: number;
+        eventName: string;
+        detail: string;
+        createTime: number;
+        chapterIndexes: string | null;
+      }) => ({
+        id: e.id,
+        eventName: e.eventName,
+        detail: e.detail,
+        createTime: e.createTime,
+        chapters: e.chapterIndexes ? e.chapterIndexes.split(",").map(Number) : [],
+      }),
+    );
 
     res.status(200).send(success({ list, total: Number(total) }));
   },

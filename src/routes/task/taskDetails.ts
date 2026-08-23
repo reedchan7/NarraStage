@@ -14,5 +14,5 @@ export default router.post(
     const { taskId } = req.body;
     const data = await u.db("o_tasks").where("id", taskId).select("*").first();
     res.status(200).send(success(data));
-  }
+  },
 );

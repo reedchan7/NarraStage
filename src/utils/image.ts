@@ -3,6 +3,8 @@ import fss from "fs";
 import path from "node:path";
 import sharp from "sharp";
 
+type SharpFit = keyof typeof sharp.fit;
+
 /**
  * 图片缩放选项
  */
@@ -12,7 +14,7 @@ export interface ResizeOptions {
   /** 最大高度（默认 256 */
   height?: number;
   /** 缩放策略，默认等比缩放不超出边界 */
-  fit?: keyof sharp.FitEnum;
+  fit?: SharpFit;
   /** 是否禁止放大（默认 true） */
   withoutEnlargement?: boolean;
 }
@@ -30,7 +32,11 @@ const defaultResizeOptions: Required<ResizeOptions> = {
  * @param dstPath 目标图片绝对路径
  * @param opts 缩放选项
  */
-export async function resizeImage(srcPath: string, dstPath: string, opts?: ResizeOptions): Promise<void> {
+export async function resizeImage(
+  srcPath: string,
+  dstPath: string,
+  opts?: ResizeOptions,
+): Promise<void> {
   const { width, height, fit, withoutEnlargement } = { ...defaultResizeOptions, ...opts };
   await fs.mkdir(path.dirname(dstPath), { recursive: true });
   await sharp(srcPath).resize(width, height, { fit, withoutEnlargement }).toFile(dstPath);

@@ -16,7 +16,11 @@ export default router.post(
   }),
   async (req, res) => {
     const { projectId, assetsIds, concurrentCount } = req.body;
-    const assetsData = await u.db("o_assets").whereIn("id", assetsIds).andWhere("projectId", projectId).select("id", "name", "describe", "type");
+    const assetsData = await u
+      .db("o_assets")
+      .whereIn("id", assetsIds)
+      .andWhere("projectId", projectId)
+      .select("id", "name", "describe", "type");
 
     const audioData = await u
       .db("o_assets")
@@ -25,7 +29,8 @@ export default router.post(
       .andWhere("projectId", projectId)
       .select("id", "name", "describe");
 
-    if (!audioData.length) return res.status(400).send(error("暂无设置音频，请先前往资产中心上传音频"));
+    if (!audioData.length)
+      return res.status(400).send(error("暂无设置音频，请先前往资产中心上传音频"));
 
     const batchSize = concurrentCount ?? 1;
 
@@ -36,19 +41,28 @@ export default router.post(
           inputSchema: jsonSchema<{ id: number; audioId: number }>(
             z
               .object({
-                audioId: z.number().nullable().optional().describe("与该资产匹配的音频ID列表，若无合适匹配则返回空数组"),
+                audioId: z
+                  .number()
+                  .nullable()
+                  .optional()
+                  .describe("与该资产匹配的音频ID列表，若无合适匹配则返回空数组"),
               })
               .toJSONSchema(),
           ),
           execute: async (result) => {
             await u.db("o_assetsRole2Audio").where("assetsRoleId", asset.id).delete();
-            if (result?.audioId) await u.db("o_assetsRole2Audio").insert({ assetsRoleId: asset.id, assetsAudioId: result.audioId });
+            if (result?.audioId)
+              await u
+                .db("o_assetsRole2Audio")
+                .insert({ assetsRoleId: asset.id, assetsAudioId: result.audioId });
             await u.db("o_assets").where("id", asset.id).update("audioBindState", "已完成");
             return "无需回复用户任何内容";
           },
         });
 
-        const audioList = audioData.map((i) => `- ID:${i.id} | 名称:${i.name} | 描述:${i.describe ?? "无"}`).join("\n");
+        const audioList = audioData
+          .map((i) => `- ID:${i.id} | 名称:${i.name} | 描述:${i.describe ?? "无"}`)
+          .join("\n");
         const promptData = await u.db("o_prompt").where("type", "audioBindPrompt").first();
         let audioBindPrompt = "" as string | undefined;
         if (promptData && promptData.useData) {

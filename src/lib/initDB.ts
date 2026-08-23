@@ -939,7 +939,12 @@ export default async (knex: Knex, forceInit: boolean = false): Promise<void> => 
     {
       name: "o_skillAttribution",
       builder: (table) => {
-        table.text("skillId").notNullable().references("id").inTable("o_skillList").onDelete("CASCADE");
+        table
+          .text("skillId")
+          .notNullable()
+          .references("id")
+          .inTable("o_skillList")
+          .onDelete("CASCADE");
         table.text("attribution").notNullable(); // "production_agent_decision.md" | "production_agent_execution.md" | "production_agent_supervision.md" | "script_agent_decision.md" | "script_agent_execution.md" | "script_agent_supervision.md" | "universal_agent.md"
         table.primary(["skillId", "attribution"]);
         table.index(["attribution"]);

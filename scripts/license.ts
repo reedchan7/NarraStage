@@ -10,7 +10,9 @@ const strictWhiteList: string[] = [];
 function isStrictWhiteLicense(license: string): boolean {
   const normalized = license.replace(/[\(\)]/g, "").trim();
   const parts = normalized.split(/\s*(OR|AND|\/)\s*/i).map((part) => part.trim());
-  return parts.every((part) => strictWhiteList.some((wl) => part === wl || part.replace(/ with .*/i, "") === wl));
+  return parts.every((part) =>
+    strictWhiteList.some((wl) => part === wl || part.replace(/ with .*/i, "") === wl),
+  );
 }
 
 // 读取 package.json 里的直接依赖
@@ -60,7 +62,9 @@ checker.init({ start: process.cwd() }, (err: Error, packages: Record<string, any
   }
 
   // 排除名单过滤
-  const filteredDeclare = needDeclare.filter((pkg) => pkg.name && !excludeNames.some((exName) => pkg.name.startsWith(exName)));
+  const filteredDeclare = needDeclare.filter(
+    (pkg) => pkg.name && !excludeNames.some((exName) => pkg.name.startsWith(exName)),
+  );
 
   // 去重：同一个 name@version 只保留一条，并合并 licenses
   const dedupedDeclare = Array.from(
@@ -78,20 +82,22 @@ checker.init({ start: process.cwd() }, (err: Error, packages: Record<string, any
           return acc;
         }
 
-        const existingLicenses = Array.isArray(existing.licenses) ? existing.licenses : [existing.licenses];
+        const existingLicenses = Array.isArray(existing.licenses)
+          ? existing.licenses
+          : [existing.licenses];
         existing.licenses = [...new Set([...existingLicenses, ...licenseList].filter(Boolean))];
         if (!existing.repository && pkg.repository) {
           existing.repository = pkg.repository;
         }
         return acc;
       }, new Map<string, PackageInfo>())
-      .values()
+      .values(),
   );
 
   const content = dedupedDeclare
     .map(
       (pkg) =>
-        `Name: ${pkg.name}\nLicense: ${Array.isArray(pkg.licenses) ? pkg.licenses.join(", ") : pkg.licenses}\nRepository: ${pkg.repository ?? "N/A"}`
+        `Name: ${pkg.name}\nLicense: ${Array.isArray(pkg.licenses) ? pkg.licenses.join(", ") : pkg.licenses}\nRepository: ${pkg.repository ?? "N/A"}`,
     )
     .join("\n\n-----------------------------\n\n");
   fs.writeFileSync(path.resolve(process.cwd(), "NOTICES.txt"), content, "utf-8");

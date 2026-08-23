@@ -19,7 +19,9 @@ export default router.post(
       }
 
       if (node.type == "generated") {
-        node.data.generatedImage = node.data.generatedImage ? u.replaceUrl(node.data.generatedImage) : "";
+        node.data.generatedImage = node.data.generatedImage
+          ? u.replaceUrl(node.data.generatedImage)
+          : "";
         node.data.references.forEach((item: { image: string }) => {
           item.image = item.image ? u.replaceUrl(item.image) : "";
         });

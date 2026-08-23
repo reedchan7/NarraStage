@@ -42,7 +42,15 @@ const vendorConfigSchema = z.object({
         type: z.literal("video"),
         mode: z.array(
           z.union([
-            z.enum(["singleImage", "startEndRequired", "endFrameOptional", "startFrameOptional", "text", "audioReference", "videoReference"]),
+            z.enum([
+              "singleImage",
+              "startEndRequired",
+              "endFrameOptional",
+              "startFrameOptional",
+              "text",
+              "audioReference",
+              "videoReference",
+            ]),
             z.array(z.string().regex(/^(videoReference|imageReference|audioReference):\d+$/)),
           ]),
         ),
@@ -95,10 +103,13 @@ export default router.post(
         return `${index + 1}. ${path}: ${detail}`;
       });
 
-      return res.status(400).send(error(`vendor配置校验失败，共 ${issueLines.length} 处:\n${issueLines.join("\n")}`));
+      return res
+        .status(400)
+        .send(error(`vendor配置校验失败，共 ${issueLines.length} 处:\n${issueLines.join("\n")}`));
     }
 
-    if ((vendor.id as string).includes(":")) return res.status(400).send(error("id不能包含英文冒号"));
+    if ((vendor.id as string).includes(":"))
+      return res.status(400).send(error("id不能包含英文冒号"));
     const data = await u.db("o_vendorConfig").where("id", vendor.id).first();
     if (data) return res.status(500).send(error("供应商id已存在"));
     const [id] = await u.db("o_vendorConfig").insert({

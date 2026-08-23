@@ -13,7 +13,10 @@ export default router.post(
   }),
   async (req, res) => {
     const { projectId, agentType } = req.body;
-    const row = await u.db("o_agentWorkData").where({ projectId: projectId, key: agentType }).first();
+    const row = await u
+      .db("o_agentWorkData")
+      .where({ projectId: projectId, key: agentType })
+      .first();
 
     if (!row) {
       const [id] = await u.db("o_agentWorkData").insert({
@@ -30,7 +33,7 @@ export default router.post(
             storySkeleton: "",
             adaptationStrategy: "",
           },
-          id
+          id,
         }),
       );
     }

@@ -14,9 +14,16 @@ export default router.post(
   async (req, res) => {
     const { assetsId } = req.body;
 
-    const assets = await u.db("o_assets").where("id", assetsId).select("id", "imageId", "type").first();
+    const assets = await u
+      .db("o_assets")
+      .where("id", assetsId)
+      .select("id", "imageId", "type")
+      .first();
 
-    const rawTempAssets = await u.db("o_image").where("assetsId", assetsId).select("id", "filePath", "assetsId", "type", "state");
+    const rawTempAssets = await u
+      .db("o_image")
+      .where("assetsId", assetsId)
+      .select("id", "filePath", "assetsId", "type", "state");
 
     const tempAssets = await Promise.all(
       rawTempAssets.map(async (item) => ({

@@ -36,7 +36,11 @@ export default router.post(
       const videoPrompt = await u.db("o_prompt").where("type", "videoPromptGeneration").first();
       let videoPromptGeneration = "" as string | undefined;
 
-      const modelPromptData = await u.db("o_modelPrompt").where("vendorId", id).where("model", modelData).first();
+      const modelPromptData = await u
+        .db("o_modelPrompt")
+        .where("vendorId", id)
+        .where("model", modelData)
+        .first();
       //查询到 有绑定对应视频提示词
       if (modelPromptData) {
         const modelPromptRoot = u.getPath(["modelPrompt"]);
@@ -61,7 +65,11 @@ export default router.post(
         } else if (/seedance.*2[.\-]0/i.test(modelLower)) {
           // seedance 2.0 / 2-0 系列
           fileName = "seedance2Multi-parameterMode.md";
-        } else if (mode === "startEndRequired" || mode === "endFrameOptional" || mode === "startFrameOptional") {
+        } else if (
+          mode === "startEndRequired" ||
+          mode === "endFrameOptional" ||
+          mode === "startFrameOptional"
+        ) {
           // body.mode 为首尾帧相关 => 通用首尾帧模式
           fileName = "universalFirstAndLastFrameMode.md";
         } else if (typeof mode === "string" && mode.startsWith('["') && mode.endsWith('"]')) {
@@ -98,67 +106,72 @@ export default router.post(
         .update({ state: "生成中" });
       // 并发控制：每个 track 独立走 查询→拼装→AI调用→更新 流程
       const limit = pLimit(concurrentCount ?? 5);
-      const tasks = trackData.map((track: { trackId: number; info: { id: number; sources: string }[] }) =>
-        limit(async () => {
-          // 查询参数
-          const images = await Promise.all(
-            track.info.map(async (item: { id: number; sources: string }) => {
-              if (item.sources === "storyboard") {
-                // 查询分镜主信息
-                const storyboard = await u
-                  .db("o_storyboard")
-                  .where("o_storyboard.id", item.id)
-                  .select("videoDesc", "prompt", "track", "duration", "shouldGenerateImage")
-                  .first();
-                // 查询分镜关联的资产ID
-                const assetRows = await u.db("o_assets2Storyboard").where("storyboardId", item.id).orderBy("rowid").select("assetId");
-                const associateAssetsIds = assetRows.map((row: any) => row.assetId);
-                return {
-                  ...storyboard,
-                  associateAssetsIds,
-                  _type: "storyboard",
-                };
-              }
-              if (item.sources === "assets") {
-                // 查询素材
-                const assetsData = await u
-                  .db("o_assets")
-                  .leftJoin("o_image", "o_image.id", "o_assets.imageId")
-                  .where("o_assets.id", item.id)
-                  .select("o_assets.id", "o_assets.type", "o_assets.name", "o_image.filePath")
-                  .first();
-                return {
-                  ...assetsData,
-                  _type: "assets",
-                };
-              }
-            }),
-          );
+      const tasks = trackData.map(
+        (track: { trackId: number; info: { id: number; sources: string }[] }) =>
+          limit(async () => {
+            // 查询参数
+            const images = await Promise.all(
+              track.info.map(async (item: { id: number; sources: string }) => {
+                if (item.sources === "storyboard") {
+                  // 查询分镜主信息
+                  const storyboard = await u
+                    .db("o_storyboard")
+                    .where("o_storyboard.id", item.id)
+                    .select("videoDesc", "prompt", "track", "duration", "shouldGenerateImage")
+                    .first();
+                  // 查询分镜关联的资产ID
+                  const assetRows = await u
+                    .db("o_assets2Storyboard")
+                    .where("storyboardId", item.id)
+                    .orderBy("rowid")
+                    .select("assetId");
+                  const associateAssetsIds = assetRows.map((row: any) => row.assetId);
+                  return {
+                    ...storyboard,
+                    associateAssetsIds,
+                    _type: "storyboard",
+                  };
+                }
+                if (item.sources === "assets") {
+                  // 查询素材
+                  const assetsData = await u
+                    .db("o_assets")
+                    .leftJoin("o_image", "o_image.id", "o_assets.imageId")
+                    .where("o_assets.id", item.id)
+                    .select("o_assets.id", "o_assets.type", "o_assets.name", "o_image.filePath")
+                    .first();
+                  return {
+                    ...assetsData,
+                    _type: "assets",
+                  };
+                }
+              }),
+            );
 
-          // 拆分 assets 和 storyboard
-          const assets: any[] = [];
-          const storyboard: any[] = [];
-          for (const item of images) {
-            if (!item) continue;
-            if (item._type === "assets")
-              assets.push({
-                id: item.id,
-                type: item.type,
-                name: item.name,
-                filePath: item.filePath,
-              });
-            if (item._type === "storyboard")
-              storyboard.push({
-                videoDesc: item.videoDesc,
-                prompt: item.prompt,
-                track: item.track,
-                duration: item.duration,
-                associateAssetsIds: item.associateAssetsIds,
-                shouldGenerateImage: item.shouldGenerateImage,
-              });
-          }
+            // 拆分 assets 和 storyboard
+            const assets: any[] = [];
+            const storyboard: any[] = [];
+            for (const item of images) {
+              if (!item) continue;
+              if (item._type === "assets")
+                assets.push({
+                  id: item.id,
+                  type: item.type,
+                  name: item.name,
+                  filePath: item.filePath,
+                });
+              if (item._type === "storyboard")
+                storyboard.push({
+                  videoDesc: item.videoDesc,
+                  prompt: item.prompt,
+                  track: item.track,
+                  duration: item.duration,
+                  associateAssetsIds: item.associateAssetsIds,
+                  shouldGenerateImage: item.shouldGenerateImage,
+                });
+            }
 
-          const content = `
+            const content = `
           **模型名称**：${modelData},
           **资产信息**（角色、场景、道具、音频):${assets
             .filter((i: any) => i.filePath)
@@ -172,34 +185,34 @@ export default router.post(
           )},
           `;
 
-          try {
-            const { text } = await u.Ai.Text("universalAi").invoke({
-              system: videoPromptGeneration,
-              messages: [
-                {
-                  role: "assistant",
-                  content: `${visualManual}`,
-                },
-                {
-                  role: "user",
-                  content: content,
-                },
-              ],
-            });
+            try {
+              const { text } = await u.Ai.Text("universalAi").invoke({
+                system: videoPromptGeneration,
+                messages: [
+                  {
+                    role: "assistant",
+                    content: `${visualManual}`,
+                  },
+                  {
+                    role: "user",
+                    content: content,
+                  },
+                ],
+              });
 
-            await u.db("o_videoTrack").where({ id: track.trackId }).update({
-              prompt: text,
-              state: "已完成",
-            });
+              await u.db("o_videoTrack").where({ id: track.trackId }).update({
+                prompt: text,
+                state: "已完成",
+              });
 
-            return { trackId: track.trackId, text };
-          } catch (e: any) {
-            await u
-              .db("o_videoTrack")
-              .where({ id: track.trackId })
-              .update({ state: "生成失败", reason: u.error(e).message });
-          }
-        }),
+              return { trackId: track.trackId, text };
+            } catch (e: any) {
+              await u
+                .db("o_videoTrack")
+                .where({ id: track.trackId })
+                .update({ state: "生成失败", reason: u.error(e).message });
+            }
+          }),
       );
 
       // 后台执行，不等待结果

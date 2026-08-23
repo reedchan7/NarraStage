@@ -18,9 +18,16 @@ export default router.post(
   async (req, res) => {
     const { assetIds, projectId, scriptId, concurrentCount = 5 } = req.body;
 
-    const projectSettingData = await u.db("o_project").where("id", projectId).select("imageModel", "imageQuality", "artStyle").first();
+    const projectSettingData = await u
+      .db("o_project")
+      .where("id", projectId)
+      .select("imageModel", "imageQuality", "artStyle")
+      .first();
 
-    const assetsDataArr = await u.db("o_assets").whereIn("id", assetIds).select("id", "describe", "name", "type", "assetsId");
+    const assetsDataArr = await u
+      .db("o_assets")
+      .whereIn("id", assetIds)
+      .select("id", "describe", "name", "type", "assetsId");
     const parentIds = assetsDataArr.map((item) => item.assetsId).filter((id) => id !== null);
     const parentAssetsData = await u
       .db("o_assets")
@@ -37,9 +44,21 @@ export default router.post(
     parentAssetsData.forEach((item) => {
       if (item.filePath) imageUrlRecord[item.id] = item.filePath;
     });
-    const rolePrompt = u.getArtPrompt(projectSettingData!.artStyle!, "art_skills", "art_character_derivative");
-    const toolPrompt = u.getArtPrompt(projectSettingData!.artStyle!, "art_skills", "art_prop_derivative");
-    const scenePrompt = u.getArtPrompt(projectSettingData!.artStyle!, "art_skills", "art_scene_derivative");
+    const rolePrompt = u.getArtPrompt(
+      projectSettingData!.artStyle!,
+      "art_skills",
+      "art_character_derivative",
+    );
+    const toolPrompt = u.getArtPrompt(
+      projectSettingData!.artStyle!,
+      "art_skills",
+      "art_prop_derivative",
+    );
+    const scenePrompt = u.getArtPrompt(
+      projectSettingData!.artStyle!,
+      "art_skills",
+      "art_scene_derivative",
+    );
     const promptRecord: Record<string, { prompt: string }> = {
       role: {
         prompt: rolePrompt,
@@ -82,16 +101,20 @@ export default router.post(
           },
         ],
       });
-        await u.db("o_assets").where("id", item.id).update({ prompt: text });
+      await u.db("o_assets").where("id", item.id).update({ prompt: text });
 
-      const imageBase64 = imageUrlRecord[item.assetsId!] ? await u.oss.getImageBase64(imageUrlRecord[item.assetsId!]) : null;
+      const imageBase64 = imageUrlRecord[item.assetsId!]
+        ? await u.oss.getImageBase64(imageUrlRecord[item.assetsId!])
+        : null;
       try {
         const repeloadObj = {
           prompt: text,
           size: projectSettingData?.imageQuality as "1K" | "2K" | "4K",
           aspectRatio: "16:9" as `${number}:${number}`,
         };
-        const imageCls = await u.Ai.Image(projectSettingData?.imageModel as `${string}:${string}`).run(
+        const imageCls = await u.Ai.Image(
+          projectSettingData?.imageModel as `${string}:${string}`,
+        ).run(
           {
             referenceList: imageBase64 ? [{ type: "image", base64: imageBase64 }] : [],
             ...repeloadObj,
@@ -105,7 +128,10 @@ export default router.post(
         );
         const savePath = `/${projectId}/assets/${scriptId}/${item.type}/${u.uuid()}.jpg`;
         await imageCls.save(savePath);
-        await u.db("o_image").where({ id: imageId }).update({ state: "已完成", filePath: savePath });
+        await u
+          .db("o_image")
+          .where({ id: imageId })
+          .update({ state: "已完成", filePath: savePath });
         return {
           id: item.id!,
           state: "已完成",

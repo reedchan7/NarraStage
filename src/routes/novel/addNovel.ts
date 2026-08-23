@@ -22,7 +22,12 @@ export default router.post(
   async (req, res) => {
     const { projectId, data } = req.body;
     const totalNovelId = [];
-    const getLastChapterIndex = await u.db("o_novel").where("projectId", projectId).select("chapterIndex").orderBy("chapterIndex", "desc").first();
+    const getLastChapterIndex = await u
+      .db("o_novel")
+      .where("projectId", projectId)
+      .select("chapterIndex")
+      .orderBy("chapterIndex", "desc")
+      .first();
     let lastChapterIndex = 0;
     if (getLastChapterIndex) {
       lastChapterIndex = getLastChapterIndex.chapterIndex!;
@@ -39,13 +44,20 @@ export default router.post(
       });
       totalNovelId.push(id);
     }
-    const chapterAllList = await u.db("o_novel").where("projectId", projectId).whereIn("id", totalNovelId);
+    const chapterAllList = await u
+      .db("o_novel")
+      .where("projectId", projectId)
+      .whereIn("id", totalNovelId);
     const novelClass = new u.cleanNovel();
     novelClass.emitter.on("item", async (item) => {
       await u
         .db("o_novel")
         .where("id", item.id)
-        .update({ event: item.event, eventState: item.event ? 1 : -1, errorReason: item?.errReason ?? null });
+        .update({
+          event: item.event,
+          eventState: item.event ? 1 : -1,
+          errorReason: item?.errReason ?? null,
+        });
     });
     novelClass.start(chapterAllList, projectId);
 

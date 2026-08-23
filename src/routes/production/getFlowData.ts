@@ -4,7 +4,7 @@ import { z } from "zod";
 import { success, error } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
 const router = express.Router();
-import { FlowData } from "@/agents/productionAgent/tools";
+import type { FlowData } from "@/agents/productionAgent/tools";
 
 export default router.post(
   "/",
@@ -21,7 +21,11 @@ export default router.post(
       .select("data")
       .first();
 
-    const scriptData = await u.db("o_script").where("projectId", projectId).where("id", episodesId).first();
+    const scriptData = await u
+      .db("o_script")
+      .where("projectId", projectId)
+      .where("id", episodesId)
+      .first();
     const scriptAssets = await u.db("o_scriptAssets").where("scriptId", episodesId);
     const assetIds = scriptAssets.map((i) => i.assetId);
     const assetsData = await u
@@ -101,7 +105,10 @@ export default router.post(
           }),
         );
         const storyboardIds = storyboardData.map((i) => i.id);
-        const assetsIds = await u.db("o_assets2Storyboard").whereIn("storyboardId", storyboardIds).orderBy("rowid");
+        const assetsIds = await u
+          .db("o_assets2Storyboard")
+          .whereIn("storyboardId", storyboardIds)
+          .orderBy("rowid");
 
         const assets2StoryboardMap: Record<number, number[]> = {};
         assetsIds.forEach((i) => {
