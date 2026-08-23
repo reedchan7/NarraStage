@@ -3,8 +3,11 @@ import { HashRouter, Navigate, Outlet, Route, Routes } from "react-router-dom";
 import { AppShell } from "@/components/AppShell";
 import { DesktopTitlebar } from "@/components/DesktopTitlebar";
 import { LoginPage } from "@/pages/LoginPage";
+import { AssetsPage } from "@/pages/AssetsPage";
+import { JobsPage } from "@/pages/JobsPage";
 import { ProjectsPage } from "@/pages/ProjectsPage";
 import { ProvidersPage } from "@/pages/ProvidersPage";
+import { ScriptsPage } from "@/pages/ScriptsPage";
 import { StudioPage } from "@/pages/StudioPage";
 import { useSession } from "@/state/session";
 
@@ -49,6 +52,11 @@ export function App() {
               <Route path="/projects" element={<ProjectsPage />} />
               <Route path="/studio" element={<StudioPage />} />
               <Route path="/studio/:projectId" element={<StudioPage />} />
+              <Route path="/scripts" element={<ScriptsPage />} />
+              <Route path="/scripts/:projectId" element={<ScriptsPage />} />
+              <Route path="/assets" element={<AssetsPage />} />
+              <Route path="/assets/:projectId" element={<AssetsPage />} />
+              <Route path="/jobs" element={<JobsPage />} />
               <Route path="/providers" element={<ProvidersPage />} />
             </Route>
             <Route path="*" element={<Navigate to="/projects" replace />} />

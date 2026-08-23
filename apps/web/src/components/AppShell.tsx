@@ -1,14 +1,27 @@
-import { Boxes, ChevronDown, Film, KeyRound, LogOut, PanelsTopLeft } from "lucide-react";
+import {
+  Boxes,
+  ChevronDown,
+  FileText,
+  Film,
+  Images,
+  KeyRound,
+  ListChecks,
+  LogOut,
+  PanelsTopLeft,
+} from "lucide-react";
 import type { ReactNode } from "react";
 import { NavLink } from "react-router-dom";
 import { localeLabels, type Locale } from "@/i18n/messages";
 import { useI18n } from "@/i18n/useI18n";
 import { useSession } from "@/state/session";
+import { useWorkspace } from "@/state/workspace";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { locale, setLocale, t } = useI18n();
   const session = useSession((state) => state.session);
   const signOut = useSession((state) => state.signOut);
+  const projectId = useWorkspace((state) => state.projectId);
+  const projectPath = (surface: string) => (projectId ? `/${surface}/${projectId}` : `/${surface}`);
 
   return (
     <div className="app-shell">
@@ -28,9 +41,21 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Boxes size={18} />
             <span>{t("nav.projects")}</span>
           </NavLink>
-          <NavLink to="/studio">
+          <NavLink to={projectPath("studio")}>
             <PanelsTopLeft size={18} />
             <span>{t("nav.studio")}</span>
+          </NavLink>
+          <NavLink to={projectPath("scripts")}>
+            <FileText size={18} />
+            <span>{t("nav.scripts")}</span>
+          </NavLink>
+          <NavLink to={projectPath("assets")}>
+            <Images size={18} />
+            <span>{t("nav.assets")}</span>
+          </NavLink>
+          <NavLink to="/jobs">
+            <ListChecks size={18} />
+            <span>{t("nav.jobs")}</span>
           </NavLink>
           <NavLink to="/providers">
             <KeyRound size={18} />

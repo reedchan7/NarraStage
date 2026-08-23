@@ -259389,7 +259389,7 @@ var init_writeVersion = __esm(() => {
   init_getPath();
   APP_VERSION = (() => {
     if (true) {
-      return "2.0.0";
+      return "2.1.0";
     }
     const pkgPath = path13.resolve(process.cwd(), "package.json");
     const pkg = JSON.parse(fs9.readFileSync(pkgPath, "utf8"));
@@ -264566,13 +264566,15 @@ var init_addDirectorManual = __esm(() => {
 });
 
 // apps/server/src/routes/project/addProject.ts
-var router93, addProject_default;
+var router93, projectModelIdSchema, projectImageQualitySchema, addProject_default;
 var init_addProject = __esm(() => {
   init_compat2();
   init_utils3();
   init_zod();
   init_middleware();
   router93 = compat_default.Router();
+  projectModelIdSchema = exports_external.string().regex(/^[a-z0-9_-]+:.+$/i);
+  projectImageQualitySchema = exports_external.enum(["1K", "2K", "4K"]);
   addProject_default = router93.post("/", validateFields({
     projectType: exports_external.string(),
     name: exports_external.string(),
@@ -264581,9 +264583,9 @@ var init_addProject = __esm(() => {
     artStyle: exports_external.string(),
     directorManual: exports_external.string(),
     videoRatio: exports_external.string(),
-    imageModel: exports_external.string(),
-    videoModel: exports_external.string(),
-    imageQuality: exports_external.string(),
+    imageModel: projectModelIdSchema,
+    videoModel: projectModelIdSchema,
+    imageQuality: projectImageQualitySchema,
     mode: exports_external.string()
   }), async (req, res) => {
     const {
@@ -277009,7 +277011,7 @@ var init_checkUpdate = __esm(() => {
   router119 = compat_default.Router();
   APP_VERSION2 = (() => {
     if (true) {
-      return "2.0.0";
+      return "2.1.0";
     }
     const pkgPath = path28.resolve(process.cwd(), "package.json");
     const pkg = JSON.parse(fs26.readFileSync(pkgPath, "utf8"));
@@ -283969,7 +283971,12 @@ async function createHttpApplication(localApiPolicy) {
     const extension2 = path36.extname(relativePath);
     const thumbnailPath = path36.join(ossDirectory, "smallImage", path36.dirname(relativePath), `${path36.basename(relativePath, extension2)}_${selected.directory}${extension2}`);
     const result = await ensureThumbnail(originalPath, thumbnailPath, selected.options);
-    return result ? new Response(Bun.file(result)) : next();
+    if (!result)
+      return next();
+    const bytes = await fs36.promises.readFile(result);
+    return new Response(bytes, {
+      headers: { "content-type": getMimeType(result) ?? "application/octet-stream" }
+    });
   });
   app.use("/oss/*", staticRoute(ossDirectory, "/oss"));
   app.use("/skills/*", async (context, next) => {

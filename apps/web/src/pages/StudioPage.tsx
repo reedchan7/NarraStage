@@ -1,12 +1,13 @@
 import { FileText, Image, Video } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "@/api/client";
 import { ConversationPanel } from "@/features/conversation/ConversationPanel";
 import { GenerationPanel } from "@/features/generation/GenerationPanel";
 import { useI18n } from "@/i18n/useI18n";
 import { useSession } from "@/state/session";
+import { useWorkspace } from "@/state/workspace";
 
 type StudioStage = "story" | "image" | "video";
 
@@ -14,8 +15,12 @@ export function StudioPage() {
   const parameters = useParams();
   const projectId = Number(parameters.projectId);
   const token = useSession((state) => state.session?.token ?? "");
+  const selectProject = useWorkspace((state) => state.selectProject);
   const { t } = useI18n();
   const [stage, setStage] = useState<StudioStage>("story");
+  useEffect(() => {
+    if (Number.isInteger(projectId) && projectId > 0) selectProject(projectId);
+  }, [projectId, selectProject]);
   const catalog = useQuery({
     queryKey: ["provider-catalog"],
     queryFn: () => api.catalog(token),

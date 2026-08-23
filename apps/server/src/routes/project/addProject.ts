@@ -4,6 +4,8 @@ import { z } from "zod";
 import { success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
 const router = legacyHttp.Router();
+export const projectModelIdSchema = z.string().regex(/^[a-z0-9_-]+:.+$/i);
+export const projectImageQualitySchema = z.enum(["1K", "2K", "4K"]);
 
 // 新增项目
 export default router.post(
@@ -16,9 +18,9 @@ export default router.post(
     artStyle: z.string(),
     directorManual: z.string(),
     videoRatio: z.string(),
-    imageModel: z.string(),
-    videoModel: z.string(),
-    imageQuality: z.string(),
+    imageModel: projectModelIdSchema,
+    videoModel: projectModelIdSchema,
+    imageQuality: projectImageQualitySchema,
     mode: z.string(),
   }),
   async (req, res) => {

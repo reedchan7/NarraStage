@@ -1,3 +1,6 @@
+import contractSource from "@toonflow/contracts/source";
+import type { operations } from "@toonflow/contracts";
+
 export interface ApiEnvelope<T> {
   code: number;
   data: T;
@@ -36,117 +39,75 @@ export interface CreateProjectInput {
   mode: string;
 }
 
-export interface ProviderSlot {
-  slot: string;
-  configured: boolean;
-  source: ToonflowCredentialStatus["source"];
-  writable: boolean;
-  updatedAt?: string;
-}
-
-export interface ProviderStatus {
-  providerId: string;
-  health: "healthy" | "unhealthy" | "degraded" | "unknown";
-  slots: ProviderSlot[];
-}
-
-export interface ProviderStatusResult {
-  schemaVersion: "2.0.0";
-  providers: ProviderStatus[];
-}
-
-export type GenerationOperation = "image.generate" | "video.generate";
-
-export interface CapabilityField {
-  path: string;
-  kind: "text" | "integer" | "boolean" | "enum" | "assets";
-  label: string;
-  required: boolean;
-  enumValues?: string[];
-  allowedValues?: Array<string | number | boolean>;
-  minimum?: number;
-  maximum?: number;
-  maximumLength?: number;
-  advanced?: boolean;
-}
-
-export interface CapabilitySchema {
-  id: string;
-  operation: string;
-  fields: CapabilityField[];
-  assetModes?: Array<{ id: string; label: string }>;
-}
-
-export interface Offering {
-  id: string;
-  canonicalModelId: string;
-  providerId: string;
-  providerModelId: string;
-  operations: Array<{
-    operation: string;
-    capabilitySchemaId: string;
-    enabled: boolean;
-  }>;
-  support: {
-    implementation: "declared" | "implemented";
-    evidence: string[];
-  };
-}
-
-export interface CatalogResult {
-  schemaVersion: string;
-  offerings: Offering[];
-  capabilitySchemas: CapabilitySchema[];
-  availability: Array<{
-    offeringId: string;
-    available: boolean;
-    health: string;
-    reasons: string[];
+export interface ConversationHistoryItem {
+  id: string | number;
+  role: "user" | "assistant";
+  name?: string;
+  status: "complete";
+  datetime: string;
+  content: Array<{
+    id?: string | number;
+    type: string;
+    status?: "complete";
+    data: unknown;
   }>;
 }
 
-export type GenerationJobState =
-  | "queued"
-  | "preparing_assets"
-  | "submitting"
-  | "submission_unknown"
-  | "submitted"
-  | "remote_queued"
-  | "running"
-  | "importing"
-  | "succeeded"
-  | "failed"
-  | "cancelled"
-  | "abandoned";
-
-export interface GenerationJob {
-  id: string;
-  idempotencyKey: string;
-  canonicalModelId: string;
-  offeringId: string;
-  providerId: string;
-  operation: GenerationOperation;
-  state: GenerationJobState;
-  result?: unknown;
-  error?: unknown;
-  version: number;
-  createdAt: number;
-  updatedAt: number;
-  requiresReconciliation: boolean;
+export interface ScriptRecord {
+  id: number;
+  name: string;
+  content: string;
+  createTime?: number;
+  extractState?: -1 | 0 | 1 | 2;
+  errorReason?: string;
+  relatedAssets: Array<{ id: number; name: string }>;
 }
 
-export interface SubmitGenerationJobInput {
-  schemaVersion: "2.0.0";
-  idempotencyKey: string;
-  canonicalModelId: string;
-  offeringId: string;
-  operation: GenerationOperation;
-  input: {
-    mode?: string;
-    values: Record<string, unknown>;
-    assets: Array<{ assetId: string; kind: "image" | "video" | "audio"; role: string }>;
-  };
+export interface ScriptInput {
+  name: string;
+  content: string;
+  assets: number[];
 }
+
+export interface ProjectAsset {
+  id: number;
+  name: string;
+  describe?: string | null;
+  type: string;
+  filePath?: string | null;
+  state?: string | null;
+  historyImages?: Array<{ id: number; filePath?: string | null }>;
+}
+
+type CatalogEnvelope =
+  operations["getProviderCatalog"]["responses"][200]["content"]["application/json"];
+type ProviderEnvelope =
+  operations["getProviderCredentialStatus"]["responses"][200]["content"]["application/json"];
+type SubmitJobOperation =
+  operations["submitGenerationJob"]["requestBody"]["content"]["application/json"];
+type UploadAssetEnvelope =
+  operations["uploadOwnedMediaAsset"]["responses"][201]["content"]["application/json"];
+type JobListEnvelope =
+  operations["listGenerationJobs"]["responses"][200]["content"]["application/json"];
+
+export type CatalogResult = CatalogEnvelope["data"];
+export type CapabilitySchema = CatalogResult["capabilitySchemas"][number];
+export type CapabilityField = CapabilitySchema["fields"][number];
+export type Offering = CatalogResult["offerings"][number];
+export type ProviderStatusResult = ProviderEnvelope["data"];
+export type ProviderStatus = ProviderStatusResult["providers"][number];
+export type ProviderSlot = ProviderStatus["slots"][number];
+export type SubmitGenerationJobInput = SubmitJobOperation;
+export type GenerationOperation = Extract<
+  SubmitGenerationJobInput["operation"],
+  "image.generate" | "video.generate"
+>;
+export type GenerationJob =
+  operations["submitGenerationJob"]["responses"][202]["content"]["application/json"]["data"];
+export type GenerationJobState = GenerationJob["state"];
+export type UploadAssetResult = UploadAssetEnvelope["data"];
+export type GenerationJobList = JobListEnvelope["data"];
+type ApiMeta = operations["getApiMeta"]["responses"][200]["content"]["application/json"];
 
 export class ApiError extends Error {
   readonly status: number;
@@ -155,6 +116,64 @@ export class ApiError extends Error {
     super(message);
     this.name = "ApiError";
     this.status = status;
+  }
+}
+
+function parseVersion(version: string): readonly [number, number, number] | null {
+  const match = /^(\d+)\.(\d+)\.(\d+)$/.exec(version);
+  if (!match) return null;
+  return [Number(match[1]), Number(match[2]), Number(match[3])];
+}
+
+export function contractRangeIncludes(range: string, version: string): boolean {
+  const minimum = range.startsWith("^") ? parseVersion(range.slice(1)) : null;
+  const actual = parseVersion(version);
+  if (!minimum || !actual) return false;
+  const [minimumMajor, minimumMinor, minimumPatch] = minimum;
+  const [actualMajor, actualMinor, actualPatch] = actual;
+  const atOrAboveMinimum =
+    actualMajor > minimumMajor ||
+    (actualMajor === minimumMajor && actualMinor > minimumMinor) ||
+    (actualMajor === minimumMajor && actualMinor === minimumMinor && actualPatch >= minimumPatch);
+  if (!atOrAboveMinimum) return false;
+  if (minimumMajor > 0) return actualMajor === minimumMajor;
+  if (minimumMinor > 0) return actualMajor === 0 && actualMinor === minimumMinor;
+  return actualMajor === 0 && actualMinor === 0 && actualPatch === minimumPatch;
+}
+
+async function assertApiCompatibility(): Promise<void> {
+  const expectedRange =
+    import.meta.env.VITE_TOONFLOW_CONTRACT_RANGE ?? `^${contractSource.contractVersion}`;
+  const expectedOpenApi =
+    import.meta.env.VITE_TOONFLOW_OPENAPI_SHA256 ?? contractSource.openapiSha256;
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 20_000);
+  try {
+    const response = await fetch("/api/meta", {
+      headers: { Accept: "application/json" },
+      credentials: "same-origin",
+      signal: controller.signal,
+    });
+    const meta = (await response.json().catch(() => null)) as ApiMeta | null;
+    const compatibleVersion = Boolean(
+      meta && contractRangeIncludes(expectedRange, meta.contractVersion),
+    );
+    const compatibleSchema = Boolean(
+      meta &&
+      (meta.contractVersion !== contractSource.contractVersion ||
+        meta.openapiSha256 === expectedOpenApi),
+    );
+    if (!response.ok || !compatibleVersion || !compatibleSchema) {
+      throw new ApiError("客户端 API 契约与服务端不兼容，请更新 Toonflow 客户端", 426);
+    }
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new ApiError("API 兼容性检查超时，未提交生成任务", 408);
+    }
+    throw new ApiError(error instanceof Error ? error.message : "API 兼容性检查失败", 0);
+  } finally {
+    window.clearTimeout(timeout);
   }
 }
 
@@ -212,18 +231,77 @@ export const api = {
       token,
     );
   },
+  conversationHistory(token: string, projectId: number) {
+    return apiRequest<ConversationHistoryItem[]>(
+      "/api/agents/getMemory",
+      {
+        method: "POST",
+        body: JSON.stringify({ projectId, agentType: "scriptAgent" }),
+      },
+      token,
+    );
+  },
+  clearConversation(token: string, projectId: number) {
+    return apiRequest<null>(
+      "/api/agents/clearMemory",
+      {
+        method: "POST",
+        body: JSON.stringify({ projectId, agentType: "scriptAgent", type: "all" }),
+      },
+      token,
+    );
+  },
+  scripts(token: string, projectId: number, name = "") {
+    return apiRequest<ScriptRecord[]>(
+      "/api/script/getScrptApi",
+      { method: "POST", body: JSON.stringify({ projectId, name }) },
+      token,
+    );
+  },
+  createScript(token: string, projectId: number, input: ScriptInput) {
+    return apiRequest<{ message: string }>(
+      "/api/script/addScript",
+      { method: "POST", body: JSON.stringify({ ...input, projectId }) },
+      token,
+    );
+  },
+  updateScript(token: string, id: number, input: ScriptInput) {
+    return apiRequest<{ message: string }>(
+      "/api/script/updateScript",
+      { method: "POST", body: JSON.stringify({ ...input, id }) },
+      token,
+    );
+  },
+  deleteScripts(token: string, ids: number[]) {
+    return apiRequest<{ message: string }>(
+      "/api/script/delScript",
+      { method: "POST", body: JSON.stringify({ ids }) },
+      token,
+    );
+  },
+  projectAssets(token: string, projectId: number) {
+    return apiRequest<ProjectAsset[]>(
+      "/api/cornerScape/getAllAssets",
+      { method: "POST", body: JSON.stringify({ projectId }) },
+      token,
+    );
+  },
   providers(token: string) {
     return apiRequest<ProviderStatusResult>("/api/v2/providers", undefined, token);
   },
   catalog(token: string) {
     return apiRequest<CatalogResult>("/api/v2/catalog", undefined, token);
   },
-  submitJob(token: string, input: SubmitGenerationJobInput) {
+  async submitJob(token: string, input: SubmitGenerationJobInput) {
+    await assertApiCompatibility();
     return apiRequest<GenerationJob>(
       "/api/v2/jobs",
       { method: "POST", body: JSON.stringify(input) },
       token,
     );
+  },
+  jobs(token: string) {
+    return apiRequest<GenerationJobList>("/api/v2/jobs?limit=100", undefined, token);
   },
   job(token: string, id: string) {
     return apiRequest<GenerationJob>(`/api/v2/jobs/${id}`, undefined, token);
@@ -241,5 +319,27 @@ export const api = {
     });
     if (!response.ok) throw new ApiError(`素材读取失败 (${response.status})`, response.status);
     return response.blob();
+  },
+  async uploadMediaAsset(token: string, file: File): Promise<UploadAssetResult> {
+    if (!file.type) throw new ApiError("无法识别素材类型", 400);
+    const response = await fetch("/api/v2/media-assets/upload", {
+      method: "PUT",
+      headers: {
+        Accept: "application/json",
+        Authorization: token,
+        "X-Toonflow-Media-Type": file.type,
+        "X-Toonflow-Filename": encodeURIComponent(file.name),
+      },
+      credentials: "same-origin",
+      body: file,
+    });
+    const payload = (await response.json().catch(() => null)) as
+      | ApiEnvelope<UploadAssetResult>
+      | { message?: string }
+      | null;
+    if (!response.ok || !payload || !("code" in payload) || payload.code !== 200) {
+      throw new ApiError(payload?.message ?? `素材上传失败 (${response.status})`, response.status);
+    }
+    return payload.data;
   },
 };

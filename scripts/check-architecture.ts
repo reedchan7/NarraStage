@@ -13,3 +13,14 @@ for (const relativePath of guarded) {
     throw new Error(`provider-specific branch detected in core: ${relativePath}`);
   }
 }
+
+const webClient = await readFile(
+  path.resolve(import.meta.dir, "..", "apps/web/src/api/client.ts"),
+  "utf8",
+);
+if (!webClient.includes('from "@toonflow/contracts"')) {
+  throw new Error("Web API client must consume generated @toonflow/contracts types");
+}
+if (!webClient.includes('from "@toonflow/contracts/source"')) {
+  throw new Error("Web API client must consume generated contract compatibility metadata");
+}

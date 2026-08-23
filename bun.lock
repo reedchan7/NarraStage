@@ -50,6 +50,7 @@
       },
       "devDependencies": {
         "@rmp135/sql-ts": "^2.2.0",
+        "@toonflow/contracts": "workspace:*",
         "@types/bun": "1.4.0",
         "@types/graphlib": "^2.1.12",
         "@types/jsonwebtoken": "^9.0.10",
@@ -68,21 +69,21 @@
     },
     "apps/desktop": {
       "name": "@toonflow/desktop",
-      "version": "2.0.0",
+      "version": "2.1.0",
       "devDependencies": {
         "typescript": "7.0.2",
       },
     },
     "apps/server": {
       "name": "@toonflow/server",
-      "version": "2.0.0",
+      "version": "2.1.0",
       "devDependencies": {
         "typescript": "7.0.2",
       },
     },
     "apps/web": {
       "name": "@toonflow/web",
-      "version": "2.0.0",
+      "version": "2.1.0",
       "dependencies": {
         "@tanstack/react-query": "5.102.2",
         "@toonflow/contracts": "workspace:*",

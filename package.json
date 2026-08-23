@@ -1,6 +1,6 @@
 {
   "name": "toonflow",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "private": true,
   "description": "Bun-powered AI workstation for turning stories and scripts into short-form animated productions.",
   "homepage": "https://github.com/reedchan7/Toonflow-app#readme",
@@ -133,6 +133,7 @@
   },
   "devDependencies": {
     "@rmp135/sql-ts": "^2.2.0",
+    "@toonflow/contracts": "workspace:*",
     "@types/bun": "1.4.0",
     "@types/graphlib": "^2.1.12",
     "@types/jsonwebtoken": "^9.0.10",

@@ -1,4 +1,5 @@
 import { io } from "socket.io-client";
+import { readFile } from "node:fs/promises";
 import { startDeterministicProductFixture } from "@tooling/deterministic-product-fixture";
 
 function invariant(condition: unknown, message: string): asserts condition {
@@ -36,6 +37,7 @@ try {
     operation: "image.generate" | "video.generate",
     offeringId: string,
     canonicalModelId: string,
+    input: { mode?: string; values: Record<string, unknown>; assets: unknown[] },
   ) {
     const request = {
       schemaVersion: "2.0.0",
@@ -43,7 +45,7 @@ try {
       canonicalModelId,
       offeringId,
       operation,
-      input: { values: { prompt: "月港信使穿过潮门" }, assets: [] },
+      input,
     };
     const first = await json<Envelope<{ id: string }>>(
       await fetch(`${baseUrl}/api/v2/jobs`, {
@@ -75,8 +77,65 @@ try {
     return first.data.id;
   }
 
-  const imageJob = await runJob("image.generate", "deterministic:image", "deterministic:image-v1");
-  const videoJob = await runJob("video.generate", "deterministic:video", "deterministic:video-v1");
+  const imageJob = await runJob("image.generate", "deterministic:image", "deterministic:image-v1", {
+    values: { prompt: "月港信使穿过潮门", aspectRatio: "16:9" },
+    assets: [],
+  });
+  const keyframe = await readFile(
+    new URL("../data/skills/art_skills/2D_90s_japanese_anime/images/1.png", import.meta.url),
+  );
+  const uploaded = await json<Envelope<{ assetId: string; kind: string }>>(
+    await fetch(`${baseUrl}/api/v2/media-assets/upload`, {
+      method: "PUT",
+      headers: {
+        Authorization: authorization,
+        "X-Toonflow-Media-Type": "image/png",
+        "X-Toonflow-Filename": "keyframe.png",
+      },
+      body: keyframe,
+    }),
+  );
+  invariant(uploaded.data.kind === "image", "upload_contract");
+  const videoJob = await runJob("video.generate", "deterministic:video", "deterministic:video-v1", {
+    mode: "keyframes",
+    values: {
+      prompt: "月港信使穿过潮门",
+      durationSeconds: 4,
+      resolution: "768P",
+      aspectRatio: "16:9",
+    },
+    assets: [{ assetId: uploaded.data.assetId, kind: "image", role: "first_frame" }],
+  });
+
+  const scripts = await json<Envelope<Array<{ name: string }>>>(
+    await fetch(`${baseUrl}/api/script/getScrptApi`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ projectId: 7001, name: "月港" }),
+    }),
+  );
+  invariant(
+    scripts.data.some((script) => script.name === "月港信使"),
+    "scripts_surface",
+  );
+  const assets = await json<Envelope<Array<{ type: string }>>>(
+    await fetch(`${baseUrl}/api/cornerScape/getAllAssets`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ projectId: 7001 }),
+    }),
+  );
+  invariant(
+    assets.data.some((asset) => asset.type === "role"),
+    "assets_surface",
+  );
+  const jobs = await json<Envelope<{ jobs: Array<{ id: string }> }>>(
+    await fetch(`${baseUrl}/api/v2/jobs?limit=100`, { headers }),
+  );
+  invariant(
+    jobs.data.jobs.some((job) => job.id === videoJob),
+    "jobs_surface",
+  );
 
   socket = io(`${baseUrl}/api/socket/scriptAgent`, {
     auth: { token: authorization, isolationKey: "acceptance", projectId: 7001 },
@@ -102,9 +161,12 @@ try {
     JSON.stringify({
       login: true,
       catalog: true,
+      scripts: true,
+      assets: true,
+      jobs: true,
       conversation: true,
       image: { jobId: imageJob, idempotent: true, media: true },
-      video: { jobId: videoJob, idempotent: true, media: true },
+      video: { jobId: videoJob, idempotent: true, media: true, keyframeUpload: true },
     }),
   );
 } finally {

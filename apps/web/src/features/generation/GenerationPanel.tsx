@@ -1,4 +1,13 @@
-import { CircleStop, Image as ImageIcon, LoaderCircle, Play, RotateCcw, Video } from "lucide-react";
+import {
+  CircleStop,
+  Image as ImageIcon,
+  LoaderCircle,
+  Play,
+  RotateCcw,
+  Trash2,
+  Upload,
+  Video,
+} from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import {
@@ -10,9 +19,19 @@ import {
 } from "@/api/client";
 import {
   buildGenerationRequest,
+  assetModeViolation,
   extractMediaArtifact,
   isTerminalJob,
+  type CapabilityAssetMode,
+  type GenerationAssetInput,
 } from "@/features/generation/contracts";
+
+interface UploadedGenerationAsset {
+  input: GenerationAssetInput;
+  filename: string;
+  mediaType: string;
+  byteLength: number;
+}
 
 function initialFieldValue(field: CapabilityField): string | number | boolean {
   if (field.path === "aspectRatio" && field.enumValues?.includes("16:9")) return "16:9";
@@ -20,6 +39,65 @@ function initialFieldValue(field: CapabilityField): string | number | boolean {
   if (field.kind === "integer") return field.minimum ?? 1;
   if (field.kind === "boolean") return false;
   return "";
+}
+
+function fieldForMode(field: CapabilityField, mode: CapabilityAssetMode | undefined) {
+  const rule = mode?.fieldRules?.find((candidate) => candidate.path === field.path);
+  return {
+    ...field,
+    ...(rule?.required === undefined ? {} : { required: rule.required }),
+    ...(rule?.enumValues ? { enumValues: rule.enumValues } : {}),
+    ...(rule?.allowedValues ? { allowedValues: rule.allowedValues } : {}),
+  };
+}
+
+function normalizeValuesForMode(
+  fields: CapabilityField[],
+  mode: CapabilityAssetMode | undefined,
+  values: Record<string, string | number | boolean>,
+) {
+  return Object.fromEntries(
+    fields.map((field) => {
+      const effective = fieldForMode(field, mode);
+      const current = values[field.path];
+      const allowed = effective.enumValues ?? effective.allowedValues;
+      return [
+        field.path,
+        current !== undefined && (!allowed || allowed.includes(current))
+          ? current
+          : initialFieldValue(effective),
+      ];
+    }),
+  );
+}
+
+function acceptForKinds(kinds: readonly ("image" | "video" | "audio")[]) {
+  return kinds.map((kind) => `${kind}/*`).join(",");
+}
+
+async function durationSeconds(file: File): Promise<number | undefined> {
+  if (!file.type.startsWith("video/") && !file.type.startsWith("audio/")) return undefined;
+  const url = URL.createObjectURL(file);
+  const media = document.createElement(file.type.startsWith("video/") ? "video" : "audio");
+  try {
+    return await new Promise<number>((resolve, reject) => {
+      const timeout = window.setTimeout(() => reject(new Error("无法读取素材时长")), 10_000);
+      media.onloadedmetadata = () => {
+        window.clearTimeout(timeout);
+        Number.isFinite(media.duration)
+          ? resolve(media.duration)
+          : reject(new Error("素材时长无效"));
+      };
+      media.onerror = () => {
+        window.clearTimeout(timeout);
+        reject(new Error("无法读取素材元数据"));
+      };
+      media.preload = "metadata";
+      media.src = url;
+    });
+  } finally {
+    URL.revokeObjectURL(url);
+  }
 }
 
 function statusLabel(job: GenerationJob | undefined) {
@@ -137,6 +215,11 @@ export function GenerationPanel(props: {
     (candidate) => candidate.id === operationDescriptor?.capabilitySchemaId,
   );
   const [values, setValues] = useState<Record<string, string | number | boolean>>({});
+  const [modeId, setModeId] = useState("");
+  const [uploadedAssets, setUploadedAssets] = useState<UploadedGenerationAsset[]>([]);
+  const [uploadingRole, setUploadingRole] = useState<string | null>(null);
+  const [assetError, setAssetError] = useState<string | null>(null);
+  const [parentJobId, setParentJobId] = useState("");
   const [jobId, setJobId] = useState<string | null>(null);
   const [mediaUrl, setMediaUrl] = useState<string | null>(null);
   const [mediaError, setMediaError] = useState<string | null>(null);
@@ -146,15 +229,25 @@ export function GenerationPanel(props: {
   }, [offerings]);
 
   useEffect(() => {
-    setValues(
-      Object.fromEntries(
-        (schema?.fields ?? []).map((field) => [field.path, initialFieldValue(field)]),
-      ),
-    );
+    const defaultMode =
+      schema?.assetModes?.find((candidate) => candidate.id === "text") ?? schema?.assetModes?.[0];
+    setModeId(defaultMode?.id ?? "");
+    setValues(normalizeValuesForMode(schema?.fields ?? [], defaultMode, {}));
+    setUploadedAssets([]);
+    setAssetError(null);
+    setParentJobId("");
     setJobId(null);
     setMediaUrl(null);
     setMediaError(null);
   }, [schema]);
+
+  const selectedMode = schema?.assetModes?.find((candidate) => candidate.id === modeId);
+  const effectiveFields = useMemo(
+    () => (schema?.fields ?? []).map((field) => fieldForMode(field, selectedMode)),
+    [schema?.fields, selectedMode],
+  );
+  const generationAssets = uploadedAssets.map((asset) => asset.input);
+  const assetViolation = assetModeViolation(selectedMode, generationAssets, parentJobId);
 
   const job = useQuery({
     queryKey: ["generation-job", jobId],
@@ -175,6 +268,9 @@ export function GenerationPanel(props: {
           offering,
           schema,
           values,
+          mode: selectedMode?.id,
+          assets: generationAssets,
+          parentJobId: selectedMode?.requiresContinuation ? parentJobId.trim() : undefined,
         }),
       );
     },
@@ -189,9 +285,43 @@ export function GenerationPanel(props: {
   });
   const currentJob = job.data ?? submit.data;
   const availability = props.catalog.availability.find(
-    (candidate) => candidate.offeringId === offering?.id,
+    (candidate) => candidate.offeringId === offering?.id && candidate.operation === props.operation,
   );
   const available = availability?.available ?? true;
+
+  async function uploadAssets(role: CapabilityAssetMode["roles"][number], files: FileList | null) {
+    if (!files?.length) return;
+    const currentCount = uploadedAssets.filter((asset) => asset.input.role === role.role).length;
+    const selectedFiles = Array.from(files).slice(0, Math.max(0, role.maximum - currentCount));
+    setUploadingRole(role.role);
+    setAssetError(null);
+    try {
+      const nextAssets: UploadedGenerationAsset[] = [];
+      for (const file of selectedFiles) {
+        const uploaded = await api.uploadMediaAsset(props.token, file);
+        if (uploaded.kind === "file" || !role.kinds.includes(uploaded.kind)) {
+          throw new Error(`${file.name} 不符合 ${role.role} 的素材类型要求`);
+        }
+        const duration = await durationSeconds(file);
+        nextAssets.push({
+          input: {
+            assetId: uploaded.assetId,
+            kind: uploaded.kind,
+            role: role.role,
+            ...(duration === undefined ? {} : { durationSeconds: duration }),
+          },
+          filename: uploaded.filename,
+          mediaType: uploaded.mediaType,
+          byteLength: uploaded.byteLength,
+        });
+      }
+      setUploadedAssets((current) => [...current, ...nextAssets]);
+    } catch (cause) {
+      setAssetError(cause instanceof Error ? cause.message : "素材上传失败");
+    } finally {
+      setUploadingRole(null);
+    }
+  }
 
   useEffect(() => {
     const artifact = extractMediaArtifact(currentJob?.result);
@@ -269,8 +399,32 @@ export function GenerationPanel(props: {
               ))}
             </select>
           </label>
+          {schema.assetModes && schema.assetModes.length > 0 ? (
+            <label>
+              <span>生成模式</span>
+              <select
+                value={selectedMode?.id ?? ""}
+                onChange={(event) => {
+                  const nextMode = schema.assetModes?.find(
+                    (candidate) => candidate.id === event.currentTarget.value,
+                  );
+                  setModeId(event.currentTarget.value);
+                  setValues((current) => normalizeValuesForMode(schema.fields, nextMode, current));
+                  setUploadedAssets([]);
+                  setAssetError(null);
+                  setParentJobId("");
+                }}
+              >
+                {schema.assetModes.map((mode) => (
+                  <option key={mode.id} value={mode.id}>
+                    {mode.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
           <div className="generation-fields">
-            {schema.fields
+            {effectiveFields
               .filter((field) => field.kind !== "assets" && !field.advanced)
               .map((field) => (
                 <CapabilityFieldControl
@@ -283,9 +437,89 @@ export function GenerationPanel(props: {
                 />
               ))}
           </div>
+          {selectedMode?.requiresContinuation ? (
+            <label>
+              <span>父任务 ID</span>
+              <input
+                value={parentJobId}
+                onChange={(event) => setParentJobId(event.currentTarget.value)}
+                placeholder="从任务中心复制一个已完成任务 ID"
+                required
+              />
+            </label>
+          ) : null}
+          {selectedMode && selectedMode.roles.length > 0 ? (
+            <section className="asset-mode-inputs" aria-label="生成素材">
+              {selectedMode.roles.map((role) => {
+                const roleAssets = uploadedAssets.filter((asset) => asset.input.role === role.role);
+                return (
+                  <div className="asset-role" key={role.role}>
+                    <div>
+                      <strong>{role.role}</strong>
+                      <small>
+                        {role.kinds.join(" / ")} · {role.minimum}–{role.maximum}
+                      </small>
+                    </div>
+                    <label className="asset-upload-button">
+                      {uploadingRole === role.role ? (
+                        <LoaderCircle className="spin" size={15} />
+                      ) : (
+                        <Upload size={15} />
+                      )}
+                      <span>上传素材</span>
+                      <input
+                        type="file"
+                        accept={acceptForKinds(role.kinds)}
+                        multiple={role.maximum > 1}
+                        disabled={uploadingRole !== null || roleAssets.length >= role.maximum}
+                        onChange={(event) => {
+                          void uploadAssets(role, event.currentTarget.files);
+                          event.currentTarget.value = "";
+                        }}
+                      />
+                    </label>
+                    {roleAssets.length > 0 ? (
+                      <ul>
+                        {roleAssets.map((asset) => (
+                          <li key={`${asset.input.assetId}:${asset.input.role}`}>
+                            <span>
+                              {asset.filename}
+                              <small>{asset.mediaType}</small>
+                            </span>
+                            <button
+                              className="icon-button danger"
+                              type="button"
+                              aria-label={`移除 ${asset.filename}`}
+                              onClick={() =>
+                                setUploadedAssets((current) =>
+                                  current.filter((candidate) => candidate !== asset),
+                                )
+                              }
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </section>
+          ) : null}
+          {assetError ? (
+            <p className="form-error" role="alert">
+              {assetError}
+            </p>
+          ) : null}
+          {assetViolation && selectedMode?.roles.length ? (
+            <p className="capability-hint" role="status">
+              {assetViolation}
+            </p>
+          ) : null}
           {!available ? (
             <p className="capability-unavailable" role="status">
-              服务尚未就绪：{availability?.reasons.join(" · ") || "请先配置模型服务"}
+              服务尚未就绪：{availability?.reasonCodes.join(" · ") || "请先配置模型服务"}
             </p>
           ) : null}
           {submit.error || job.error || cancel.error ? (
@@ -302,7 +536,11 @@ export function GenerationPanel(props: {
             <button
               className="button primary"
               disabled={
-                !available || submit.isPending || Boolean(currentJob && !isTerminalJob(currentJob))
+                !available ||
+                submit.isPending ||
+                Boolean(currentJob && !isTerminalJob(currentJob)) ||
+                Boolean(assetViolation) ||
+                uploadingRole !== null
               }
               type="submit"
             >

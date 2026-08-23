@@ -8,6 +8,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { Hono } from "hono";
 import { logger } from "hono/logger";
+import { getMimeType } from "hono/utils/mime";
 import isPathInside from "is-path-inside";
 import jwt from "jsonwebtoken";
 import type { Knex } from "knex";
@@ -181,7 +182,11 @@ async function createHttpApplication(
       `${path.basename(relativePath, extension)}_${selected.directory}${extension}`,
     );
     const result = await ensureThumbnail(originalPath, thumbnailPath, selected.options);
-    return result ? new Response(Bun.file(result)) : next();
+    if (!result) return next();
+    const bytes = await fs.promises.readFile(result);
+    return new Response(bytes, {
+      headers: { "content-type": getMimeType(result) ?? "application/octet-stream" },
+    });
   });
   app.use("/oss/*", staticRoute(ossDirectory, "/oss"));
   app.use("/skills/*", async (context, next) => {

@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { Session } from "@/api/client";
+import { useWorkspace } from "@/state/workspace";
 
 interface SessionState {
   session: Session | null;
@@ -13,7 +14,10 @@ export const useSession = create<SessionState>()(
     (set) => ({
       session: null,
       setSession: (session) => set({ session }),
-      signOut: () => set({ session: null }),
+      signOut: () => {
+        useWorkspace.getState().clearProject();
+        set({ session: null });
+      },
     }),
     {
       name: "toonflow.session.v2",

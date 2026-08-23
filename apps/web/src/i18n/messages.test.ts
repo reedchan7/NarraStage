@@ -6,12 +6,12 @@ describe("localization contract", () => {
     const expected = Object.keys(messages["zh-CN"]).toSorted();
     expect(Object.keys(messages)).toEqual([
       "zh-CN",
-      "en-US",
+      "zh-TW",
+      "en",
       "ja-JP",
-      "ko-KR",
-      "es-ES",
-      "fr-FR",
-      "de-DE",
+      "ru-RU",
+      "th-TH",
+      "vi-VN",
     ]);
     for (const [locale, dictionary] of Object.entries(messages)) {
       expect(Object.keys(dictionary).toSorted(), locale).toEqual(expected);

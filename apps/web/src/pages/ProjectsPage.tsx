@@ -5,21 +5,23 @@ import { useNavigate } from "react-router-dom";
 import { api, type CreateProjectInput } from "@/api/client";
 import { useI18n } from "@/i18n/useI18n";
 import { useSession } from "@/state/session";
+import { useWorkspace } from "@/state/workspace";
 
 const projectDefaults: Omit<CreateProjectInput, "name" | "intro" | "artStyle" | "videoRatio"> = {
   projectType: "animation",
   type: "short",
   directorManual: "",
-  imageModel: "",
-  videoModel: "",
-  imageQuality: "standard",
-  mode: "story",
+  imageModel: "toonflow:doubao-seedream-5.0-Lite",
+  videoModel: "toonflow:Kling-Video-O1",
+  imageQuality: "1K",
+  mode: "text",
 };
 
 export function ProjectsPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const token = useSession((state) => state.session?.token ?? "");
+  const selectProject = useWorkspace((state) => state.selectProject);
   const { t } = useI18n();
   const [creating, setCreating] = useState(false);
   const projects = useQuery({
@@ -90,7 +92,10 @@ export function ProjectsPage() {
             <article className="project-card" key={project.id}>
               <button
                 className="project-card-link"
-                onClick={() => navigate(`/studio/${project.id}`)}
+                onClick={() => {
+                  selectProject(project.id);
+                  navigate(`/studio/${project.id}`);
+                }}
                 type="button"
                 aria-label={`${t("projects.open")}: ${project.name}`}
               >

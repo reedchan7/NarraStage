@@ -99,7 +99,7 @@ export function ConversationPanel(props: { projectId: number; token: string }) {
         <div className="composer-actions">
           <button
             className="icon-button"
-            onClick={conversation.clear}
+            onClick={() => void conversation.clear()}
             type="button"
             aria-label="清空对话"
           >

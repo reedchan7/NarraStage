@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { io, type Socket } from "socket.io-client";
+import { api } from "@/api/client";
 
 export interface ConversationContent {
   id: string;
@@ -37,9 +38,28 @@ export function useAgentConversation(input: { projectId: number; token: string }
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let active = true;
+    void api
+      .conversationHistory(input.token, input.projectId)
+      .then((history) => {
+        if (!active) return;
+        setMessages(
+          history.map((message) => ({
+            ...message,
+            id: String(message.id),
+            content: message.content.map((content, index) => ({
+              ...content,
+              id: String(content.id ?? `${message.id}:${index}`),
+            })),
+          })),
+        );
+      })
+      .catch((cause: unknown) => {
+        if (active) setError(cause instanceof Error ? cause.message : "对话历史读取失败");
+      });
     const socket = io("/api/socket/scriptAgent", {
       auth: {
-        isolationKey: `web:${input.projectId}`,
+        isolationKey: `${input.projectId}:scriptAgent`,
         projectId: input.projectId,
         token: input.token,
       },
@@ -118,6 +138,7 @@ export function useAgentConversation(input: { projectId: number; token: string }
       );
     });
     return () => {
+      active = false;
       socket.removeAllListeners();
       socket.disconnect();
       socketRef.current = null;
@@ -140,7 +161,15 @@ export function useAgentConversation(input: { projectId: number; token: string }
   }, []);
 
   const stop = useCallback(() => socketRef.current?.emit("stop"), []);
-  const clear = useCallback(() => setMessages([]), []);
+  const clear = useCallback(async () => {
+    try {
+      await api.clearConversation(input.token, input.projectId);
+      setMessages([]);
+      setError(null);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "对话清空失败");
+    }
+  }, [input.projectId, input.token]);
 
   return { messages, connection, error, send, stop, clear };
 }

@@ -12,6 +12,24 @@ describe("packaged contract provenance", () => {
     expect(builderSource).not.toContain("!contracts/**");
   });
 
+  test("advances the packaged runtime data version with the desktop application", async () => {
+    const [rootManifest, serverManifest, webManifest, desktopManifest, dataVersion] =
+      await Promise.all([
+        readFile(path.join(process.cwd(), "package.json"), "utf8").then(JSON.parse),
+        readFile(path.join(process.cwd(), "apps/server/package.json"), "utf8").then(JSON.parse),
+        readFile(path.join(process.cwd(), "apps/web/package.json"), "utf8").then(JSON.parse),
+        readFile(path.join(process.cwd(), "apps/desktop/package.json"), "utf8").then(JSON.parse),
+        readFile(path.join(process.cwd(), "data/version.txt"), "utf8").then((value) =>
+          value.trim(),
+        ),
+      ]);
+
+    expect(dataVersion).toBe(rootManifest.version);
+    expect(serverManifest.version).toBe(rootManifest.version);
+    expect(webManifest.version).toBe(rootManifest.version);
+    expect(desktopManifest.version).toBe(rootManifest.version);
+  });
+
   test("packages Web only after generated contract provenance is verified", async () => {
     const packageSource = await readFile(
       path.join(process.cwd(), "scripts/package-web.ts"),

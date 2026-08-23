@@ -3,6 +3,9 @@ const zhCN = {
   "app.tagline": "从故事到成片，一处完成",
   "nav.projects": "项目",
   "nav.studio": "制作台",
+  "nav.scripts": "剧本",
+  "nav.assets": "素材",
+  "nav.jobs": "任务",
   "nav.providers": "模型服务",
   "nav.signOut": "退出登录",
   "login.eyebrow": "本地创作系统",
@@ -47,11 +50,14 @@ const zhCN = {
 export type MessageKey = keyof typeof zhCN;
 type Messages = Record<MessageKey, string>;
 
-const enUS: Messages = {
+const en: Messages = {
   "app.name": "Toonflow",
   "app.tagline": "From story to final cut, in one place",
   "nav.projects": "Projects",
   "nav.studio": "Studio",
+  "nav.scripts": "Scripts",
+  "nav.assets": "Assets",
+  "nav.jobs": "Jobs",
   "nav.providers": "Providers",
   "nav.signOut": "Sign out",
   "login.eyebrow": "Local creative system",
@@ -96,7 +102,7 @@ const enUS: Messages = {
 };
 
 const jaJP: Messages = {
-  ...enUS,
+  ...en,
   "app.tagline": "物語から完成映像まで、ひとつの場所で",
   "nav.projects": "プロジェクト",
   "nav.studio": "スタジオ",
@@ -112,92 +118,92 @@ const jaJP: Messages = {
   "common.loading": "読み込み中…",
 };
 
-const koKR: Messages = {
-  ...enUS,
-  "app.tagline": "이야기부터 완성 영상까지 한곳에서",
-  "nav.projects": "프로젝트",
-  "nav.studio": "스튜디오",
-  "nav.providers": "모델 서비스",
-  "nav.signOut": "로그아웃",
-  "login.title": "Toonflow에 오신 것을 환영합니다",
-  "login.username": "사용자 이름",
-  "login.password": "비밀번호",
-  "login.submit": "작업 공간 열기",
-  "projects.title": "프로젝트",
-  "projects.create": "새 프로젝트",
-  "providers.title": "모델 서비스",
-  "common.loading": "불러오는 중…",
+const zhTW: Messages = {
+  ...zhCN,
+  "app.tagline": "從故事到成片，一處完成",
+  "nav.projects": "專案",
+  "nav.studio": "製作台",
+  "nav.scripts": "劇本",
+  "nav.assets": "素材",
+  "nav.jobs": "任務",
+  "nav.providers": "模型服務",
+  "nav.signOut": "登出",
+  "login.title": "歡迎回到 Toonflow",
+  "projects.title": "專案",
+  "projects.create": "新增專案",
+  "providers.title": "模型服務",
+  "common.loading": "正在載入…",
 };
 
-const esES: Messages = {
-  ...enUS,
-  "app.tagline": "De la historia al montaje final, en un solo lugar",
-  "nav.projects": "Proyectos",
-  "nav.studio": "Estudio",
-  "nav.providers": "Proveedores",
-  "nav.signOut": "Cerrar sesión",
-  "login.title": "Te damos la bienvenida a Toonflow",
-  "login.username": "Usuario",
-  "login.password": "Contraseña",
-  "login.submit": "Entrar al espacio",
-  "projects.title": "Proyectos",
-  "projects.create": "Nuevo proyecto",
-  "providers.title": "Proveedores de modelos",
-  "common.loading": "Cargando…",
+const ruRU: Messages = {
+  ...en,
+  "app.tagline": "От истории до финального монтажа в одном месте",
+  "nav.projects": "Проекты",
+  "nav.studio": "Студия",
+  "nav.scripts": "Сценарии",
+  "nav.assets": "Материалы",
+  "nav.jobs": "Задачи",
+  "nav.providers": "Модели",
+  "nav.signOut": "Выйти",
+  "login.title": "С возвращением в Toonflow",
+  "projects.title": "Проекты",
+  "projects.create": "Новый проект",
+  "providers.title": "Поставщики моделей",
+  "common.loading": "Загрузка…",
 };
 
-const frFR: Messages = {
-  ...enUS,
-  "app.tagline": "De l'histoire au montage final, au même endroit",
-  "nav.projects": "Projets",
+const thTH: Messages = {
+  ...en,
+  "app.tagline": "จากเรื่องราวสู่ผลงานฉบับสมบูรณ์ในที่เดียว",
+  "nav.projects": "โปรเจกต์",
+  "nav.studio": "สตูดิโอ",
+  "nav.scripts": "บท",
+  "nav.assets": "สื่อ",
+  "nav.jobs": "งาน",
+  "nav.providers": "โมเดล",
+  "nav.signOut": "ออกจากระบบ",
+  "login.title": "ยินดีต้อนรับกลับสู่ Toonflow",
+  "projects.title": "โปรเจกต์",
+  "projects.create": "โปรเจกต์ใหม่",
+  "providers.title": "ผู้ให้บริการโมเดล",
+  "common.loading": "กำลังโหลด…",
+};
+
+const viVN: Messages = {
+  ...en,
+  "app.tagline": "Từ câu chuyện đến bản dựng cuối trong một nơi",
+  "nav.projects": "Dự án",
   "nav.studio": "Studio",
-  "nav.providers": "Fournisseurs",
-  "nav.signOut": "Se déconnecter",
-  "login.title": "Bienvenue sur Toonflow",
-  "login.username": "Nom d'utilisateur",
-  "login.password": "Mot de passe",
-  "login.submit": "Ouvrir l'espace",
-  "projects.title": "Projets",
-  "projects.create": "Nouveau projet",
-  "providers.title": "Fournisseurs de modèles",
-  "common.loading": "Chargement…",
-};
-
-const deDE: Messages = {
-  ...enUS,
-  "app.tagline": "Von der Geschichte bis zum finalen Schnitt an einem Ort",
-  "nav.projects": "Projekte",
-  "nav.studio": "Studio",
-  "nav.providers": "Modelldienste",
-  "nav.signOut": "Abmelden",
-  "login.title": "Willkommen zurück bei Toonflow",
-  "login.username": "Benutzername",
-  "login.password": "Passwort",
-  "login.submit": "Arbeitsbereich öffnen",
-  "projects.title": "Projekte",
-  "projects.create": "Neues Projekt",
-  "providers.title": "Modelldienste",
-  "common.loading": "Wird geladen…",
+  "nav.scripts": "Kịch bản",
+  "nav.assets": "Tư liệu",
+  "nav.jobs": "Tác vụ",
+  "nav.providers": "Mô hình",
+  "nav.signOut": "Đăng xuất",
+  "login.title": "Chào mừng trở lại Toonflow",
+  "projects.title": "Dự án",
+  "projects.create": "Dự án mới",
+  "providers.title": "Nhà cung cấp mô hình",
+  "common.loading": "Đang tải…",
 };
 
 export const messages = {
   "zh-CN": zhCN,
-  "en-US": enUS,
+  "zh-TW": zhTW,
+  en,
   "ja-JP": jaJP,
-  "ko-KR": koKR,
-  "es-ES": esES,
-  "fr-FR": frFR,
-  "de-DE": deDE,
+  "ru-RU": ruRU,
+  "th-TH": thTH,
+  "vi-VN": viVN,
 } satisfies Record<string, Messages>;
 
 export type Locale = keyof typeof messages;
 
 export const localeLabels: Record<Locale, string> = {
   "zh-CN": "简体中文",
-  "en-US": "English",
+  "zh-TW": "繁體中文",
+  en: "English",
   "ja-JP": "日本語",
-  "ko-KR": "한국어",
-  "es-ES": "Español",
-  "fr-FR": "Français",
-  "de-DE": "Deutsch",
+  "ru-RU": "Русский",
+  "th-TH": "ไทย",
+  "vi-VN": "Tiếng Việt",
 };
