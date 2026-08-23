@@ -62,6 +62,8 @@
     "desktop:check": "bun run desktop:typecheck && bun run desktop:probe",
     "build:runtime": "cross-env NODE_ENV=prod bun scripts/build.ts",
     "runtime:probe": "bun scripts/probe-server-runtime.ts",
+    "acceptance:fixture": "bun scripts/deterministic-product-fixture.ts",
+    "acceptance:deterministic": "bun scripts/acceptance-deterministic.ts",
     "live:test": "bun scripts/run-live-tests.ts",
     "live:review": "bun scripts/review-live-report.ts",
     "typecheck": "tsc --noEmit",

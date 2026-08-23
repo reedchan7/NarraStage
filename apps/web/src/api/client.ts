@@ -55,6 +55,99 @@ export interface ProviderStatusResult {
   providers: ProviderStatus[];
 }
 
+export type GenerationOperation = "image.generate" | "video.generate";
+
+export interface CapabilityField {
+  path: string;
+  kind: "text" | "integer" | "boolean" | "enum" | "assets";
+  label: string;
+  required: boolean;
+  enumValues?: string[];
+  allowedValues?: Array<string | number | boolean>;
+  minimum?: number;
+  maximum?: number;
+  maximumLength?: number;
+  advanced?: boolean;
+}
+
+export interface CapabilitySchema {
+  id: string;
+  operation: string;
+  fields: CapabilityField[];
+  assetModes?: Array<{ id: string; label: string }>;
+}
+
+export interface Offering {
+  id: string;
+  canonicalModelId: string;
+  providerId: string;
+  providerModelId: string;
+  operations: Array<{
+    operation: string;
+    capabilitySchemaId: string;
+    enabled: boolean;
+  }>;
+  support: {
+    implementation: "declared" | "implemented";
+    evidence: string[];
+  };
+}
+
+export interface CatalogResult {
+  schemaVersion: string;
+  offerings: Offering[];
+  capabilitySchemas: CapabilitySchema[];
+  availability: Array<{
+    offeringId: string;
+    available: boolean;
+    health: string;
+    reasons: string[];
+  }>;
+}
+
+export type GenerationJobState =
+  | "queued"
+  | "preparing_assets"
+  | "submitting"
+  | "submission_unknown"
+  | "submitted"
+  | "remote_queued"
+  | "running"
+  | "importing"
+  | "succeeded"
+  | "failed"
+  | "cancelled"
+  | "abandoned";
+
+export interface GenerationJob {
+  id: string;
+  idempotencyKey: string;
+  canonicalModelId: string;
+  offeringId: string;
+  providerId: string;
+  operation: GenerationOperation;
+  state: GenerationJobState;
+  result?: unknown;
+  error?: unknown;
+  version: number;
+  createdAt: number;
+  updatedAt: number;
+  requiresReconciliation: boolean;
+}
+
+export interface SubmitGenerationJobInput {
+  schemaVersion: "2.0.0";
+  idempotencyKey: string;
+  canonicalModelId: string;
+  offeringId: string;
+  operation: GenerationOperation;
+  input: {
+    mode?: string;
+    values: Record<string, unknown>;
+    assets: Array<{ assetId: string; kind: "image" | "video" | "audio"; role: string }>;
+  };
+}
+
 export class ApiError extends Error {
   readonly status: number;
 
@@ -121,5 +214,32 @@ export const api = {
   },
   providers(token: string) {
     return apiRequest<ProviderStatusResult>("/api/v2/providers", undefined, token);
+  },
+  catalog(token: string) {
+    return apiRequest<CatalogResult>("/api/v2/catalog", undefined, token);
+  },
+  submitJob(token: string, input: SubmitGenerationJobInput) {
+    return apiRequest<GenerationJob>(
+      "/api/v2/jobs",
+      { method: "POST", body: JSON.stringify(input) },
+      token,
+    );
+  },
+  job(token: string, id: string) {
+    return apiRequest<GenerationJob>(`/api/v2/jobs/${id}`, undefined, token);
+  },
+  cancelJob(token: string, id: string) {
+    return apiRequest<GenerationJob>(
+      `/api/v2/jobs/${id}/cancel`,
+      { method: "POST", body: JSON.stringify({ reason: "user_requested" }) },
+      token,
+    );
+  },
+  async mediaAsset(token: string, assetId: string): Promise<Blob> {
+    const response = await fetch(`/api/v2/media-assets/${encodeURIComponent(assetId)}/content`, {
+      headers: { Authorization: token },
+    });
+    if (!response.ok) throw new ApiError(`素材读取失败 (${response.status})`, response.status);
+    return response.blob();
   },
 };

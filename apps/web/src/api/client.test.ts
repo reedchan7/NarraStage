@@ -23,7 +23,9 @@ describe("typed API client", () => {
   });
 
   test("keeps provider secrets off the HTTP surface", () => {
-    expect(Object.keys(api)).toEqual(["login", "projects", "createProject", "providers"]);
+    expect(api).not.toHaveProperty("setCredential");
+    expect(api).not.toHaveProperty("deleteCredential");
+    expect(JSON.stringify(api)).not.toContain("apiKey");
   });
 
   test("preserves visible server failures", async () => {

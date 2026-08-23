@@ -29,6 +29,10 @@ export default defineConfig({
     proxy: {
       "/api": "http://localhost:10588",
       "/oss": "http://localhost:10588",
+      "/socket.io": {
+        target: "http://localhost:10588",
+        ws: true,
+      },
     },
   },
 });
