@@ -24,7 +24,7 @@ const externalDependencies = [
 
 // 后端服务打包配置
 const appBuildConfig: Bun.BuildConfig = {
-  entrypoints: ["src/app.ts"],
+  entrypoints: ["apps/server/src/app.ts"],
   minify: false,
   format: "esm",
   outdir: "data/serve",
@@ -36,7 +36,7 @@ const appBuildConfig: Bun.BuildConfig = {
 
 // Electron 主进程打包配置
 const mainBuildConfig: Bun.BuildConfig = {
-  entrypoints: ["scripts/main.ts"],
+  entrypoints: ["apps/desktop/src/main.ts"],
   minify: false,
   format: "esm",
   outdir: "build",
@@ -47,7 +47,7 @@ const mainBuildConfig: Bun.BuildConfig = {
 };
 
 const preloadBuildConfig: Bun.BuildConfig = {
-  entrypoints: ["scripts/preload.ts"],
+  entrypoints: ["apps/desktop/src/preload.ts"],
   minify: false,
   format: "cjs",
   outdir: "build",

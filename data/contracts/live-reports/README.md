@@ -4,7 +4,7 @@ Each accepted paid/live run writes one redacted JSON report named `<runId>.json`
 
 Reports must contain no credentials, prompts with user data, or generated media. They retain only execution identity, alias-resolved provider revision, region, timestamps, cost, request IDs, retry trace, deterministic checks, fact ratios, and blind-review scores.
 
-The frozen prompts, options, fixture paths and SHA-256 values, expected facts, deterministic assertions, and hard-failure definitions live in `src/release/acceptanceSuite.ts`. The sequential live runner verifies every fixture hash before execution and writes the matching case digest; reports cannot replace those inputs with ad hoc samples.
+The frozen prompts, options, fixture paths and SHA-256 values, expected facts, deterministic assertions, and hard-failure definitions live in `apps/server/src/release/acceptanceSuite.ts`. The sequential live runner verifies every fixture hash before execution and writes the matching case digest; reports cannot replace those inputs with ad hoc samples.
 
 The release gate enforces the acceptance profile registered for each offering:
 

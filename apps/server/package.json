@@ -2,5 +2,14 @@
   "name": "@toonflow/server",
   "version": "2.0.0",
   "private": true,
-  "type": "module"
+  "type": "module",
+  "scripts": {
+    "dev": "bun --watch --inspect src/app.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "bun ../../scripts/test-server.ts",
+    "check": "bun run typecheck && bun run test"
+  },
+  "devDependencies": {
+    "typescript": "7.0.2"
+  }
 }

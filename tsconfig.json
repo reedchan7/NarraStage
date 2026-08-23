@@ -1,4 +1,5 @@
 {
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",
@@ -16,12 +17,18 @@
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./apps/server/src/*"],
+      "@tooling/*": ["./scripts/*"]
     },
     "types": ["bun"],
     "resolveJsonModule": true,
     "allowImportingTsExtensions": false
   },
-  "include": ["src/**/*.ts", "tests/**/*.ts", "scripts/**/*.ts"],
+  "include": [
+    "apps/server/src/**/*.ts",
+    "apps/server/tests/**/*.ts",
+    "apps/desktop/src/**/*.ts",
+    "scripts/**/*.ts"
+  ],
   "exclude": ["node_modules", "data/**/*.ts", "dist", "build"]
 }

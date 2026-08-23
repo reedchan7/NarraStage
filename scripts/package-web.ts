@@ -38,7 +38,7 @@ export const backendRevisionScope: RepositoryRevisionScope = {
     "Dockerfile",
     "data/contracts/openapi.v2.json",
   ]),
-  includedPrefixes: ["src/", "tests/", "apps/server/", "apps/desktop/", "scripts/", "data/vendor/"],
+  includedPrefixes: ["apps/server/", "apps/desktop/", "scripts/", "data/vendor/"],
   excludedPrefixes: ["data/serve/", "apps/web/"],
 };
 

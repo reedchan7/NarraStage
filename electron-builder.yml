@@ -16,7 +16,7 @@ files:
   - "!node_modules/**/LICENSE*"
   - "!node_modules/**/{README,readme}*"
   - "!**/*.d.ts"
-  - "!src/**/*"
+  - "!apps/*/src/**/*"
   - "!scripts/**/*.ts"
   - "!scripts/*.ts"
 

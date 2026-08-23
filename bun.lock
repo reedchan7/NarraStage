@@ -74,10 +74,16 @@
     "apps/desktop": {
       "name": "@toonflow/desktop",
       "version": "2.0.0",
+      "devDependencies": {
+        "typescript": "7.0.2",
+      },
     },
     "apps/server": {
       "name": "@toonflow/server",
       "version": "2.0.0",
+      "devDependencies": {
+        "typescript": "7.0.2",
+      },
     },
     "apps/web": {
       "name": "@toonflow/web",

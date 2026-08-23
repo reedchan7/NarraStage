@@ -1,6 +1,6 @@
 import fg from "fast-glob";
 
-const files = await fg(["src/**/*.{ts,tsx}", "scripts/**/*.{ts,tsx}"], {
+const files = await fg(["apps/{server,desktop}/**/*.{ts,tsx}", "scripts/**/*.{ts,tsx}"], {
   ignore: ["**/node_modules/**"],
 });
 const failures: string[] = [];
