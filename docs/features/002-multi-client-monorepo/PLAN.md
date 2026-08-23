@@ -107,7 +107,7 @@
   - Checkpoint: `d0a27c73092ab6f4b99de43a81b1426ef99d1a54`
   - Evidence: server and desktop TypeScript 7 checks, module/architecture/route/OpenAPI checks, 212/212 server tests, three Bun runtime bundles, repository-local Web packaging/provenance, isolated SQLite `/api/meta` start/close, and Electron `safeStorage` round-trip/delete probes passed. User `data/db2.sqlite` and `HANDOFF.md` digests remained unchanged.
 
-- [ ] **S3 — Hono HTTP runtime with preserved API and Socket.IO**
+- [x] **S3 — Hono HTTP runtime with preserved API and Socket.IO**
   - Covers: AC-005, AC-010, AC-013, RC-002-005, NFR-002-004, NFR-007-009
   - Blocked by: S2 · Risk: high; request/response, body/upload, static-file, auth/error, and socket semantics can drift
   - Files: create `apps/server/src/http` Hono server/compatibility modules and tests; mechanically migrate route imports; modify route generator, middleware, server entry, package dependencies, and security/integration tests
@@ -117,8 +117,8 @@
   - Affected verify: `bun run server:check && bun run benchmark:http && bun run forbidden:check` → 208+ tests pass, benchmark has zero failures, no Express result
   - Manual/scripted probe: isolated server start, API/login/static/socket smoke, clean close
   - Rollback: revert S3 commit if any public route characterization, security test, or socket probe changes meaning
-  - Checkpoint: commit SHA recorded on completion in this PLAN
-  - Evidence: recorded after fresh slice checks
+  - Checkpoint: `d06473b172ff60d4f9997c5e9eac0e4fd8dba9d7`
+  - Evidence: Hono compatibility characterization and the complete 213/213 server suite passed; 100 local requests completed with zero failures; the isolated runtime served metadata and the embedded renderer, enforced the origin policy, kept the Script Agent Socket.IO namespace connected on the same listener, and closed cleanly. Express packages/imports were absent, the Electron vault probe passed, and all runtime bundles plus Web provenance regenerated successfully.
 
 - [ ] **S4 — React shell, routing, localization, projects, and provider settings**
   - Covers: AC-003, AC-008/009/013, RC-002/003/006, NFR-001/005/006/008/009
@@ -199,6 +199,7 @@
 |---|---|---|---|
 | D-001 2026-08-24 | PLAN | Baseline handoff said `bun run build` passed; fresh HEAD fails embedded backend source revision. This affects S1/S6 baseline only and confirms sibling-provenance coupling. | Record exact known-red fingerprint; do not refresh legacy bundle before S1; approved scope already replaces the coupling. |
 | D-002 2026-08-24 | Code | The imported Vue compiler (`vue-tsc` 3.3.11) requires the removed TypeScript `./lib/tsc` subpath and cannot run on the required TypeScript 7.0.2. Web Vitest remains 40/40 and Vite production build remains the interim behavior oracle. | Keep TypeScript 7.0.2, record the exact incompatibility, and replace the Vue compiler with native React TypeScript checking in S4; no requirement or final gate changes. |
+| D-003 2026-08-24 | Code | Hono's generic CORS middleware finalizes headers through its Fetch response, while the compatibility boundary intentionally streams some existing route responses directly through Node. Applying both paths produced `ERR_HTTP_HEADERS_SENT` in the first runtime probe. | Keep the exact local-origin policy and write its validated CORS headers directly to the Node response before dispatch. The repeat runtime probe is clean and verifies accepted, absent, and rejected origins. |
 
 ## Noticed, not touched
 
