@@ -53,7 +53,7 @@ export type AcceptanceProfile =
 
 export const acceptanceAssetFixtures = {
   logo: {
-    sha256: "f7dcd68febfad3733a6613b3950123f83edd77718d93aff0ce4a4cec4e957e8b",
+    sha256: "4e172e6b1f8029e0cd691bcc586f041c644a15ce7473c5d718a042d3baa3396c",
     mediaType: "image/png",
     kind: "image",
     filename: "logo.png",

@@ -19,20 +19,19 @@ Provider secrets never enter the HTTP API, Web storage, or Query cache. NarraSta
 Run commands from the repository root:
 
 ```bash
-bun install --frozen-lockfile
-bun run dev:server
-bun run web:dev
+make install
+make dev
+make web-dev
 ```
 
 Open `http://localhost:50188`. Vite proxies `/api` and `/oss` to `http://localhost:10588`.
 
 ```bash
-bun run web:typecheck
-bun run web:test
-bun run web:build
-bun run web:check
+make web-check
+make web-build
+make web-package
 ```
 
-`bun run web:package` builds the single-file renderer from this repository, binds it to contract and source digests, and atomically updates `data/web/index.html` and `data/contracts/web-build.json`.
+`make web-package` builds the single-file renderer from this repository, binds it to contract and source digests, and atomically updates `data/web/index.html` and `data/contracts/web-build.json`. Run `make` or `make help` to list the common project commands.
 
 The client follows the repository's Apache-2.0 license and release gates.

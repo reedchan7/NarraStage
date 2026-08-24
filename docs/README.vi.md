@@ -127,18 +127,6 @@ NarraStage là một bàn làm việc AI dành cho sản xuất phim ngắn, xoa
 5. Chuyển sang ProductionAgent, tổ chức các nút phân cảnh, tài liệu và video trong canvas vô hạn.
 6. Tinh chỉnh từng nút cho ảnh phân cảnh rồi đưa trở lại bàn làm việc, hoàn tất ghép nối và xuất video.
 
-## 📺 Hướng dẫn bằng video
-
-https://www.bilibili.com/video/BV1oXD7BqEqJ
-[![NarraStage 12 phút bắt đầu nhanh với AI Video](./videoCover.jpg)](https://www.bilibili.com/video/BV1oXD7BqEqJ)
-
-**NarraStage 12 phút bắt đầu nhanh với AI Video**
-👉 [Nhấp để xem](https://www.bilibili.com/video/BV1oXD7BqEqJ)
-
-📱 Quét mã QR bằng WeChat để xem
-
-<img src="./videoQR.png" alt="Quét mã QR WeChat để xem" width="150"/>
-
 ---
 
 # 📸 Ảnh chụp màn hình và video trình diễn
@@ -412,27 +400,37 @@ pm2 monit             # Bảng điều khiển giám sát
    make install
    ```
 
+   Chạy `make` hoặc `make help` để xem tất cả lệnh thường dùng.
+
 3. **Khởi động môi trường phát triển**
 
-   Dự án này bao gồm **Dịch vụ API backend** và **Trang frontend** hai phần, vui lòng chọn cách khởi động theo nhu cầu:
+   Dự án này đặt **Web, API backend, ứng dụng desktop Electron và hợp đồng dùng chung** trong cùng một Bun workspace. Chọn cách khởi động theo nhu cầu:
 
-   - **Cách 1: Chỉ khởi động dịch vụ backend**
+   - **Cách 1: Khởi động dịch vụ backend**
 
      ```bash
      make dev
      ```
 
-     > ⚠️ Lệnh này chỉ khởi động dịch vụ API backend (cổng 10588), **không bao gồm trang frontend**. Truy cập trực tiếp `http://localhost:10588` chỉ có thể gọi các API, không thấy được giao diện web đầy đủ. Nếu muốn sử dụng đồng thời trang frontend, vui lòng kết hợp với dự án frontend khởi động riêng, hoặc sử dụng chế độ GUI bên dưới.
+     > Backend dùng Hono, mặc định lắng nghe cổng 10588, đồng thời phục vụ trang React đã đóng gói trong kho này.
 
-   - **Cách 2: Khởi động ứng dụng desktop Electron**
+   - **Cách 2: Khởi động môi trường hot-reload React Web**
+
+     ```bash
+     make web-dev
+     ```
+
+     > Web lắng nghe `http://localhost:50188` và proxy API cùng Socket.IO tới 10588. Hãy chạy `make dev` trên một terminal khác cùng lúc.
+
+   - **Cách 3: Khởi động ứng dụng desktop Electron**
 
      ```bash
      make dev-gui
      ```
 
-     > Lệnh này sẽ đồng thời khởi động dịch vụ backend và cửa sổ desktop Electron, có sẵn trang frontend tích hợp, dùng ngay, không cần cấu hình thêm. Phù hợp với nhà phát triển muốn trải nghiệm đầy đủ tất cả chức năng.
+     > Electron khởi động cùng một dịch vụ Hono và trình kết xuất React đơn tệp. Khi ghép với Vite, hãy chạy `make web-dev` trước, rồi `make dev-gui-vite`.
 
-   - **Cách 3: Khởi động chế độ sản xuất**
+   - **Cách 4: Khởi động chế độ sản xuất**
 
      ```bash
      make start
@@ -442,10 +440,17 @@ pm2 monit             # Bảng điều khiển giám sát
 
 4. **Đóng gói dự án**
 
-   - Biên dịch và tạo tệp TypeScript:
+   - Cập nhật trình kết xuất React nhúng và biên dịch server/desktop:
 
      ```bash
+     make web-package
      make build
+     ```
+
+   - Tạo gói Electron nghiệm thu trên máy, không yêu cầu bằng chứng phát hành đã ký:
+
+     ```bash
+     make pack-local
      ```
 
    - Đóng gói thành chương trình thực thi cho Windows:
@@ -485,58 +490,34 @@ pm2 monit             # Bảng điều khiển giám sát
 ## Cấu trúc dự án
 
 ```
-📂 build/                    # Sản phẩm biên dịch
+📂 apps/
+│  ├─ 📂 server/            # Hono API, Socket.IO, Agent và tác vụ sinh
+│  │  ├─ 📂 src/
+│  │  └─ 📂 tests/
+│  ├─ 📂 web/               # Web client React 19 và kiểm thử Vitest
+│  │  └─ 📂 src/
+│  └─ 📂 desktop/           # Electron main/preload và cầu thông tin xác thực an toàn
+│     └─ 📂 src/
+📂 packages/
+│  └─ 📂 contracts/         # Hợp đồng TypeScript đa client sinh từ OpenAPI
+📂 build/                   # Sản phẩm biên dịch Electron main/preload
 📂 data/                     # Dữ liệu thời gian chạy
+│  ├─ 📂 contracts/         # Nguồn gốc OpenAPI và bản dựng Web
 │  ├─ 📂 models/            # Mô hình suy luận cục bộ (ONNX)
 │  ├─ 📂 oss/               # Lưu trữ đối tượng (tài liệu/nhân vật/bối cảnh)
 │  ├─ 📂 serve/             # Điểm vào môi trường sản xuất
 │  ├─ 📂 skills/            # Lời nhắc kỹ năng Agent
-│  └─ 📂 web/               # Sản phẩm biên dịch frontend (tích hợp sẵn)
+│  └─ 📂 web/               # Trình kết xuất React đơn tệp (Web/desktop dùng chung)
 📂 docs/                     # Tài liệu
 📂 env/                      # Cấu hình môi trường
-📂 scripts/                  # Tập lệnh xây dựng và hỗ trợ
-📂 src/
-├─ 📂 agents/               # Mô-đun AI Agent
-│  ├─ 📂 productionAgent/   # Agent sản xuất
-│  └─ 📂 scriptAgent/       # Agent kịch bản
-├─ 📂 lib/                  # Thư viện công cộng (khởi tạo cơ sở dữ liệu, định dạng phản hồi)
-├─ 📂 middleware/            # Middleware
-├─ 📂 routes/               # Mô-đun định tuyến
-│  ├─ 📂 agents/            # Quản lý bộ nhớ Agent
-│  ├─ 📂 artStyle/          # Quản lý phong cách
-│  ├─ 📂 assets/            # Quản lý tài liệu
-│  ├─ 📂 assetsGenerate/    # Tạo tài liệu
-│  ├─ 📂 cornerScape/       # Quản lý phân cảnh
-│  ├─ 📂 general/           # API chung
-│  ├─ 📂 login/             # Xác thực đăng nhập
-│  ├─ 📂 migrate/           # Di chuyển dữ liệu
-│  ├─ 📂 modelSelect/       # Lựa chọn mô hình
-│  ├─ 📂 novel/             # Quản lý tiểu thuyết
-│  ├─ 📂 other/             # Chức năng khác
-│  ├─ 📂 production/        # Quản lý sản xuất
-│  ├─ 📂 project/           # Quản lý dự án
-│  ├─ 📂 script/            # Tạo kịch bản
-│  ├─ 📂 scriptAgent/       # API Agent kịch bản
-│  ├─ 📂 setting/           # Cài đặt hệ thống
-│  ├─ 📂 task/              # Quản lý tác vụ
-│  └─ 📂 test/              # API kiểm thử
-├─ 📂 socket/               # Giao tiếp thời gian thực WebSocket
-├─ 📂 types/                # Khai báo kiểu TypeScript
-├─ 📂 utils/                # Hàm tiện ích
-├─ 📄 app.ts                # Điểm vào ứng dụng
-├─ 📄 core.ts               # Khởi tạo lõi
-├─ 📄 env.ts                # Xử lý biến môi trường
-├─ 📄 err.ts                # Xử lý lỗi
-├─ 📄 logger.ts             # Mô-đun nhật ký
-├─ 📄 router.ts             # Đăng ký định tuyến
-└─ 📄 utils.ts              # Tiện ích chung
+📂 scripts/                  # Tập lệnh xây dựng, kiểm nguồn, nghiệm thu và cổng phát hành
 📄 Dockerfile                # Tệp xây dựng Docker
 📄 electron-builder.yml      # Cấu hình đóng gói Electron
-📄 skillList.json            # Danh sách kỹ năng
 📄 LICENSE                   # Giấy phép (Apache-2.0)
 📄 NOTICES.txt               # Tuyên bố phụ thuộc bên thứ ba
-📄 package.json              # Cấu hình dự án
-📄 tsconfig.json             # Cấu hình TypeScript
+📄 bun.lock                  # Khóa phụ thuộc duy nhất của workspace
+📄 package.json              # Bun workspace và cửa lệnh thống nhất
+📄 tsconfig.base.json        # Đường cơ sở TypeScript 7 dùng chung
 ```
 
 ---

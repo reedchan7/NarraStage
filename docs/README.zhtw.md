@@ -127,18 +127,6 @@ NarraStage 是面向短劇生產的 AI 工作檯，圍繞「策劃 → 編劇 �
 5. 切換到 ProductionAgent，在無限畫布中組織分鏡、素材與影片節點。
 6. 對分鏡圖進行節點化精調後回流工作檯，完成影片拼接與匯出。
 
-## 📺 影片教學
-
-https://www.bilibili.com/video/BV1oXD7BqEqJ
-[![NarraStage 12 分鐘快速上手 AI 影片](./videoCover.jpg)](https://www.bilibili.com/video/BV1oXD7BqEqJ)
-
-**NarraStage 12 分鐘快速上手 AI 影片**
-👉 [點擊觀看](https://www.bilibili.com/video/BV1oXD7BqEqJ)
-
-📱 手機微信掃碼觀看
-
-<img src="./videoQR.png" alt="微信掃碼觀看" width="150"/>
-
 ---
 
 # 📸 示範截圖與影片
@@ -412,9 +400,11 @@ pm2 monit             # 監控面板
    make install
    ```
 
+   執行 `make` 或 `make help` 可查看全部常用指令。
+
 3. **啟動開發環境**
 
-   本專案包含 **後端 API 服務** 和 **前端頁面** 兩部分，請根據需要選擇啟動方式：
+   本專案把 **Web、後端 API、Electron 桌面客戶端和共享契約** 放在同一個 Bun workspace 中，請根據需要選擇啟動方式：
 
    - **方式一：僅啟動後端服務**
 
@@ -422,17 +412,25 @@ pm2 monit             # 監控面板
      make dev
      ```
 
-     > ⚠️ 此指令僅啟動後端 API 服務（埠 10588），**不包含前端頁面**。直接訪問 `http://localhost:10588` 只能呼叫 API 介面，無法看到完整的網頁介面。如需同時使用前端頁面，請配合前端專案單獨啟動，或使用下方的 GUI 模式。
+     > 後端使用 Hono，預設監聽 10588，並同時提供倉庫內已封裝的 React 頁面。
 
-   - **方式二：啟動 Electron 桌面客戶端**
+   - **方式二：啟動 React Web 熱更新環境**
+
+     ```bash
+     make web-dev
+     ```
+
+     > Web 預設監聽 `http://localhost:50188`，並將 API 與 Socket.IO 代理到 10588；請在另一個終端同時執行 `make dev`。
+
+   - **方式三：啟動 Electron 桌面客戶端**
 
      ```bash
      make dev-gui
      ```
 
-     > 此指令會同時啟動後端服務和 Electron 桌面視窗，自帶內建前端頁面，開箱即用，無需額外配置。適合想要完整體驗所有功能的開發者。
+     > Electron 啟動同一套 Hono 服務和單檔 React 渲染器。聯調 Vite 時，先執行 `make web-dev`，再執行 `make dev-gui-vite`。
 
-   - **方式三：生產模式啟動**
+   - **方式四：生產模式啟動**
 
      ```bash
      make start
@@ -442,10 +440,17 @@ pm2 monit             # 監控面板
 
 4. **專案打包**
 
-   - 編譯並生成 TypeScript 檔案：
+   - 更新嵌入式 React 渲染器並編譯服務端/桌面端：
 
      ```bash
+     make web-package
      make build
+     ```
+
+   - 生成本機 Electron 驗收包（不要求簽名發布證據）：
+
+     ```bash
+     make pack-local
      ```
 
    - 打包為 Windows 平台可執行程式：
@@ -485,58 +490,34 @@ pm2 monit             # 監控面板
 ## 專案結構
 
 ```
-📂 build/                    # 編譯產物
+📂 apps/
+│  ├─ 📂 server/            # Hono API、Socket.IO、Agent 與生成任務
+│  │  ├─ 📂 src/
+│  │  └─ 📂 tests/
+│  ├─ 📂 web/               # React 19 Web 客戶端與 Vitest 測試
+│  │  └─ 📂 src/
+│  └─ 📂 desktop/           # Electron main/preload 與安全憑據橋
+│     └─ 📂 src/
+📂 packages/
+│  └─ 📂 contracts/         # 由 OpenAPI 生成的跨端 TypeScript 契約
+📂 build/                   # Electron main/preload 編譯產物
 📂 data/                     # 執行時資料
+│  ├─ 📂 contracts/         # OpenAPI 與 Web 建置來源清單
 │  ├─ 📂 models/            # 本地推理模型（ONNX）
 │  ├─ 📂 oss/               # 物件儲存（素材/角色/場景）
 │  ├─ 📂 serve/             # 生產環境入口
 │  ├─ 📂 skills/            # Agent 技能提示詞
-│  └─ 📂 web/               # 前端編譯產物（內建）
+│  └─ 📂 web/               # React 單檔渲染器（Web/桌面共用）
 📂 docs/                     # 文件資源
 📂 env/                      # 環境配置
-📂 scripts/                  # 建置與輔助腳本
-📂 src/
-├─ 📂 agents/               # AI Agent 模組
-│  ├─ 📂 productionAgent/   # 生產 Agent
-│  └─ 📂 scriptAgent/       # 劇本 Agent
-├─ 📂 lib/                  # 公共庫（資料庫初始化、回應格式）
-├─ 📂 middleware/            # 中介軟體
-├─ 📂 routes/               # 路由模組
-│  ├─ 📂 agents/            # Agent 記憶管理
-│  ├─ 📂 artStyle/          # 畫風管理
-│  ├─ 📂 assets/            # 素材管理
-│  ├─ 📂 assetsGenerate/    # 素材生成
-│  ├─ 📂 cornerScape/       # 分鏡管理
-│  ├─ 📂 general/           # 通用介面
-│  ├─ 📂 login/             # 登入認證
-│  ├─ 📂 migrate/           # 資料遷移
-│  ├─ 📂 modelSelect/       # 模型選擇
-│  ├─ 📂 novel/             # 小說管理
-│  ├─ 📂 other/             # 其他功能
-│  ├─ 📂 production/        # 製作管理
-│  ├─ 📂 project/           # 專案管理
-│  ├─ 📂 script/            # 劇本生成
-│  ├─ 📂 scriptAgent/       # 劇本 Agent 介面
-│  ├─ 📂 setting/           # 系統設定
-│  ├─ 📂 task/              # 任務管理
-│  └─ 📂 test/              # 測試介面
-├─ 📂 socket/               # WebSocket 即時通訊
-├─ 📂 types/                # TypeScript 型別宣告
-├─ 📂 utils/                # 工具函數
-├─ 📄 app.ts                # 應用入口
-├─ 📄 core.ts               # 核心初始化
-├─ 📄 env.ts                # 環境變數處理
-├─ 📄 err.ts                # 錯誤處理
-├─ 📄 logger.ts             # 日誌模組
-├─ 📄 router.ts             # 路由註冊
-└─ 📄 utils.ts              # 通用工具
+📂 scripts/                  # 建置、來源校驗、驗收與發布門禁
 📄 Dockerfile                # Docker 建置檔案
 📄 electron-builder.yml      # Electron 打包配置
-📄 skillList.json            # 技能清單
 📄 LICENSE                   # 許可證（Apache-2.0）
 📄 NOTICES.txt               # 第三方依賴宣告
-📄 package.json              # 專案配置
-📄 tsconfig.json             # TypeScript 配置
+📄 bun.lock                  # 全倉唯一依賴鎖
+📄 package.json              # Bun workspace 與統一指令入口
+📄 tsconfig.base.json        # 多端統一 TypeScript 7 基線
 ```
 
 ---

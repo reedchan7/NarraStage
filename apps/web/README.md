@@ -19,21 +19,20 @@ NarraStage 的仓库内置 Web 客户端。它与 `apps/server`、`apps/desktop`
 所有命令从仓库根目录执行：
 
 ```bash
-bun install --frozen-lockfile
-bun run dev:server
-bun run web:dev
+make install
+make dev
+make web-dev
 ```
 
 打开 `http://localhost:50188`。开发服务器将 `/api`、`/oss` 和 Socket.IO 代理到 `http://localhost:10588`。
 
 ```bash
-bun run web:typecheck
-bun run web:test
-bun run web:build
-bun run web:check
+make web-check
+make web-build
+make web-package
 ```
 
-`bun run web:package` 会从当前仓库源码构建单文件渲染器，记录契约与源码摘要，并原子更新 `data/web/index.html` 和 `data/contracts/web-build.json`。
+`make web-package` 会从当前仓库源码构建单文件渲染器，记录契约与源码摘要，并原子更新 `data/web/index.html` 和 `data/contracts/web-build.json`。运行 `make` 或 `make help` 可查看全部常用命令。
 
 ## 目录
 

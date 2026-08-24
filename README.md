@@ -120,18 +120,6 @@ NarraStage 是面向短剧生产的 AI 工作台，围绕“策划 → 编剧 �
 5. 切换到 ProductionAgent，在无限画布中组织分镜、素材与视频节点。
 6. 对分镜图进行节点化精调后回流工作台，完成视频拼接与导出。
 
-## 📺 视频教程
-
-https://www.bilibili.com/video/BV1oXD7BqEqJ
-[![NarraStage 12 分钟快速上手 AI 视频](./docs/videoCover.jpg)](https://www.bilibili.com/video/BV1oXD7BqEqJ)
-
-**NarraStage 12 分钟快速上手 AI 视频**
-👉 [点击观看](https://www.bilibili.com/video/BV1oXD7BqEqJ)
-
-📱 手机微信扫码观看
-
-<img src="./docs/videoQR.png" alt="微信扫码观看" width="150"/>
-
 ---
 
 # 📸 演示截图与视频
@@ -256,8 +244,8 @@ make docker-run
 docker build -t narrastage .
 docker run -d -p <本地端口>:10588 -v <本地数据路径>:/app/data narrastage
 
-# 此时在相应端口的 /web/index.html 路径即可访问页面
-# 例如 http://localhost:10588/web/index.html
+# 访问对应端口的 /index.html
+# 例如 http://localhost:10588/index.html
 ```
 
 ### 服务端口说明

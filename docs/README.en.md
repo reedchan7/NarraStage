@@ -127,18 +127,6 @@ NarraStage is an AI workstation designed for short drama production, building a 
 5. Switch to ProductionAgent to organize storyboards, assets, and video nodes on the infinite canvas.
 6. Perform node-based refinement on storyboard images, then return them to the workbench for video stitching and export.
 
-## 📺 Video Tutorial
-
-https://www.bilibili.com/video/BV1oXD7BqEqJ
-[![NarraStage 12-minute Quick Start AI Video](./videoCover.jpg)](https://www.bilibili.com/video/BV1oXD7BqEqJ)
-
-**NarraStage 12-minute Quick Start AI Video**
-👉 [Click to Watch](https://www.bilibili.com/video/BV1oXD7BqEqJ)
-
-📱 Scan with WeChat to watch
-
-<img src="./videoQR.png" alt="Scan with WeChat" width="150"/>
-
 ---
 
 # 📸 Demo Screenshots & Video
@@ -416,25 +404,33 @@ pm2 monit             # Monitoring dashboard
 
 3. **Start Development Environment**
 
-   This project includes both the **backend API service** and **frontend pages**. Choose the appropriate startup method:
+   This project keeps **Web, the backend API, the Electron desktop client, and shared contracts** in one Bun workspace. Choose the startup method you need:
 
-   - **Method 1: Start backend only**
+   - **Method 1: Start the backend**
 
      ```bash
      make dev
      ```
 
-     > ⚠️ This command starts only the backend API service (port 10588), **without the frontend**. Use the GUI mode below for the complete interface.
+     > The backend uses Hono, listens on 10588 by default, and also serves the packaged React page from this repository.
 
-   - **Method 2: Start Electron Desktop Client**
+   - **Method 2: Start the React Web hot-reload environment**
+
+     ```bash
+     make web-dev
+     ```
+
+     > Web listens on `http://localhost:50188` and proxies API and Socket.IO to 10588. Run `make dev` in another terminal at the same time.
+
+   - **Method 3: Start the Electron desktop client**
 
      ```bash
      make dev-gui
      ```
 
-     > This command starts both the backend service and the Electron desktop window with a built-in frontend page, ready to use out of the box. Ideal for developers who want the full experience.
+     > Electron starts the same Hono service and single-file React renderer. For Vite pairing, run `make web-dev` first, then `make dev-gui-vite`.
 
-   - **Method 3: Production Mode**
+   - **Method 4: Production mode**
 
      ```bash
      make start
@@ -444,10 +440,17 @@ pm2 monit             # Monitoring dashboard
 
 4. **Package the Project**
 
-   - Compile and generate TypeScript files:
+   - Update the embedded React renderer and compile the server/desktop:
 
      ```bash
+     make web-package
      make build
+     ```
+
+   - Build a local Electron acceptance package that skips signed release evidence:
+
+     ```bash
+     make pack-local
      ```
 
    - Package as Windows executable:
@@ -487,58 +490,34 @@ pm2 monit             # Monitoring dashboard
 ## Project Structure
 
 ```
-📂 build/                    # Build artifacts
+📂 apps/
+│  ├─ 📂 server/            # Hono API, Socket.IO, agents, and generation jobs
+│  │  ├─ 📂 src/
+│  │  └─ 📂 tests/
+│  ├─ 📂 web/               # React 19 Web client and Vitest tests
+│  │  └─ 📂 src/
+│  └─ 📂 desktop/           # Electron main/preload and secure credential bridge
+│     └─ 📂 src/
+📂 packages/
+│  └─ 📂 contracts/         # Cross-client TypeScript contracts generated from OpenAPI
+📂 build/                   # Electron main/preload build artifacts
 📂 data/                     # Runtime data
+│  ├─ 📂 contracts/         # OpenAPI and Web build provenance
 │  ├─ 📂 models/            # Local inference models (ONNX)
 │  ├─ 📂 oss/               # Object storage (assets/characters/scenes)
 │  ├─ 📂 serve/             # Production entry point
 │  ├─ 📂 skills/            # Agent skill prompts
-│  └─ 📂 web/               # Frontend build artifacts (built-in)
+│  └─ 📂 web/               # Single-file React renderer (shared by Web and desktop)
 📂 docs/                     # Documentation resources
 📂 env/                      # Environment configuration
-📂 scripts/                  # Build and helper scripts
-📂 src/
-├─ 📂 agents/               # AI Agent modules
-│  ├─ 📂 productionAgent/   # Production Agent
-│  └─ 📂 scriptAgent/       # Script Agent
-├─ 📂 lib/                  # Common libraries (DB init, response formats)
-├─ 📂 middleware/            # Middleware
-├─ 📂 routes/               # Route modules
-│  ├─ 📂 agents/            # Agent memory management
-│  ├─ 📂 artStyle/          # Art style management
-│  ├─ 📂 assets/            # Asset management
-│  ├─ 📂 assetsGenerate/    # Asset generation
-│  ├─ 📂 cornerScape/       # Storyboard management
-│  ├─ 📂 general/           # General interfaces
-│  ├─ 📂 login/             # Login authentication
-│  ├─ 📂 migrate/           # Data migration
-│  ├─ 📂 modelSelect/       # Model selection
-│  ├─ 📂 novel/             # Novel management
-│  ├─ 📂 other/             # Other features
-│  ├─ 📂 production/        # Production management
-│  ├─ 📂 project/           # Project management
-│  ├─ 📂 script/            # Script generation
-│  ├─ 📂 scriptAgent/       # Script Agent API
-│  ├─ 📂 setting/           # System settings
-│  ├─ 📂 task/              # Task management
-│  └─ 📂 test/              # Test interfaces
-├─ 📂 socket/               # WebSocket real-time communication
-├─ 📂 types/                # TypeScript type declarations
-├─ 📂 utils/                # Utility functions
-├─ 📄 app.ts                # Application entry
-├─ 📄 core.ts               # Core initialization
-├─ 📄 env.ts                # Environment variable handling
-├─ 📄 err.ts                # Error handling
-├─ 📄 logger.ts             # Logging module
-├─ 📄 router.ts             # Route registration
-└─ 📄 utils.ts              # Common utilities
+📂 scripts/                  # Build, provenance, acceptance, and release gates
 📄 Dockerfile                # Docker build file
 📄 electron-builder.yml      # Electron packaging config
-📄 skillList.json            # Skill list
 📄 LICENSE                   # License (Apache-2.0)
 📄 NOTICES.txt               # Third-party dependency notices
-📄 package.json              # Project configuration
-📄 tsconfig.json             # TypeScript configuration
+📄 bun.lock                  # Single workspace lockfile
+📄 package.json              # Bun workspace and unified command entry
+📄 tsconfig.base.json        # Shared TypeScript 7 baseline
 ```
 
 ---

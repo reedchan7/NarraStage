@@ -127,18 +127,6 @@ NarraStage はショートドラマ制作のためのAIワークベンチです�
 5. ProductionAgent に切り替え、無限キャンバス上で絵コンテ、素材、動画ノードを整理。
 6. 絵コンテ画像をノード化して微調整後、ワークベンチに戻し動画結合とエクスポートを完了。
 
-## 📺 ビデオチュートリアル
-
-https://www.bilibili.com/video/BV1oXD7BqEqJ
-[![NarraStage 12分でわかるAI動画クイックスタート](./videoCover.jpg)](https://www.bilibili.com/video/BV1oXD7BqEqJ)
-
-**NarraStage 12分でわかるAI動画クイックスタート**
-👉 [クリックして視聴](https://www.bilibili.com/video/BV1oXD7BqEqJ)
-
-📱 スマホでWeChatスキャンして視聴
-
-<img src="./videoQR.png" alt="WeChatスキャンで視聴" width="150"/>
-
 ---
 
 # 📸 デモスクリーンショットと動画
@@ -412,27 +400,37 @@ pm2 monit             # モニタリングパネル
    make install
    ```
 
+   `make` または `make help` でよく使うコマンド一覧を表示できます。
+
 3. **開発環境の起動**
 
-   本プロジェクトは **バックエンドAPIサービス** と **フロントエンドページ** の2つの部分からなります。必要に応じて起動方法を選択してください：
+   本プロジェクトは **Web、バックエンド API、Electron デスクトップクライアント、共有契約** を同一の Bun workspace に置いています。用途に応じて起動方法を選んでください：
 
-   - **方法1：バックエンドサービスのみ起動**
+   - **方法1：バックエンドサービスの起動**
 
      ```bash
      make dev
      ```
 
-     > ⚠️ このコマンドはバックエンドAPIサービスのみ起動（ポート10588）し、**フロントエンドページは含みません**。`http://localhost:10588` に直接アクセスするとAPIインターフェースのみ呼び出せ、完全なWebインターフェースは表示されません。フロントエンドページも使用する場合は、フロントエンドプロジェクトを別途起動するか、下記のGUIモードを使用してください。
+     > バックエンドは Hono を使い、既定で 10588 を待ち受け、リポジトリ内にパッケージ済みの React ページも提供します。
 
-   - **方法2：Electron デスクトップクライアントの起動**
+   - **方法2：React Web ホットリロード環境の起動**
+
+     ```bash
+     make web-dev
+     ```
+
+     > Web は `http://localhost:50188` を待ち受け、API と Socket.IO を 10588 にプロキシします。別ターミナルで同時に `make dev` を実行してください。
+
+   - **方法3：Electron デスクトップクライアントの起動**
 
      ```bash
      make dev-gui
      ```
 
-     > このコマンドはバックエンドサービスとElectronデスクトップウィンドウを同時に起動します。組み込みのフロントエンドページが含まれており、追加設定なしで即座に使用できます。全機能を完全に体験したい開発者に適しています。
+     > Electron は同じ Hono サービスと単一ファイルの React レンダラーを起動します。Vite 連携時は先に `make web-dev`、続けて `make dev-gui-vite` を実行します。
 
-   - **方法3：本番モードでの起動**
+   - **方法4：本番モードでの起動**
 
      ```bash
      make start
@@ -442,10 +440,17 @@ pm2 monit             # モニタリングパネル
 
 4. **プロジェクトのパッケージング**
 
-   - TypeScriptファイルのコンパイルと生成：
+   - 埋め込み React レンダラーを更新し、サーバー/デスクトップをコンパイル：
 
      ```bash
+     make web-package
      make build
+     ```
+
+   - 署名済みリリース証拠を要求しない、本機 Electron 受け入れパッケージの生成：
+
+     ```bash
+     make pack-local
      ```
 
    - Windows プラットフォーム用実行可能プログラムのパッケージング：
@@ -485,58 +490,34 @@ pm2 monit             # モニタリングパネル
 ## プロジェクト構造
 
 ```
-📂 build/                    # ビルド成果物
+📂 apps/
+│  ├─ 📂 server/            # Hono API、Socket.IO、Agent、生成ジョブ
+│  │  ├─ 📂 src/
+│  │  └─ 📂 tests/
+│  ├─ 📂 web/               # React 19 Web クライアントと Vitest テスト
+│  │  └─ 📂 src/
+│  └─ 📂 desktop/           # Electron main/preload と安全な資格情報ブリッジ
+│     └─ 📂 src/
+📂 packages/
+│  └─ 📂 contracts/         # OpenAPI から生成したクロスクライアント TypeScript 契約
+📂 build/                   # Electron main/preload ビルド成果物
 📂 data/                     # ランタイムデータ
+│  ├─ 📂 contracts/         # OpenAPI と Web ビルド由来証明
 │  ├─ 📂 models/            # ローカル推論モデル（ONNX）
 │  ├─ 📂 oss/               # オブジェクトストレージ（素材/キャラクター/シーン）
 │  ├─ 📂 serve/             # 本番環境エントリ
 │  ├─ 📂 skills/            # Agent スキルプロンプト
-│  └─ 📂 web/               # フロントエンドビルド成果物（組み込み）
+│  └─ 📂 web/               # 単一ファイル React レンダラー（Web/デスクトップ共用）
 📂 docs/                     # ドキュメントリソース
 📂 env/                      # 環境設定
-📂 scripts/                  # ビルドと補助スクリプト
-📂 src/
-├─ 📂 agents/               # AI Agent モジュール
-│  ├─ 📂 productionAgent/   # プロダクション Agent
-│  └─ 📂 scriptAgent/       # 脚本 Agent
-├─ 📂 lib/                  # 共通ライブラリ（DB初期化、レスポンスフォーマット）
-├─ 📂 middleware/            # ミドルウェア
-├─ 📂 routes/               # ルートモジュール
-│  ├─ 📂 agents/            # Agent メモリ管理
-│  ├─ 📂 artStyle/          # 画風管理
-│  ├─ 📂 assets/            # 素材管理
-│  ├─ 📂 assetsGenerate/    # 素材生成
-│  ├─ 📂 cornerScape/       # 絵コンテ管理
-│  ├─ 📂 general/           # 汎用インターフェース
-│  ├─ 📂 login/             # ログイン認証
-│  ├─ 📂 migrate/           # データマイグレーション
-│  ├─ 📂 modelSelect/       # モデル選択
-│  ├─ 📂 novel/             # 小説管理
-│  ├─ 📂 other/             # その他機能
-│  ├─ 📂 production/        # 制作管理
-│  ├─ 📂 project/           # プロジェクト管理
-│  ├─ 📂 script/            # 脚本生成
-│  ├─ 📂 scriptAgent/       # 脚本 Agent インターフェース
-│  ├─ 📂 setting/           # システム設定
-│  ├─ 📂 task/              # タスク管理
-│  └─ 📂 test/              # テストインターフェース
-├─ 📂 socket/               # WebSocket リアルタイム通信
-├─ 📂 types/                # TypeScript 型宣言
-├─ 📂 utils/                # ユーティリティ関数
-├─ 📄 app.ts                # アプリケーションエントリ
-├─ 📄 core.ts               # コア初期化
-├─ 📄 env.ts                # 環境変数処理
-├─ 📄 err.ts                # エラー処理
-├─ 📄 logger.ts             # ログモジュール
-├─ 📄 router.ts             # ルート登録
-└─ 📄 utils.ts              # 汎用ツール
+📂 scripts/                  # ビルド、由来検証、受け入れ、リリース門禁
 📄 Dockerfile                # Docker ビルドファイル
 📄 electron-builder.yml      # Electron パッケージング設定
-📄 skillList.json            # スキル一覧
 📄 LICENSE                   # ライセンス（Apache-2.0）
-📄 NOTICES.txt               # サードパーティ依存関係の声明
-📄 package.json              # プロジェクト設定
-📄 tsconfig.json             # TypeScript 設定
+📄 NOTICES.txt               # サードパーティ依存関係の告知
+📄 bun.lock                  # ワークスペース唯一のロックファイル
+📄 package.json              # Bun workspace と統一コマンド入口
+📄 tsconfig.base.json        # 共通 TypeScript 7 ベースライン
 ```
 
 ---
