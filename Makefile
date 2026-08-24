@@ -6,51 +6,20 @@ DOCKER_IMAGE ?= narrastage
 PORT ?= 10588
 DATA_DIR ?= $(CURDIR)/data
 
-.PHONY: \
-	help \
-	install \
-	deps-check \
-	hooks \
-	workspace-check \
-	contracts-check \
-	dev \
-	server-test \
-	web-dev \
-	web-check \
-	web-build \
-	web-package \
-	desktop-dev \
-	dev-gui \
-	dev-gui-vite \
-	start \
-	format \
-	format-check \
-	lint \
-	lint-fix \
-	runtime-check \
-	modules-check \
-	typecheck \
-	test \
-	test-watch \
-	check \
-	ci \
-	build \
-	pack \
-	pack-local \
-	dist \
-	dist-win \
-	dist-mac \
-	dist-linux \
-	debug-ai \
-	license \
-	vendor-json \
-	docker-build \
-	docker-run \
-	clean
+# 分组约定：
+#   ##@ 标题     — 出现在 `make help` 里的分组名
+#   target: ## 说明 — 出现在对应分组下
 
+##@ 帮助
+.PHONY: help
 help: ## 显示可用命令
-	@awk 'BEGIN {FS = ":.*## "; printf "用法: make <target>\n\n可用命令:\n"} /^[a-zA-Z0-9_-]+:.*## / {printf "  %-18s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*## "; printf "用法: make <target>\n"} \
+		/^##@/ { printf "\n%s\n", substr($$0, 5) } \
+		/^[a-zA-Z0-9_-]+:.*## / { printf "  %-20s %s\n", $$1, $$2 } \
+		END { printf "\n" }' $(MAKEFILE_LIST)
 
+##@ 环境
+.PHONY: install deps-check hooks
 install: ## 按锁文件安装依赖
 	$(BUN) install --frozen-lockfile
 
@@ -60,29 +29,13 @@ deps-check: ## 检查依赖是否有可用更新
 hooks: ## 安装 Lefthook Git hooks
 	$(BUN) run hooks
 
-workspace-check: ## 检查多端工作区、锁文件和 TypeScript 版本策略
-	$(BUN) run workspace:check
-
-contracts-check: ## 检查共享 API 契约是否与服务端一致
-	$(BUN) run contracts:check
-
+##@ 开发
+.PHONY: dev web-dev desktop-dev dev-gui dev-gui-vite start debug-ai
 dev: ## 启动后端开发服务
 	$(BUN) run dev
 
-server-test: ## 运行服务端测试
-	$(BUN) run test:server
-
 web-dev: ## 启动 Web 客户端开发环境
 	$(BUN) run web:dev
-
-web-check: ## 检查 Web 客户端
-	$(BUN) run web:check
-
-web-build: ## 构建 Web 客户端
-	$(BUN) run web:build
-
-web-package: ## 构建并嵌入仓库内 Web 客户端
-	$(BUN) run web:package
 
 desktop-dev: ## 启动桌面客户端开发环境
 	$(BUN) run dev:gui
@@ -96,6 +49,38 @@ dev-gui-vite: ## 连接 Vite 前端启动 Electron
 start: ## 启动已构建的生产服务
 	$(BUN) run start
 
+debug-ai: ## 启动 AI SDK 调试面板
+	$(BUN) run debug:ai
+
+##@ 质量
+.PHONY: \
+	workspace-check \
+	contracts-check \
+	runtime-check \
+	modules-check \
+	format \
+	format-check \
+	lint \
+	lint-fix \
+	typecheck \
+	web-check \
+	server-test \
+	test \
+	test-watch \
+	check \
+	ci
+workspace-check: ## 检查多端工作区、锁文件和 TypeScript 版本策略
+	$(BUN) run workspace:check
+
+contracts-check: ## 检查共享 API 契约是否与服务端一致
+	$(BUN) run contracts:check
+
+runtime-check: ## 检查 Bun 运行时版本
+	$(BUN) run runtime:check
+
+modules-check: ## 检查 ESM、无扩展名导入与 @ 别名边界
+	$(BUN) run modules:check
+
 format: ## 使用 Oxfmt 格式化代码
 	$(BUN) run format
 
@@ -108,14 +93,14 @@ lint: ## 使用 Oxlint 检查代码
 lint-fix: ## 自动修复可安全修复的 lint 问题
 	$(BUN) run lint:fix
 
-runtime-check: ## 检查 Bun 运行时版本
-	$(BUN) run runtime:check
-
-modules-check: ## 检查 ESM、无扩展名导入与 @ 别名边界
-	$(BUN) run modules:check
-
 typecheck: ## 运行 TypeScript 类型检查
 	$(BUN) run typecheck
+
+web-check: ## 检查 Web 客户端
+	$(BUN) run web:check
+
+server-test: ## 运行服务端测试
+	$(BUN) run test:server
 
 test: ## 运行测试
 	$(BUN) run test
@@ -128,6 +113,14 @@ check: ## 运行格式、lint、类型和测试检查
 
 ci: ## 运行完整 CI 检查和构建
 	$(BUN) run ci
+
+##@ 构建
+.PHONY: web-build web-package build pack pack-local dist dist-win dist-mac dist-linux
+web-build: ## 构建 Web 客户端
+	$(BUN) run web:build
+
+web-package: ## 构建并嵌入仓库内 Web 客户端
+	$(BUN) run web:package
 
 build: ## 构建后端和 Electron 主进程
 	$(BUN) run build
@@ -150,20 +143,23 @@ dist-mac: ## 构建 macOS 安装包
 dist-linux: ## 构建 Linux 安装包
 	$(BUN) run dist:linux
 
-debug-ai: ## 启动 AI SDK 调试面板
-	$(BUN) run debug:ai
-
+##@ 工具
+.PHONY: license vendor-json
 license: ## 生成依赖许可证清单
 	$(BUN) run license
 
 vendor-json: ## 将供应商定义转换为 JSON
 	$(BUN) run vendor2json
 
+##@ Docker
+.PHONY: docker-build docker-run
 docker-build: ## 构建本地 Docker 镜像
 	$(DOCKER) build -t $(DOCKER_IMAGE) .
 
 docker-run: ## 运行本地 Docker 镜像
 	$(DOCKER) run --rm -p $(PORT):10588 -v "$(DATA_DIR):/app/data" $(DOCKER_IMAGE)
 
+##@ 清理
+.PHONY: clean
 clean: ## 清理可再生成的输出
 	rm -rf ./build ./dist ./coverage
