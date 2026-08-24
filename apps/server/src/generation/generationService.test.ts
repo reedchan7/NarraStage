@@ -18,7 +18,7 @@ afterEach(async () => {
 });
 
 async function setup(availability?: OfferingAvailabilityService) {
-  const directory = await mkdtemp(path.join(os.tmpdir(), "toonflow-service-"));
+  const directory = await mkdtemp(path.join(os.tmpdir(), "narrastage-service-"));
   directories.push(directory);
   const database = knex({
     client: "sqlite3",

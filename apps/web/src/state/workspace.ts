@@ -15,7 +15,7 @@ export const useWorkspace = create<WorkspaceState>()(
       clearProject: () => set({ projectId: null }),
     }),
     {
-      name: "toonflow.workspace.v1",
+      name: "narrastage.workspace.v1",
       version: 1,
       partialize: (state) => ({ projectId: state.projectId }),
     },

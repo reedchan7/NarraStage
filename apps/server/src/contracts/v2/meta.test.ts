@@ -11,7 +11,7 @@ describe("API compatibility metadata", () => {
     const meta = await getApiMeta();
 
     expect(meta.backendRevision).toBe(
-      process.env.TOONFLOW_BACKEND_REVISION ?? manifest.backendRevision,
+      process.env.NARRASTAGE_BACKEND_REVISION ?? manifest.backendRevision,
     );
     expect(meta.webRevision).toBe(manifest.webRevision);
     expect(meta.openapiSha256).toBe(manifest.openapiSha256);

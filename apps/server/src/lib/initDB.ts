@@ -565,7 +565,7 @@ export default async (knex: Knex, forceInit: boolean = false): Promise<void> => 
       initData: async (knex) => {
         await knex("o_vendorConfig").insert([
           {
-            id: "toonflow",
+            id: "narrastage",
             inputValues: "{}",
             models: "[]",
             enable: 0,

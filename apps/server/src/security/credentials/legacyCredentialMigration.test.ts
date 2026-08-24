@@ -15,7 +15,7 @@ afterEach(async () => {
 
 describe("legacy credential migration", () => {
   test("is restart-safe across vault-write interruption and removes plaintext from SQLite", async () => {
-    const directory = await mkdtemp(path.join(os.tmpdir(), "toonflow-migration-"));
+    const directory = await mkdtemp(path.join(os.tmpdir(), "narrastage-migration-"));
     directories.push(directory);
     const databasePath = path.join(directory, "copied.sqlite");
     const database = knex({

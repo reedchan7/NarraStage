@@ -20,7 +20,7 @@ afterEach(async () => {
 });
 
 async function fixture() {
-  const root = await mkdtemp(path.join(os.tmpdir(), "toonflow-live-review-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "narrastage-live-review-"));
   directories.push(root);
   const artifactDirectory = path.join(root, "artifacts");
   const reviewPath = "instruction/response.txt";
@@ -40,7 +40,7 @@ async function fixture() {
       {
         id: "executor",
         publicKeyPem: publicKeyPem(executor),
-        repository: "reedchan7/Toonflow-app",
+        repository: "reedchan7/NarraStage",
         workflow: "provider-live-acceptance",
         environments: ["provider-acceptance"],
       },
@@ -95,7 +95,7 @@ async function fixture() {
     ],
     executionAttestation: {
       executorId: "executor",
-      repository: "reedchan7/Toonflow-app",
+      repository: "reedchan7/NarraStage",
       workflow: "provider-live-acceptance",
       environment: "provider-acceptance",
       commitSha: "1".repeat(40),
@@ -362,7 +362,7 @@ describe("signed live report review", () => {
         stderr: "pipe",
         env: {
           ...globalThis.process.env,
-          TOONFLOW_REVIEWER_PRIVATE_KEY_PEM: value.privateKeyPem(value.reviewerA),
+          NARRASTAGE_REVIEWER_PRIVATE_KEY_PEM: value.privateKeyPem(value.reviewerA),
         },
       },
     );

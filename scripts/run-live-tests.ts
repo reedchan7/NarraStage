@@ -75,13 +75,13 @@ export function assertLiveTestAuthorization(
   preview: LiveTestPreview,
   env: Record<string, string | undefined>,
 ): void {
-  if (env.TOONFLOW_LIVE_TESTS !== "1") {
-    throw new Error("paid live tests require explicit TOONFLOW_LIVE_TESTS=1");
+  if (env.NARRASTAGE_LIVE_TESTS !== "1") {
+    throw new Error("paid live tests require explicit NARRASTAGE_LIVE_TESTS=1");
   }
 
-  const approvedBudget = env.TOONFLOW_LIVE_TEST_MAX_USD;
+  const approvedBudget = env.NARRASTAGE_LIVE_TEST_MAX_USD;
   if (!approvedBudget) {
-    throw new Error("paid live tests require TOONFLOW_LIVE_TEST_MAX_USD");
+    throw new Error("paid live tests require NARRASTAGE_LIVE_TEST_MAX_USD");
   }
 
   const missingCredentials = preview.cases
@@ -308,15 +308,15 @@ async function main(): Promise<void> {
   const output = path.resolve(requiredArgument("--output"));
   if (path.basename(output) !== `${runId}.json`) throw new Error("live.output_filename_mismatch");
   assertExternalArtifactDirectory(repositoryRoot, artifactDirectory);
-  const privateKeyPem = environmentValue("TOONFLOW_EXECUTOR_PRIVATE_KEY_PEM").replaceAll(
+  const privateKeyPem = environmentValue("NARRASTAGE_EXECUTOR_PRIVATE_KEY_PEM").replaceAll(
     "\\n",
     "\n",
   );
   const executorPrivateKey = createPrivateKey(privateKeyPem);
-  const executorId = environmentValue("TOONFLOW_EXECUTOR_ID");
+  const executorId = environmentValue("NARRASTAGE_EXECUTOR_ID");
   const repository = environmentValue("GITHUB_REPOSITORY");
-  const workflow = environmentValue("TOONFLOW_EXECUTOR_WORKFLOW");
-  const environment = environmentValue("TOONFLOW_EXECUTOR_ENVIRONMENT");
+  const workflow = environmentValue("NARRASTAGE_EXECUTOR_WORKFLOW");
+  const environment = environmentValue("NARRASTAGE_EXECUTOR_ENVIRONMENT");
   const commitSha = environmentValue("GITHUB_SHA");
   const workflowRunId = environmentValue("GITHUB_RUN_ID");
   const vault = createEnvironmentCredentialVault(process.env);
@@ -348,7 +348,7 @@ async function main(): Promise<void> {
     offeringId,
     providerId: offering.providerId,
     requestedProviderModelId: offering.providerModelId,
-    deploymentRegion: process.env.TOONFLOW_DEPLOYMENT_REGION ?? "global",
+    deploymentRegion: process.env.NARRASTAGE_DEPLOYMENT_REGION ?? "global",
     adapterManifestId: target.adapterManifestId,
     adapterManifestSha256: manifests[target.adapterManifestId]!,
     acceptanceSuiteId: target.acceptanceSuiteId,

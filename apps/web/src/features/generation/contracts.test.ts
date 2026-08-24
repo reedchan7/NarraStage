@@ -57,7 +57,7 @@ describe("generation request contract", () => {
       projectType: "animation",
       imageModel: "grsai:nano-banana-2",
       imageOfferingId: "google:nano-banana-2-lite:official",
-      videoModel: "toonflow:Kling-Video-O1",
+      videoModel: "narrastage:Kling-Video-O1",
       videoOfferingId: "minimax:h3:official",
     };
     expect(configuredProjectOffering(project, "image.generate")).toBe(

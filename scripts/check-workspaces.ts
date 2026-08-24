@@ -65,7 +65,7 @@ export async function collectWorkspaceViolations(repositoryRoot: string): Promis
     const file = Bun.file(path.join(repositoryRoot, relativePath));
     if (!(await file.exists())) continue;
     const source = await file.text();
-    for (const forbidden of ["../Toonflow-web", "HBAI-Ltd/Toonflow-web", "corepack yarn"]) {
+    for (const forbidden of ["../NarraStage-web", "HBAI-Ltd/Toonflow-web", "corepack yarn"]) {
       if (source.includes(forbidden)) violations.push(`${relativePath} contains ${forbidden}`);
     }
   }

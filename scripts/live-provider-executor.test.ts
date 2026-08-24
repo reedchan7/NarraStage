@@ -20,7 +20,7 @@ afterEach(async () => {
 
 describe("real live provider executor wiring", () => {
   test("drives registered generate and stream ports and writes digest-bound review artifacts", async () => {
-    const artifactDirectory = await mkdtemp(path.join(os.tmpdir(), "toonflow-live-artifacts-"));
+    const artifactDirectory = await mkdtemp(path.join(os.tmpdir(), "narrastage-live-artifacts-"));
     directories.push(artifactDirectory);
     const calls: string[] = [];
     const submittedRequests: unknown[] = [];
@@ -137,7 +137,7 @@ describe("real live provider executor wiring", () => {
       estimatedMaxUsd: "0.05",
     });
 
-    const artifactDirectory = await mkdtemp(path.join(os.tmpdir(), "toonflow-live-cli-"));
+    const artifactDirectory = await mkdtemp(path.join(os.tmpdir(), "narrastage-live-cli-"));
     directories.push(artifactDirectory);
     const output = path.join(artifactDirectory, "missing-credential.json");
     const live = Bun.spawn(
@@ -163,8 +163,8 @@ describe("real live provider executor wiring", () => {
           ...process.env,
           DEEPSEEK_API_KEY: "",
           DEEPSEEK_KEY: "",
-          TOONFLOW_LIVE_TESTS: "1",
-          TOONFLOW_LIVE_TEST_MAX_USD: "0.05",
+          NARRASTAGE_LIVE_TESTS: "1",
+          NARRASTAGE_LIVE_TEST_MAX_USD: "0.05",
         },
       },
     );
@@ -174,7 +174,7 @@ describe("real live provider executor wiring", () => {
   });
 
   test("polls real video ports, validates media bytes, and targets cancellation at the accepted handle", async () => {
-    const artifactDirectory = await mkdtemp(path.join(os.tmpdir(), "toonflow-live-video-"));
+    const artifactDirectory = await mkdtemp(path.join(os.tmpdir(), "narrastage-live-video-"));
     directories.push(artifactDirectory);
     const video = await acceptanceFixtureBytes(process.cwd(), "endingVideo");
     const calls: string[] = [];
@@ -282,7 +282,7 @@ describe("real live provider executor wiring", () => {
   });
 
   test("rejects JSON that parses but violates frozen types and additionalProperties", async () => {
-    const artifactDirectory = await mkdtemp(path.join(os.tmpdir(), "toonflow-live-structure-"));
+    const artifactDirectory = await mkdtemp(path.join(os.tmpdir(), "narrastage-live-structure-"));
     directories.push(artifactDirectory);
     const registry = new ProviderRegistry();
     registry.register(
@@ -335,7 +335,7 @@ describe("real live provider executor wiring", () => {
   });
 
   test("rejects tool arguments that only satisfy required-key presence", async () => {
-    const artifactDirectory = await mkdtemp(path.join(os.tmpdir(), "toonflow-live-tool-schema-"));
+    const artifactDirectory = await mkdtemp(path.join(os.tmpdir(), "narrastage-live-tool-schema-"));
     directories.push(artifactDirectory);
     const registry = new ProviderRegistry();
     registry.register(
@@ -389,7 +389,7 @@ describe("real live provider executor wiring", () => {
   });
 
   test("rejects a grounding response whose stream omits source metadata", async () => {
-    const artifactDirectory = await mkdtemp(path.join(os.tmpdir(), "toonflow-live-grounding-"));
+    const artifactDirectory = await mkdtemp(path.join(os.tmpdir(), "narrastage-live-grounding-"));
     directories.push(artifactDirectory);
     const registry = new ProviderRegistry();
     registry.register(
@@ -436,7 +436,7 @@ describe("real live provider executor wiring", () => {
   });
 
   test("binds Omni continuation to the frozen source case instead of the last completed job", async () => {
-    const artifactDirectory = await mkdtemp(path.join(os.tmpdir(), "toonflow-live-omni-"));
+    const artifactDirectory = await mkdtemp(path.join(os.tmpdir(), "narrastage-live-omni-"));
     directories.push(artifactDirectory);
     const video = await acceptanceFixtureBytes(process.cwd(), "endingVideo");
     const continuations: Array<string | undefined> = [];

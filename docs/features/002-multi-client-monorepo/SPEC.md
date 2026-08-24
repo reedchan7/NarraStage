@@ -9,12 +9,12 @@
 
 ## Problem and evidence
 
-ToonFlow's backend, provider platform, Electron main process, generated Web bundle, and release evidence live in this repository, while the editable Vue Web client and its Yarn toolchain live in `../Toonflow-web`. Every release job reconstructs that two-repository relationship, and the latest backend HEAD already fails the embedded Web provenance gate when the sibling-derived bundle is stale. The target is a single workspace whose server, Web, desktop, and typed-client boundaries can evolve together while the user-visible conversation, image, and video workflows remain usable.
+NarraStage's backend, provider platform, Electron main process, generated Web bundle, and release evidence live in this repository, while the editable Vue Web client and its Yarn toolchain live in `../NarraStage-web`. Every release job reconstructs that two-repository relationship, and the latest backend HEAD already fails the embedded Web provenance gate when the sibling-derived bundle is stale. The target is a single workspace whose server, Web, desktop, and typed-client boundaries can evolve together while the user-visible conversation, image, and video workflows remain usable.
 
 | Evidence | Class | Source | Limitation |
 |---|---|---|---|
 | Release CI separately checks out and builds `HBAI-Ltd/Toonflow-web`. | observed | `.github/workflows/release.yml:28` | Does not by itself prove a monorepo is the only solution. |
-| The root package hard-codes `../Toonflow-web`; current `bun run build` fails `embedded Web backend source revision mismatch`. | measured | `package.json:39`; baseline run 2026-08-24 | The immediate manifest can be refreshed without restructuring. |
+| The root package hard-codes `../NarraStage-web`; current `bun run build` fails `embedded Web backend source revision mismatch`. | measured | `package.json:39`; baseline run 2026-08-24 | The immediate manifest can be refreshed without restructuring. |
 | The migration exposure is 96 Vue SFCs / 35,548 lines and 192 server files importing Express. | measured | `RESEARCH.md` | Counts do not prove equal effort per file. |
 | Server 208/208 tests and Web 40/40 tests, type-check, and production build pass independently. | measured | baseline runs 2026-08-24 | Paid provider and packaged desktop live paths were not exercised. |
 
@@ -58,7 +58,7 @@ ToonFlow's backend, provider platform, Electron main process, generated Web bund
 
 1. **[P1]** As a maintainer, I want every executable surface in one workspace, so that shared contracts and releases are changed and verified atomically.
    Independent demonstration: a clean checkout installs once and root help exposes per-app and aggregate commands.
-2. **[P1]** As a Web or desktop user, I want the React client to preserve the ToonFlow creation journey, so that modernization does not remove conversation or media production.
+2. **[P1]** As a Web or desktop user, I want the React client to preserve the NarraStage creation journey, so that modernization does not remove conversation or media production.
    Independent demonstration: the same React build runs standalone and inside Electron and completes the named local acceptance script.
 3. **[P1]** As a future client developer, I want a versioned generated API client boundary, so that a new client does not import server implementation files.
    Independent demonstration: a package-level contract test consumes the generated client with no server-source import.
@@ -181,7 +181,7 @@ ToonFlow's backend, provider platform, Electron main process, generated Web bund
 ## Limitations
 
 - No product analytics quantify maintenance savings or migration user value; completion is a behavior/operability result.
-- Hono/Elysia published benchmarks do not model ToonFlow's database, media, sockets, or Electron workload; selection uses compatibility and adoption evidence, not a claim of universal fastest throughput.
+- Hono/Elysia published benchmarks do not model NarraStage's database, media, sockets, or Electron workload; selection uses compatibility and adoption evidence, not a claim of universal fastest throughput.
 - The design review is a disclosed non-independent self-review because the user instructed the agent to make and approve decisions without pausing; implementation still requires a bounded code review and full evidence gates.
 
 ## Decision log (append-only)

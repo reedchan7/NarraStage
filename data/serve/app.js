@@ -26153,7 +26153,7 @@ var require_package = __commonJS(function(exports, module) {
 
 // node_modules/.bun/socket.io@4.8.3+759ce506b1ed1a42/node_modules/socket.io/dist/index.js
 var require_dist2 = __commonJS(function(exports, module) {
-  var __dirname = "/Users/reedchan/Workspaces/github/reedchan7/Toonflow-app/node_modules/.bun/socket.io@4.8.3+759ce506b1ed1a42/node_modules/socket.io/dist";
+  var __dirname = "/Users/reedchan/Workspaces/github/reedchan7/NarraStage/node_modules/.bun/socket.io@4.8.3+759ce506b1ed1a42/node_modules/socket.io/dist";
   var __createBinding = exports && exports.__createBinding || (Object.create ? function(o, m, k, k2) {
     if (k2 === undefined)
       k2 = k;
@@ -48560,7 +48560,7 @@ class GenerationJobRepository {
         sequence,
         provider_id: submittingRow.provider_id,
         offering_id: submittingRow.offering_id,
-        provider_idempotency_key: `toonflow:${id}:attempt:${sequence}`,
+        provider_idempotency_key: `narrastage:${id}:attempt:${sequence}`,
         state: "prepared",
         provider_handle: null,
         error_json: null,
@@ -50696,7 +50696,7 @@ var init_offeringAvailability = __esm(() => {
   }).strict();
   defaultAvailabilityPolicy = {
     requiredEvidence: "product_accepted",
-    deploymentRegion: process.env.TOONFLOW_DEPLOYMENT_REGION ?? "global",
+    deploymentRegion: process.env.NARRASTAGE_DEPLOYMENT_REGION ?? "global",
     maximumEvidenceAgeMs: 30 * 24 * 60 * 60 * 1000,
     now: Date.now,
     providerHealth: (offeringId) => ({
@@ -56078,7 +56078,7 @@ class ProviderConnectionProbe {
     this.#healthMonitor = options2.healthMonitor;
     this.#fetch = options2.fetch ?? fetch;
     this.#falProbe = options2.falProbe;
-    this.#deploymentRegion = options2.deploymentRegion ?? process.env.TOONFLOW_DEPLOYMENT_REGION ?? "global";
+    this.#deploymentRegion = options2.deploymentRegion ?? process.env.NARRASTAGE_DEPLOYMENT_REGION ?? "global";
   }
   async check(providerId) {
     const offerings = builtinCatalog.offerings.filter((offering) => offering.providerId === providerId && offering.support.implementation === "implemented");
@@ -56191,7 +56191,7 @@ class ProviderConnectionProbe {
       if (this.#falProbe)
         await this.#falProbe();
       else {
-        await new FalQueueTransport({ credentialVault: this.#credentialVault }).upload(new Blob(["toonflow-health"], { type: "text/plain" }));
+        await new FalQueueTransport({ credentialVault: this.#credentialVault }).upload(new Blob(["narrastage-health"], { type: "text/plain" }));
       }
       const endpointRevisions = [];
       for (const [mode, endpoint] of Object.entries(falH3Manifest.endpoints)) {
@@ -107432,7 +107432,7 @@ function isEletron() {
   return typeof process.versions?.electron !== "undefined";
 }
 var getPath_default = (fileName) => {
-  const basePath = process.env.TOONFLOW_DATA_DIR ?? path5.join(process.cwd(), "data");
+  const basePath = process.env.NARRASTAGE_DATA_DIR ?? process.env.TOONFLOW_DATA_DIR ?? path5.join(process.cwd(), "data");
   if (fileName) {
     let dbPath;
     if (Array.isArray(fileName)) {
@@ -113046,7 +113046,7 @@ var require_timestamp2 = __commonJS(function(exports, module) {
 
 // node_modules/.bun/knex@3.3.0+9606eb3220952147/node_modules/knex/lib/migrations/migrate/MigrationGenerator.js
 var require_MigrationGenerator = __commonJS(function(exports, module) {
-  var __dirname = "/Users/reedchan/Workspaces/github/reedchan7/Toonflow-app/node_modules/.bun/knex@3.3.0+9606eb3220952147/node_modules/knex/lib/migrations/migrate";
+  var __dirname = "/Users/reedchan/Workspaces/github/reedchan7/NarraStage/node_modules/.bun/knex@3.3.0+9606eb3220952147/node_modules/knex/lib/migrations/migrate";
   var path6 = __require("path");
   var { writeJsFileUsingTemplate } = require_template2();
   var { getMergedConfig } = require_migrator_configuration_merger();
@@ -113753,7 +113753,7 @@ var require_seeder_configuration_merger = __commonJS(function(exports, module) {
 
 // node_modules/.bun/knex@3.3.0+9606eb3220952147/node_modules/knex/lib/migrations/seed/Seeder.js
 var require_Seeder = __commonJS(function(exports, module) {
-  var __dirname = "/Users/reedchan/Workspaces/github/reedchan7/Toonflow-app/node_modules/.bun/knex@3.3.0+9606eb3220952147/node_modules/knex/lib/migrations/seed";
+  var __dirname = "/Users/reedchan/Workspaces/github/reedchan7/NarraStage/node_modules/.bun/knex@3.3.0+9606eb3220952147/node_modules/knex/lib/migrations/seed";
   var path6 = __require("path");
   var { ensureDirectoryExists } = require_fs5();
   var { writeJsFileUsingTemplate } = require_template2();
@@ -131875,7 +131875,7 @@ A medium tracking shot follows the woman from behind as she ascends and approach
       initData: async (knex2) => {
         await knex2("o_vendorConfig").insert([
           {
-            id: "toonflow",
+            id: "narrastage",
             inputValues: "{}",
             models: "[]",
             enable: 0
@@ -154510,7 +154510,7 @@ var vendor_default;
 var init_vendor = __esm(() => {
   vendor_default = {
     "atlascloud.ts": `/**\r
- * Toonflow AI供应商模板 - AtlasCloud MASS\r
+ * NarraStage AI供应商模板 - AtlasCloud MASS\r
  * @version 0.8\r
  *\r
  * 说明：\r
@@ -154647,7 +154647,7 @@ const vendor: VendorConfig = {\r
   version: "1.0",\r
   author: "AtlasCloud",\r
   name: "AtlasCloud MASS",\r
-  description: "AtlasCloud 全模态平台接入 Toonflow。默认按官方文档填写文本、图片、视频与任务轮询路径。",\r
+  description: "AtlasCloud 全模态平台接入 NarraStage。默认按官方文档填写文本、图片、视频与任务轮询路径。",\r
   inputs: [\r
     { key: "apiKey", label: "API密钥", type: "password", required: true, placeholder: "AtlasCloud API Key" },\r
     { key: "chatBaseUrl", label: "文本基地址", type: "url", required: true, placeholder: "https://api.atlascloud.ai/v1", disabled: true },\r
@@ -155100,7 +155100,7 @@ exports.updateVendor = updateVendor;\r
 export { };\r
 `,
     "deepseek.ts": `/**\r
- * Toonflow AI供应商模板 - DeepSeek\r
+ * NarraStage AI供应商模板 - DeepSeek\r
  * @version 2.1\r
  */\r
 \r
@@ -155229,7 +155229,7 @@ declare const exports: {\r
 const vendor: VendorConfig = {\r
   id: "deepseek",\r
   version: "2.1",\r
-  author: "Toonflow",\r
+  author: "NarraStage",\r
   name: "DeepSeek",\r
   description:\r
     "DeepSeek 官方接口适配，支持 V4 系列模型与思考模式（思维链输出）。\\n\\n[前往平台](https://platform.deepseek.com/)",\r
@@ -155324,7 +155324,7 @@ exports.updateVendor = updateVendor;\r
 \r
 export { };`,
     "grsai.ts": `/**\r
- * Toonflow AI供应商模板\r
+ * NarraStage AI供应商模板\r
  * @version 2.0\r
  */\r
 \r
@@ -155468,7 +155468,7 @@ declare const exports: {\r
 const vendor: VendorConfig = {\r
   id: "grsai",\r
   version: "2.2",\r
-  author: "Toonflow",\r
+  author: "NarraStage",\r
   name: "Grsai",\r
   description: "Grsai AI平台适配，支持文生图、图生图、文生视频、Gemini兼容文本模型 \\n [前往中转平台](https://tf.grsai.ai/zh)",\r
   inputs: [\r
@@ -155733,7 +155733,7 @@ exports.updateVendor = updateVendor;\r
 export {};\r
 `,
     "klingai.ts": `/**\r
- * Toonflow AI供应商模板 - 可灵AI\r
+ * NarraStage AI供应商模板 - 可灵AI\r
  * @version 2.0\r
  */\r
 \r
@@ -155868,7 +155868,7 @@ declare const exports: {\r
 const vendor: VendorConfig = {\r
   id: "klingai",\r
   version: "2.0",\r
-  author: "Toonflow",\r
+  author: "NarraStage",\r
   name: "可灵AI",\r
   description:\r
     "可灵AI视频生成\\n\\n支持可灵全系列视频模型，包括 kling-video-o1、kling-v3-omni、kling-v3、kling-v2-6、kling-v2-5-turbo、kling-v2-1、kling-v2-master、kling-v1-6、kling-v1-5、kling-v1 等。\\n\\n需要在[可灵AI开放平台](https://klingai.com)\\n\\n获取 Access Key 和 Secret Key。",\r
@@ -156372,7 +156372,7 @@ exports.ttsRequest = ttsRequest;\r
 export {};\r
 `,
     "minimax.ts": `/**\r
- * Toonflow AI供应商模板 - MiniMax(海螺AI)\r
+ * NarraStage AI供应商模板 - MiniMax(海螺AI)\r
  * @version 2.0\r
  */\r
 \r
@@ -156508,7 +156508,7 @@ declare const exports: {\r
 const vendor: VendorConfig = {\r
   id: "minimax",\r
   version: "2.1",\r
-  author: "Toonflow",\r
+  author: "NarraStage",\r
   name: "MiniMax(海螺AI)",\r
   description: "MiniMax官方接口适配，支持M系列推理文本模型、文生图/图生图、视频生成（文生视频、图生视频、首尾帧生成）能力 \\n [前往平台](https://minimaxi.com/)",\r
   inputs: [\r
@@ -156771,7 +156771,7 @@ exports.updateVendor = updateVendor;\r
 // 这行代码用于确保当前文件被识别为模块，避免全局变量冲突\r
 export {};`,
     "null.ts": `/**\r
- * Toonflow AI供应商模板\r
+ * NarraStage AI供应商模板\r
  * @version 2.0\r
  */\r
 \r
@@ -156906,7 +156906,7 @@ declare const exports: {\r
 const vendor: VendorConfig = {\r
   id: "null",\r
   version: "2.0",\r
-  author: "Toonflow",\r
+  author: "NarraStage",\r
   name: "空模板",\r
   description: "## 开发模板，您可以使用此模板进行Vibe Coding",\r
   inputs: [\r
@@ -156968,7 +156968,7 @@ export {};\r
  * ============================================================\r
  *\r
  * 【概述】\r
- * 本文件是 Toonflow AI 供应商适配模板。AI 在生成新供应商适配代码时，\r
+ * 本文件是 NarraStage AI 供应商适配模板。AI 在生成新供应商适配代码时，\r
  * 必须严格遵守以下规则，并要求用户提供目标平台的 curl 调用示例或 API 文档信息作为输入依据。\r
  *\r
  * 【前置要求】\r
@@ -157106,7 +157106,7 @@ export {};\r
  */\r
 `,
     "openai.ts": `/**\r
- * Toonflow AI供应商模板\r
+ * NarraStage AI供应商模板\r
  * @version 2.0\r
  */\r
 // ============================================================\r
@@ -157220,7 +157220,7 @@ declare const exports: {\r
 const vendor: VendorConfig = {\r
   id: "openai",\r
   version: "2.0",\r
-  author: "Toonflow",\r
+  author: "NarraStage",\r
   name: "OpenAI标准接口",\r
   description: "OpenAI标准格式接口，可修改请求地址并手动添加模型。",\r
   icon: "",\r
@@ -157274,8 +157274,8 @@ exports.ttsRequest = ttsRequest;\r
 exports.checkForUpdates = checkForUpdates;\r
 exports.updateVendor = updateVendor;\r
 export {};`,
-    "toonflow.ts": `/**\r
- * Toonflow官方中转平台 供应商适配\r
+    "narrastage.ts": `/**\r
+ * NarraStage 自定义多模态网关 供应商适配\r
  * @version 3.0\r
  */\r
 \r
@@ -157408,17 +157408,20 @@ declare const exports: {\r
 // ============================================================\r
 \r
 const vendor: VendorConfig = {\r
-  id: "toonflow",\r
+  id: "narrastage",\r
   version: "3.2",\r
-  author: "Toonflow",\r
-  name: "Toonflow官方中转平台",\r
+  author: "NarraStage",\r
+  name: "NarraStage 自定义多模态网关",\r
   description:\r
-    "## Toonflow官方中转平台\\n\\nToonflow官方中转平台，提供**文本、图像、视频、音频**等多模态生成能力的中转服务，支持接入多个大模型供应商，方便用户统一管理和调用不同供应商的生成能力。\\n\\n\uD83D\uDD17 [前往中转平台](https://api.toonflow.net/)\\n\\n如果这个项目对你有帮助，可以考虑支持一下我们的开发工作 ☕",\r
+    "## NarraStage 自定义多模态网关\\n\\n连接你自行部署或选择的兼容 API。请填写 API 基地址与密钥；项目不预设第三方中转服务。",\r
   icon: "",\r
-  inputs: [{ key: "apiKey", label: "API密钥", type: "password", required: true }],\r
+  inputs: [\r
+    { key: "baseUrl", label: "API 基地址", type: "url", required: true, placeholder: "https://api.example.com/v1" },\r
+    { key: "apiKey", label: "API 密钥", type: "password", required: true },\r
+  ],\r
   inputValues: {\r
     apiKey: "",\r
-    baseUrl: "https://api.toonflow.net/v1",\r
+    baseUrl: "",\r
   },\r
   models: [\r
     {\r
@@ -158026,7 +158029,7 @@ exports.updateVendor = updateVendor;\r
 \r
 export {};\r
 `,
-    "vidu.ts": `//如需遥测AI请使用在toonflow安装目录运行npx @ai-sdk/devtools （要求在其他设置中打开遥测功能，且toonflow有权限在安装目录创建.devtools文件夹）\r
+    "vidu.ts": `//如需遥测AI请使用在narrastage安装目录运行npx @ai-sdk/devtools （要求在其他设置中打开遥测功能，且narrastage有权限在安装目录创建.devtools文件夹）\r
 // ==================== 类型定义 ====================\r
 // 文本模型\r
 interface TextModel {\r
@@ -158396,7 +158399,7 @@ const ttsRequest = async (ttsConfig: TTSConfig, ttsModel: TTSModel) => {\r
 };\r
 `,
     "volcengine.ts": `/**\r
- * Toonflow AI供应商模板 - 火山引擎(豆包)\r
+ * NarraStage AI供应商模板 - 火山引擎(豆包)\r
  * @version 2.0\r
  */\r
 \r
@@ -159074,7 +159077,7 @@ exports.updateVendor = updateVendor;\r
 export {};\r
 `,
     "volcengineSd2.ts": `/**\r
- * Toonflow AI供应商模板 - 火山引擎(豆包)\r
+ * NarraStage AI供应商模板 - 火山引擎(豆包)\r
  * @version 2.0\r
  */\r
 \r
@@ -159220,7 +159223,7 @@ const TIMEOUT = 120_000;\r
 const vendor: VendorConfig = {\r
   id: "volcengineSd2",\r
   version: "2.0",\r
-  author: "toonflow",\r
+  author: "narrastage",\r
   name: "火山引擎sd2.0真人",\r
   description: "火山引擎豆包大模型，支持文本、图片生成、视频生成等能力。\\n\\n需要在[火山引擎控制台](https://console.volcengine.com/ark)获取API密钥。",\r
   icon: "",\r
@@ -159920,6 +159923,49 @@ export {};\r
   };
 });
 
+// apps/server/src/lib/brandMigration.ts
+async function migrateLegacyBrandData(knex) {
+  const legacyVendor = await knex("o_vendorConfig").where("id", "toonflow").first();
+  if (!legacyVendor)
+    return;
+  const currentVendor = await knex("o_vendorConfig").where("id", "narrastage").first();
+  if (!currentVendor) {
+    const inputValues = JSON.parse(legacyVendor.inputValues ?? "{}");
+    try {
+      if (new URL(inputValues.baseUrl).hostname.endsWith("toonflow.net")) {
+        inputValues.baseUrl = "";
+      }
+    } catch {
+      inputValues.baseUrl = inputValues.baseUrl ?? "";
+    }
+    await knex("o_vendorConfig").insert({
+      ...legacyVendor,
+      id: "narrastage",
+      inputValues: JSON.stringify(inputValues),
+      models: String(legacyVendor.models ?? "[]").replaceAll("toonflow:", "narrastage:")
+    });
+  }
+  for (const row of await knex("o_agentDeploy").where("vendorId", "toonflow").select("key", "modelName")) {
+    await knex("o_agentDeploy").where("key", row.key).update({
+      vendorId: "narrastage",
+      modelName: String(row.modelName ?? "").replace(/^toonflow:/, "narrastage:")
+    });
+  }
+  for (const row of await knex("o_project").select("id", "imageModel", "videoModel")) {
+    const updates = {};
+    if (typeof row.imageModel === "string" && row.imageModel.startsWith("toonflow:")) {
+      updates.imageModel = row.imageModel.replace(/^toonflow:/, "narrastage:");
+    }
+    if (typeof row.videoModel === "string" && row.videoModel.startsWith("toonflow:")) {
+      updates.videoModel = row.videoModel.replace(/^toonflow:/, "narrastage:");
+    }
+    if (Object.keys(updates).length > 0)
+      await knex("o_project").where("id", row.id).update(updates);
+  }
+  await knex("o_modelPrompt").where("vendorId", "toonflow").update({ vendorId: "narrastage" });
+  await knex("o_vendorConfig").where("id", "toonflow").delete();
+}
+
 // apps/server/src/lib/fixDB.ts
 import path7 from "path";
 import fs4 from "fs";
@@ -159934,7 +159980,7 @@ async function tempOnsert(tsCode) {
     id: vendor.id,
     inputValues: JSON.stringify(vendor.inputValues ?? {}),
     models: JSON.stringify([]),
-    enable: vendor.id == "toonflow" ? 1 : 0
+    enable: vendor.id == "narrastage" ? 1 : 0
   });
   utils_default.vendor.writeCode(vendor.id, tsCode);
 }
@@ -159993,6 +160039,7 @@ var import_sucrase, vendorData, fixDB_default = async (knex) => {
   await addColumn("o_assets", "audioBindState", "integer");
   await addColumn("o_modelPrompt", "fileName", "string");
   await addColumn("o_modelPrompt", "path", "string");
+  await migrateLegacyBrandData(knex);
   const vendorDataSelect = await utils_default.db("o_vendorConfig").whereIn("id", ["deepseek", "atlascloud"]).select("*");
   if (!vendorDataSelect.find((i2) => i2.id == "deepseek")) {
     await utils_default.db("o_vendorConfig").insert({
@@ -160812,9 +160859,9 @@ A medium tracking shot follows the woman from behind as she ascends and approach
   if (Number(minimaxVer) < 2.1) {
     utils_default.vendor.writeCode("minimax", vendorData["minimax.ts"]);
   }
-  const toonflowVer = await utils_default.vendor.getVendor("toonflow").version;
-  if (Number(toonflowVer) < 3.2) {
-    utils_default.vendor.writeCode("toonflow", vendorData["toonflow.ts"]);
+  const narrastageVer = await utils_default.vendor.getVendor("narrastage").version;
+  if (Number(narrastageVer) < 3.2) {
+    utils_default.vendor.writeCode("narrastage", vendorData["narrastage.ts"]);
   }
 };
 var init_fixDB = __esm(() => {
@@ -258901,7 +258948,7 @@ function inlineImageDetails(input) {
       const isReference = typeof data === "object" && data !== null && "type" in data && data.type === "reference";
       if (isReference)
         continue;
-      const detail = part.providerOptions?.toonflow?.imageDetail;
+      const detail = part.providerOptions?.narrastage?.imageDetail;
       details.push(detail === "auto" || detail === "low" || detail === "high" || detail === "original" ? detail : undefined);
     }
   }
@@ -260023,7 +260070,7 @@ var init_getMaterialData = __esm(() => {
     const ending = await utils_default.oss.getFileUrl("/ending.mp4", "assets");
     data.push({
       id: 0,
-      name: "Toonflow片尾",
+      name: "NarraStage片尾",
       filePath: ending,
       type: "clip"
     });
@@ -261553,7 +261600,7 @@ function createOpenApiArtifact() {
   const document2 = {
     openapi: "3.1.0",
     info: {
-      title: "Toonflow Provider API",
+      title: "NarraStage Provider API",
       version: contractVersion
     },
     paths: {
@@ -261737,13 +261784,13 @@ function createOpenApiArtifact() {
           operationId: "uploadOwnedMediaAsset",
           parameters: [
             {
-              name: "X-Toonflow-Media-Type",
+              name: "X-NarraStage-Media-Type",
               in: "header",
               required: true,
               schema: { type: "string" }
             },
             {
-              name: "X-Toonflow-Filename",
+              name: "X-NarraStage-Filename",
               in: "header",
               required: true,
               schema: { type: "string" }
@@ -261931,7 +261978,7 @@ async function getApiMeta() {
   return metaSchema.parse({
     contractVersion,
     openapiSha256: createOpenApiArtifact().sha256,
-    backendRevision: process.env.TOONFLOW_BACKEND_REVISION ?? webBuildManifest.backendRevision ?? "development",
+    backendRevision: process.env.NARRASTAGE_BACKEND_REVISION ?? webBuildManifest.backendRevision ?? "development",
     webRevision: webBuildManifest.webRevision
   });
 }
@@ -277076,12 +277123,11 @@ var init_checkUpdate = __esm(() => {
     return pkg.version;
   })();
   checkUpdate_default = router120.post("/", validateFields({
-    source: exports_external.enum(["toonflow", "github", "gitee", "atomgit"]),
-    url: exports_external.url().nullable().optional()
+    source: exports_external.enum(["github", "gitee", "atomgit"]),
+    url: exports_external.url()
   }), async (req, res) => {
     const { source: source2, url: url4 } = req.body;
-    const getUrl = url4 ?? "https://toonflow.oss-cn-beijing.aliyuncs.com/update.json";
-    const versionInfo = await fetch(getUrl).then((res2) => res2.json());
+    const versionInfo = await fetch(url4).then((res2) => res2.json());
     if (!versionInfo)
       return res.status(400).send(error53("无法获取版本信息"));
     const { version: tagger, time: time5, data } = versionInfo;
@@ -277188,42 +277234,42 @@ var init_agentSetKey = __esm(() => {
     key: exports_external.string().optional()
   }), async (req, res) => {
     const { key } = req.body;
-    const vendorConfigData = await utils_default.db("o_vendorConfig").where("id", "toonflow").first();
+    const vendorConfigData = await utils_default.db("o_vendorConfig").where("id", "narrastage").first();
     if (!vendorConfigData)
       return res.status(500).send(error53("未找到该供应商配置"));
     if (!vendorConfigData.inputValues)
       return res.status(500).send(error53("未找到模型配置数据"));
     const inputValue = JSON.parse(vendorConfigData.inputValues);
     inputValue.apiKey = key;
-    await utils_default.db("o_vendorConfig").where("id", "toonflow").update({
+    await utils_default.db("o_vendorConfig").where("id", "narrastage").update({
       inputValues: JSON.stringify(inputValue)
     });
     try {
-      const resText = await utils_default.Ai.Text(`toonflow:claude-haiku-4-5-20251001`).invoke({
+      const resText = await utils_default.Ai.Text(`narrastage:claude-haiku-4-5-20251001`).invoke({
         prompt: "1+1等于几？,请直接回答2，不要解释"
       });
       if (resText.text) {
         await utils_default.db("o_agentDeploy").where("key", "scriptAgent").update({
           model: "claude-sonnet-4-6",
-          modelName: "toonflow:claude-sonnet-4-6",
-          vendorId: "toonflow"
+          modelName: "narrastage:claude-sonnet-4-6",
+          vendorId: "narrastage"
         });
         await utils_default.db("o_agentDeploy").where("key", "productionAgent").update({
           model: "claude-sonnet-4-6",
-          modelName: "toonflow:claude-sonnet-4-6",
-          vendorId: "toonflow"
+          modelName: "narrastage:claude-sonnet-4-6",
+          vendorId: "narrastage"
         });
         await utils_default.db("o_agentDeploy").where("key", "universalAi").update({
           model: "claude-haiku-4-5",
-          modelName: "toonflow:claude-haiku-4-5-20251001",
-          vendorId: "toonflow"
+          modelName: "narrastage:claude-haiku-4-5-20251001",
+          vendorId: "narrastage"
         });
         res.status(200).send(success3("一键填入成功"));
       }
     } catch (err) {
       console.error(err);
       inputValue.apiKey = "";
-      await utils_default.db("o_vendorConfig").where("id", "toonflow").update({ inputValues: JSON.stringify(inputValue) });
+      await utils_default.db("o_vendorConfig").where("id", "narrastage").update({ inputValues: JSON.stringify(inputValue) });
       res.status(400).send(error53("KEY无效，请重新输入"));
     }
   });
@@ -277475,7 +277521,7 @@ var init_exportData = __esm(() => {
         tables: data
       };
       res.setHeader("Content-Type", "application/json");
-      res.setHeader("Content-Disposition", `attachment; filename=toonflow-backup-${Date.now()}.json`);
+      res.setHeader("Content-Disposition", `attachment; filename=narrastage-backup-${Date.now()}.json`);
       res.status(200).send(JSON.stringify(exportData, null, 2));
     } catch (err) {
       res.status(500).send(error53(err?.message || "导出失败"));
@@ -278108,7 +278154,7 @@ ${issueLines.join(`
       id: vendor.id,
       inputValues: JSON.stringify(vendor.inputValues ?? {}),
       models: JSON.stringify([]),
-      enable: vendor.id == "toonflow" ? 1 : 0
+      enable: vendor.id == "narrastage" ? 1 : 0
     });
     utils_default.vendor.writeCode(vendor.id, tsCode);
     res.status(200).send(success3(result.data));
@@ -278301,7 +278347,7 @@ var init_getVendorList = __esm(() => {
         version: vendor.version ?? "1.0"
       };
     }))).filter((i2) => Boolean(i2));
-    list2.sort((a, b) => a.id === "toonflow" ? -1 : b.id === "toonflow" ? 1 : 0);
+    list2.sort((a, b) => a.id === "narrastage" ? -1 : b.id === "narrastage" ? 1 : 0);
     res.status(200).send(success3(list2));
   });
 });
@@ -279500,8 +279546,8 @@ var init_upload2 = __esm(() => {
   maximumUploadBytes = 2 * 1024 * 1024 * 1024;
   router184.put("/", async (req, res) => {
     const contentLength = Number(req.headers["content-length"]);
-    const mediaType = req.headers["x-toonflow-media-type"];
-    const encodedFilename = req.headers["x-toonflow-filename"];
+    const mediaType = req.headers["x-narrastage-media-type"];
+    const encodedFilename = req.headers["x-narrastage-filename"];
     if (!Number.isSafeInteger(contentLength) || contentLength < 1 || contentLength > maximumUploadBytes || typeof mediaType !== "string" || typeof encodedFilename !== "string") {
       return res.status(400).json({ message: "contract.invalid_asset_upload_headers" });
     }
@@ -280637,7 +280683,7 @@ class PinnedHttpTransport {
         headers: {
           accept: "image/*,video/*,audio/*,application/pdf,application/octet-stream",
           "accept-encoding": "br,gzip,deflate,identity",
-          "user-agent": "Toonflow-AssetGateway/2",
+          "user-agent": "NarraStage-AssetGateway/2",
           ...headers
         }
       }, (response) => {
@@ -281393,8 +281439,8 @@ var evidenceTrustDocumentSchema = exports_external.object({
 // apps/server/src/security/localApiPolicy.ts
 var loopbackHosts = new Set(["127.0.0.1", "::1", "localhost"]);
 function resolveLocalApiPolicy(input) {
-  const host = input.runtime === "desktop" ? "127.0.0.1" : input.env.TOONFLOW_HOST || "127.0.0.1";
-  const configuredOrigins = (input.env.TOONFLOW_ALLOWED_ORIGINS ?? "").split(",").map((origin) => origin.trim()).filter(Boolean);
+  const host = input.runtime === "desktop" ? "127.0.0.1" : input.env.NARRASTAGE_HOST || "127.0.0.1";
+  const configuredOrigins = (input.env.NARRASTAGE_ALLOWED_ORIGINS ?? "").split(",").map((origin) => origin.trim()).filter(Boolean);
   const allowedOrigins = new Set(configuredOrigins);
   if (input.runtime === "desktop") {
     allowedOrigins.add("null");
@@ -282263,7 +282309,7 @@ function agentUserContent(text2, attachments) {
       data,
       mediaType: attachment.mediaType,
       filename: attachment.filename,
-      ...attachment.source.type === "inline" && attachment.detail ? { providerOptions: { toonflow: { imageDetail: attachment.detail } } } : {}
+      ...attachment.source.type === "inline" && attachment.detail ? { providerOptions: { narrastage: { imageDetail: attachment.detail } } } : {}
     });
   }
   return content;

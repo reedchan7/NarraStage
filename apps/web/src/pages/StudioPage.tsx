@@ -50,7 +50,7 @@ export function StudioPage() {
       <div className="page-frame studio-placeholder">
         <header className="page-header">
           <div>
-            <p className="eyebrow">TOONFLOW / STUDIO</p>
+            <p className="eyebrow">NARRASTAGE / STUDIO</p>
             <h1>制作台</h1>
             <p>先从项目库选择一部作品。</p>
           </div>

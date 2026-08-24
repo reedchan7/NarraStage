@@ -6,7 +6,7 @@ export function ProjectRequired({ surface }: { surface: string }) {
     <div className="page-frame">
       <header className="page-header">
         <div>
-          <p className="eyebrow">TOONFLOW / {surface.toUpperCase()}</p>
+          <p className="eyebrow">NARRASTAGE / {surface.toUpperCase()}</p>
           <h1>{surface}</h1>
           <p>先选择一个项目，再进入这条制作路径。</p>
         </div>

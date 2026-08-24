@@ -34,7 +34,7 @@ describe("project image offering persistence", () => {
       imageOfferingId: offeringId,
     });
     await expect(
-      persistProjectImageOffering(database, 7, 42, "toonflow:legacy-image"),
+      persistProjectImageOffering(database, 7, 42, "narrastage:legacy-image"),
     ).rejects.toThrow("project.image_offering_invalid");
   });
 });

@@ -178,7 +178,7 @@ export function agentUserContent(
       mediaType: attachment.mediaType,
       filename: attachment.filename,
       ...(attachment.source.type === "inline" && attachment.detail
-        ? { providerOptions: { toonflow: { imageDetail: attachment.detail } } }
+        ? { providerOptions: { narrastage: { imageDetail: attachment.detail } } }
         : {}),
     });
   }

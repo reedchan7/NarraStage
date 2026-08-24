@@ -35,7 +35,7 @@ for (const target of releaseTargets) {
 }
 assertReleaseEvidence(builtinCatalog, evidence, {
   now: Date.now(),
-  deploymentRegion: process.env.TOONFLOW_DEPLOYMENT_REGION ?? "global",
+  deploymentRegion: process.env.NARRASTAGE_DEPLOYMENT_REGION ?? "global",
   adapterManifestDigests: await adapterManifestDigests(root),
   acceptanceSuiteDigests: await acceptanceSuiteDigests(root),
   liveReportDigests: await liveReportDigests(root),

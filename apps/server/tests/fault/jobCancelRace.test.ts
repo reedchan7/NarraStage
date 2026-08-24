@@ -16,7 +16,7 @@ afterEach(async () => {
 });
 
 test("preserves provider success when cancellation loses the completion race", async () => {
-  const directory = await mkdtemp(path.join(os.tmpdir(), "toonflow-cancel-race-"));
+  const directory = await mkdtemp(path.join(os.tmpdir(), "narrastage-cancel-race-"));
   directories.push(directory);
   const database = knex({
     client: "sqlite3",

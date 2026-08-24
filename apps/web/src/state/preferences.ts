@@ -24,7 +24,7 @@ export const usePreferences = create<PreferenceState>()(
       setLocale: (locale) => set({ locale }),
     }),
     {
-      name: "toonflow.preferences.v2",
+      name: "narrastage.preferences.v2",
       version: 3,
       migrate: (persistedState) => {
         const state = persistedState as Partial<PreferenceState>;

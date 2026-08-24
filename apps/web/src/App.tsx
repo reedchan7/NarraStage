@@ -40,7 +40,7 @@ function LoginRoute() {
 }
 
 export function App() {
-  const isDesktop = Boolean(window.toonflowWindow);
+  const isDesktop = Boolean(window.narrastageWindow);
   return (
     <QueryClientProvider client={queryClient}>
       <DesktopTitlebar />

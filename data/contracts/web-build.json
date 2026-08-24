@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
-  "backendRevision": "content-3bb04efcf9b44337699ad9f606915ab64eea7fa5+tree.3bb04efcf9b44337",
-  "webRevision": "content-f30a498da9887442b81127eb233cbe6583dcb4d6+tree.f30a498da9887442",
+  "backendRevision": "content-5e1c8b4321ae471baa1b5b82ff214d9de4e96390+tree.5e1c8b4321ae471b",
+  "webRevision": "content-3e07b550707125f7b6172578e342ed4d7b71486e+tree.3e07b550707125f7",
   "contractVersion": "2.0.0",
-  "openapiSha256": "9c9a002e2c1f79dd632eca072e4b34a83b99258d309a9f6315755bcf30ab62f1",
+  "openapiSha256": "d6c467c6efc446ca9d864e09ad278f8096ee3fb229e38ed0c250a200fb74a2ea",
   "supportedContractRange": "^2.0.0",
-  "generatedClientSha256": "250581671307236fdabb924aaa5b23d1871104eaaca6b550033112b69ad63241",
-  "dependencyLockSha256": "c8d4a0218ac7bdae71940c116f731c2b7d1b05f5e33d613aa15c05b239d0eb79",
-  "webBundleSha256": "b1e2592260c010535dc87deb2e71bdce4ccd714948c13fc733e4f5419848a863"
+  "generatedClientSha256": "d1f7de7b213e41eb11fea8644502f89584a7c2afa3e83dfc7eb187fd6c17a474",
+  "dependencyLockSha256": "000aad4855be701ade4c5df5b31d3a3b73f2273c629191e46319e2727f5dfd19",
+  "webBundleSha256": "60bf4f81b396c7c903620b6f0e354105b0f5d4852beafbac45b56cd0954aff72"
 }

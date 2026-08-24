@@ -23,12 +23,12 @@ const [bundle, lockfile] = await Promise.all([
 
 const metadata = {
   schemaVersion: 1,
-  backendRevision: required("TOONFLOW_BACKEND_REVISION"),
-  webRevision: required("TOONFLOW_WEB_REVISION"),
-  contractVersion: required("TOONFLOW_CONTRACT_VERSION"),
-  openapiSha256: required("TOONFLOW_OPENAPI_SHA256"),
-  supportedContractRange: required("TOONFLOW_SUPPORTED_CONTRACT_RANGE"),
-  generatedClientSha256: required("TOONFLOW_GENERATED_CLIENT_SHA256"),
+  backendRevision: required("NARRASTAGE_BACKEND_REVISION"),
+  webRevision: required("NARRASTAGE_WEB_REVISION"),
+  contractVersion: required("NARRASTAGE_CONTRACT_VERSION"),
+  openapiSha256: required("NARRASTAGE_OPENAPI_SHA256"),
+  supportedContractRange: required("NARRASTAGE_SUPPORTED_CONTRACT_RANGE"),
+  generatedClientSha256: required("NARRASTAGE_GENERATED_CLIENT_SHA256"),
   dependencyLockSha256: sha256(lockfile),
   webBundleSha256: sha256(bundle),
 };

@@ -353,9 +353,9 @@ async function main(): Promise<void> {
   }
 
   const decisionsPath = path.resolve(requiredArgument("--decisions"));
-  const reviewerPrivateKeyPem = process.env.TOONFLOW_REVIEWER_PRIVATE_KEY_PEM;
+  const reviewerPrivateKeyPem = process.env.NARRASTAGE_REVIEWER_PRIVATE_KEY_PEM;
   if (!reviewerPrivateKeyPem?.trim()) {
-    throw new Error("live.review_environment_required:TOONFLOW_REVIEWER_PRIVATE_KEY_PEM");
+    throw new Error("live.review_environment_required:NARRASTAGE_REVIEWER_PRIVATE_KEY_PEM");
   }
   if (path.basename(outputPath) !== `${report.runId}.json`) {
     throw new Error("live.review_output_filename_mismatch");

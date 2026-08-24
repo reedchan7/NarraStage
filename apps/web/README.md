@@ -1,6 +1,6 @@
-# Toonflow Web
+# NarraStage Web
 
-Toonflow 的仓库内置 Web 客户端。它与 `apps/server`、`apps/desktop` 和 `packages/contracts` 共用一个 Bun workspace、TypeScript 版本和依赖锁，不再依赖外部前端仓库。
+NarraStage 的仓库内置 Web 客户端。它与 `apps/server`、`apps/desktop` 和 `packages/contracts` 共用一个 Bun workspace、TypeScript 版本和依赖锁，不再依赖外部前端仓库。
 
 ## 技术栈
 
@@ -12,7 +12,7 @@ Toonflow 的仓库内置 Web 客户端。它与 `apps/server`、`apps/desktop` �
 - TypeScript 7
 - Vitest 4、Testing Library
 
-模型服务密钥不进入 HTTP API、Web storage 或 Query cache。桌面客户端通过 Electron preload 的 `toonflowCredentials` 能力将密钥写入操作系统安全存储；普通浏览器只显示脱敏状态。
+模型服务密钥不进入 HTTP API、Web storage 或 Query cache。桌面客户端通过 Electron preload 的 `narrastageCredentials` 能力将密钥写入操作系统安全存储；普通浏览器只显示脱敏状态。
 
 ## 开发
 

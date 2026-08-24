@@ -5,9 +5,9 @@ import jwt from "jsonwebtoken";
 import { io } from "socket.io-client";
 
 const repositoryRoot = path.resolve(import.meta.dir, "..");
-const temporaryRoot = await mkdtemp(path.join(tmpdir(), "toonflow-server-probe."));
+const temporaryRoot = await mkdtemp(path.join(tmpdir(), "narrastage-server-probe."));
 const temporaryData = path.join(temporaryRoot, "data");
-const previousDataDirectory = process.env.TOONFLOW_DATA_DIR;
+const previousDataDirectory = process.env.NARRASTAGE_DATA_DIR;
 const previousNodeEnvironment = process.env.NODE_ENV;
 let started = false;
 let destroyDatabase: (() => Promise<void>) | undefined;
@@ -15,7 +15,7 @@ let probeSocket: ReturnType<typeof io> | undefined;
 
 try {
   await cp(path.join(repositoryRoot, "data"), temporaryData, { recursive: true });
-  process.env.TOONFLOW_DATA_DIR = temporaryData;
+  process.env.NARRASTAGE_DATA_DIR = temporaryData;
   process.env.NODE_ENV = "prod";
 
   const server = await import("@/app");
@@ -46,7 +46,7 @@ try {
   });
   if (blockedOrigin.status !== 403) throw new Error("runtime.probe_origin_rejection");
   const renderer = await fetch(`http://localhost:${port}/`);
-  if (renderer.status !== 200 || !(await renderer.text()).includes("<title>Toonflow</title>")) {
+  if (renderer.status !== 200 || !(await renderer.text()).includes("<title>NarraStage</title>")) {
     throw new Error("runtime.probe_renderer_missing");
   }
   const tokenSetting = await db("o_setting").where("key", "tokenKey").select("value").first();
@@ -89,8 +89,8 @@ try {
     await server.closeServe().catch(() => undefined);
   }
   await destroyDatabase?.();
-  if (previousDataDirectory === undefined) delete process.env.TOONFLOW_DATA_DIR;
-  else process.env.TOONFLOW_DATA_DIR = previousDataDirectory;
+  if (previousDataDirectory === undefined) delete process.env.NARRASTAGE_DATA_DIR;
+  else process.env.NARRASTAGE_DATA_DIR = previousDataDirectory;
   if (previousNodeEnvironment === undefined) delete process.env.NODE_ENV;
   else process.env.NODE_ENV = previousNodeEnvironment;
   await rm(temporaryRoot, { recursive: true, force: true });

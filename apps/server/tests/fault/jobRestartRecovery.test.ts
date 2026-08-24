@@ -18,7 +18,7 @@ afterEach(async () => {
 });
 
 test("restores a persisted provider handle, polls to owned storage, and never creates twice", async () => {
-  const directory = await mkdtemp(path.join(os.tmpdir(), "toonflow-restart-"));
+  const directory = await mkdtemp(path.join(os.tmpdir(), "narrastage-restart-"));
   directories.push(directory);
   const database = knex({
     client: "sqlite3",

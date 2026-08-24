@@ -1,6 +1,6 @@
-# Toonflow Web
+# NarraStage Web
 
-The repository-owned Toonflow Web client. It shares one Bun workspace, TypeScript version, dependency lock, API contract, and release provenance with `apps/server`, `apps/desktop`, and `packages/contracts`.
+The repository-owned NarraStage Web client. It shares one Bun workspace, TypeScript version, dependency lock, API contract, and release provenance with `apps/server`, `apps/desktop`, and `packages/contracts`.
 
 ## Stack
 
@@ -12,7 +12,7 @@ The repository-owned Toonflow Web client. It shares one Bun workspace, TypeScrip
 - TypeScript 7
 - Vitest 4 and Testing Library
 
-Provider secrets never enter the HTTP API, Web storage, or Query cache. Toonflow Desktop exposes a narrow `toonflowCredentials` preload bridge backed by operating-system secure storage; a regular browser can only read redacted provider status.
+Provider secrets never enter the HTTP API, Web storage, or Query cache. NarraStage Desktop exposes a narrow `narrastageCredentials` preload bridge backed by operating-system secure storage; a regular browser can only read redacted provider status.
 
 ## Development
 

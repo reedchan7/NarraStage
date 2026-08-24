@@ -46,7 +46,7 @@ describe("packaged contract provenance", () => {
     );
 
     expect(packageSource).toContain("generated Web API client does not match");
-    expect(packageSource).toContain("VITE_TOONFLOW_OPENAPI_SHA256");
+    expect(packageSource).toContain("VITE_NARRASTAGE_OPENAPI_SHA256");
     expect(packageSource).toContain("createBuildManifest");
     expect(packageSource).toContain("rename(temporaryManifest, targetManifest)");
   });
@@ -64,9 +64,9 @@ describe("packaged contract provenance", () => {
     expect(mainSource).toContain("randomPort: !process.env.VITE_DEV");
     expect(mainSource).toContain("createMainWindow(activeRuntimePort)");
     for (const channel of [
-      "toonflow:window:minimize",
-      "toonflow:window:toggle-maximize",
-      "toonflow:window:close",
+      "narrastage:window:minimize",
+      "narrastage:window:toggle-maximize",
+      "narrastage:window:close",
     ]) {
       expect(mainSource).toMatch(
         new RegExp(

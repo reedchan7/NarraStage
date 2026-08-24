@@ -12,10 +12,10 @@ afterEach(async () => {
 
 describe("release artifact secret scan", () => {
   test("finds configured values across stream chunk boundaries without loading the artifact", async () => {
-    const directory = await mkdtemp(path.join(os.tmpdir(), "toonflow-secret-scan-"));
+    const directory = await mkdtemp(path.join(os.tmpdir(), "narrastage-secret-scan-"));
     directories.push(directory);
     const filePath = path.join(directory, "large.bin");
-    const secret = "toonflow-boundary-secret-123456789";
+    const secret = "narrastage-boundary-secret-123456789";
     await writeFile(
       filePath,
       Buffer.concat([Buffer.alloc(1024 * 1024 - 7, 65), Buffer.from(secret), Buffer.alloc(32, 66)]),
@@ -26,7 +26,7 @@ describe("release artifact secret scan", () => {
   });
 
   test("detects common provider key formats even when the exact value was not configured", async () => {
-    const directory = await mkdtemp(path.join(os.tmpdir(), "toonflow-secret-scan-"));
+    const directory = await mkdtemp(path.join(os.tmpdir(), "narrastage-secret-scan-"));
     directories.push(directory);
     const filePath = path.join(directory, "bundle.js");
     await writeFile(filePath, `const leaked = "AIza${"A".repeat(35)}";`);
@@ -34,7 +34,7 @@ describe("release artifact secret scan", () => {
   });
 
   test("does not classify ordinary symbols and CSS identifiers as provider keys", async () => {
-    const directory = await mkdtemp(path.join(os.tmpdir(), "toonflow-secret-scan-"));
+    const directory = await mkdtemp(path.join(os.tmpdir(), "narrastage-secret-scan-"));
     directories.push(directory);
     const filePath = path.join(directory, "app.asar");
     await writeFile(filePath, "mask-image-linear-from-pos sk-image-linear-from-pos");
@@ -50,7 +50,7 @@ describe("release artifact secret scan", () => {
       "FAL_API_KEY",
       "GEMINI_API_KEY",
       "GOOGLE_GENERATIVE_AI_API_KEY",
-      "TOONFLOW_SECRET_SCAN_CANARY",
+      "NARRASTAGE_SECRET_SCAN_CANARY",
     ]) {
       delete env[name];
     }

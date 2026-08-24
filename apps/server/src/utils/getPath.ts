@@ -2,7 +2,10 @@ import path from "node:path";
 import isPathInside from "is-path-inside";
 
 export default (fileName?: string[] | string) => {
-  const basePath = process.env.TOONFLOW_DATA_DIR ?? path.join(process.cwd(), "data");
+  const basePath =
+    process.env.NARRASTAGE_DATA_DIR ??
+    process.env.TOONFLOW_DATA_DIR ??
+    path.join(process.cwd(), "data");
   if (fileName) {
     let dbPath: string;
     if (Array.isArray(fileName)) {

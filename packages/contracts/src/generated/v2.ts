@@ -1472,7 +1472,7 @@ export interface operations {
   uploadOwnedMediaAsset: {
     parameters: {
       query?: never;
-      header: { "X-Toonflow-Media-Type": string; "X-Toonflow-Filename": string };
+      header: { "X-NarraStage-Media-Type": string; "X-NarraStage-Filename": string };
       path?: never;
       cookie?: never;
     };

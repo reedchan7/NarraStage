@@ -28,7 +28,7 @@ afterEach(async () => {
 });
 
 test("job API deduplicates retries and returns the same snapshot after runtime restart", async () => {
-  const directory = await mkdtemp(path.join(os.tmpdir(), "toonflow-job-api-"));
+  const directory = await mkdtemp(path.join(os.tmpdir(), "narrastage-job-api-"));
   directories.push(directory);
   const database = knex({
     client: "sqlite3",

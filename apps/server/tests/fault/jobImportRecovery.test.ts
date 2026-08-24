@@ -18,7 +18,7 @@ afterEach(async () => {
 });
 
 test("restarts a transient owned-storage import without polling or submitting the provider again", async () => {
-  const directory = await mkdtemp(path.join(os.tmpdir(), "toonflow-import-recovery-"));
+  const directory = await mkdtemp(path.join(os.tmpdir(), "narrastage-import-recovery-"));
   directories.push(directory);
   const database = knex({
     client: "sqlite3",
@@ -89,7 +89,7 @@ test("restarts a transient owned-storage import without polling or submitting th
 });
 
 test("moves byte outputs into durable import state before owned storage can fail", async () => {
-  const directory = await mkdtemp(path.join(os.tmpdir(), "toonflow-byte-import-recovery-"));
+  const directory = await mkdtemp(path.join(os.tmpdir(), "narrastage-byte-import-recovery-"));
   directories.push(directory);
   const database = knex({
     client: "sqlite3",

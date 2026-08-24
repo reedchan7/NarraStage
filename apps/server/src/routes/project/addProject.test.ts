@@ -9,10 +9,12 @@ import { generationSelectionColumns } from "@/providers/catalog/generationSelect
 
 describe("project creation defaults", () => {
   test("accepts consumable provider:model identities and production image qualities", () => {
-    expect(projectModelIdSchema.parse("toonflow:doubao-seedream-5.0-Lite")).toBe(
-      "toonflow:doubao-seedream-5.0-Lite",
+    expect(projectModelIdSchema.parse("narrastage:doubao-seedream-5.0-Lite")).toBe(
+      "narrastage:doubao-seedream-5.0-Lite",
     );
-    expect(projectModelIdSchema.parse("toonflow:Kling-Video-O1")).toBe("toonflow:Kling-Video-O1");
+    expect(projectModelIdSchema.parse("narrastage:Kling-Video-O1")).toBe(
+      "narrastage:Kling-Video-O1",
+    );
     expect(projectImageQualitySchema.parse("1K")).toBe("1K");
   });
 
@@ -26,7 +28,7 @@ describe("project creation defaults", () => {
     expect(projectImageOfferingIdSchema.parse("google:nano-banana-2-lite:official")).toBe(
       "google:nano-banana-2-lite:official",
     );
-    expect(() => projectImageOfferingIdSchema.parse("toonflow:legacy-image")).toThrow();
+    expect(() => projectImageOfferingIdSchema.parse("narrastage:legacy-image")).toThrow();
     expect(projectModelIdSchema.parse("grsai:nano-banana-2")).toBe("grsai:nano-banana-2");
     expect(
       generationSelectionColumns({

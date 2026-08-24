@@ -5,6 +5,7 @@ import { Knex } from "knex";
 import db from "@/utils/db";
 import { transform } from "sucrase";
 import rawVendorData from "@/lib/vendor";
+import { migrateLegacyBrandData } from "@/lib/brandMigration";
 
 const vendorData = rawVendorData as Record<string, string>;
 
@@ -68,6 +69,9 @@ export default async (knex: Knex): Promise<void> => {
   await addColumn("o_assets", "audioBindState", "integer");
   await addColumn("o_modelPrompt", "fileName", "string");
   await addColumn("o_modelPrompt", "path", "string");
+
+  await migrateLegacyBrandData(knex);
+
   const vendorDataSelect = await u
     .db("o_vendorConfig")
     .whereIn("id", ["deepseek", "atlascloud"])
@@ -201,9 +205,9 @@ export default async (knex: Knex): Promise<void> => {
   if (Number(minimaxVer) < 2.1) {
     u.vendor.writeCode("minimax", vendorData["minimax.ts"]);
   }
-  const toonflowVer = await u.vendor.getVendor("toonflow").version;
-  if (Number(toonflowVer) < 3.2) {
-    u.vendor.writeCode("toonflow", vendorData["toonflow.ts"]);
+  const narrastageVer = await u.vendor.getVendor("narrastage").version;
+  if (Number(narrastageVer) < 3.2) {
+    u.vendor.writeCode("narrastage", vendorData["narrastage.ts"]);
   }
 };
 
@@ -217,7 +221,7 @@ async function tempOnsert(tsCode: string) {
     id: vendor.id,
     inputValues: JSON.stringify(vendor.inputValues ?? {}),
     models: JSON.stringify([]),
-    enable: vendor.id == "toonflow" ? 1 : 0,
+    enable: vendor.id == "narrastage" ? 1 : 0,
   });
   u.vendor.writeCode(vendor.id, tsCode);
 }

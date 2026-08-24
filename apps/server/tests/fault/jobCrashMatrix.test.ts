@@ -19,7 +19,7 @@ afterEach(async () => {
 
 describe("paid submission crash matrix", () => {
   test("never submits twice after a crash between provider acceptance and handle persistence", async () => {
-    const directory = await mkdtemp(path.join(os.tmpdir(), "toonflow-crash-"));
+    const directory = await mkdtemp(path.join(os.tmpdir(), "narrastage-crash-"));
     directories.push(directory);
     const database = knex({
       client: "sqlite3",
@@ -82,7 +82,7 @@ describe("paid submission crash matrix", () => {
   });
 
   test("records definitive provider rejection instead of inventing an unknown paid submission", async () => {
-    const directory = await mkdtemp(path.join(os.tmpdir(), "toonflow-rejected-"));
+    const directory = await mkdtemp(path.join(os.tmpdir(), "narrastage-rejected-"));
     directories.push(directory);
     const database = knex({
       client: "sqlite3",
@@ -144,7 +144,7 @@ describe("paid submission crash matrix", () => {
   });
 
   test("commits a synchronous image response and owned output as one durable result", async () => {
-    const directory = await mkdtemp(path.join(os.tmpdir(), "toonflow-image-sync-"));
+    const directory = await mkdtemp(path.join(os.tmpdir(), "narrastage-image-sync-"));
     directories.push(directory);
     const database = knex({
       client: "sqlite3",
@@ -221,7 +221,7 @@ describe("paid submission crash matrix", () => {
   });
 
   test("never retries a synchronous image after the provider returned but before persistence", async () => {
-    const directory = await mkdtemp(path.join(os.tmpdir(), "toonflow-image-crash-"));
+    const directory = await mkdtemp(path.join(os.tmpdir(), "narrastage-image-crash-"));
     directories.push(directory);
     const database = knex({
       client: "sqlite3",

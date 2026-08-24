@@ -53,7 +53,7 @@ export class PinnedHttpTransport implements OutboundTransport {
           headers: {
             accept: "image/*,video/*,audio/*,application/pdf,application/octet-stream",
             "accept-encoding": "br,gzip,deflate,identity",
-            "user-agent": "Toonflow-AssetGateway/2",
+            "user-agent": "NarraStage-AssetGateway/2",
             ...headers,
           },
         },

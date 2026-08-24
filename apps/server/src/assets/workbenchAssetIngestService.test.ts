@@ -13,7 +13,7 @@ afterEach(async () => {
 });
 
 async function setup() {
-  const directory = await mkdtemp(path.join(os.tmpdir(), "toonflow-workbench-assets-"));
+  const directory = await mkdtemp(path.join(os.tmpdir(), "narrastage-workbench-assets-"));
   directories.push(directory);
   const database = knex({
     client: "sqlite3",

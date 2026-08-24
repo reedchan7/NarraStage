@@ -14,7 +14,7 @@ afterEach(async () => {
 });
 
 test("only one runner owns a job until its lease expires", async () => {
-  const directory = await mkdtemp(path.join(os.tmpdir(), "toonflow-lease-"));
+  const directory = await mkdtemp(path.join(os.tmpdir(), "narrastage-lease-"));
   directories.push(directory);
   const database = knex({
     client: "sqlite3",

@@ -1,5 +1,5 @@
 {
-  "name": "@toonflow/server",
+  "name": "@narrastage/server",
   "version": "2.1.0",
   "private": true,
   "type": "module",

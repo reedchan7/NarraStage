@@ -14,7 +14,7 @@ afterEach(async () => {
 });
 
 test("materializes a successful owned image into asset history exactly once", async () => {
-  const directory = await mkdtemp(path.join(os.tmpdir(), "toonflow-asset-materialize-"));
+  const directory = await mkdtemp(path.join(os.tmpdir(), "narrastage-asset-materialize-"));
   directories.push(directory);
   const database = knex({
     client: "sqlite3",

@@ -42,7 +42,7 @@ export interface OfferingAvailabilityPolicy {
 
 const defaultAvailabilityPolicy: OfferingAvailabilityPolicy = {
   requiredEvidence: process.env.NODE_ENV === "prod" ? "product_accepted" : "contract_verified",
-  deploymentRegion: process.env.TOONFLOW_DEPLOYMENT_REGION ?? "global",
+  deploymentRegion: process.env.NARRASTAGE_DEPLOYMENT_REGION ?? "global",
   maximumEvidenceAgeMs: 30 * 24 * 60 * 60 * 1_000,
   now: Date.now,
   providerHealth: (offeringId) => ({

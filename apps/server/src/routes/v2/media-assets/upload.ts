@@ -8,8 +8,8 @@ const maximumUploadBytes = 2 * 1024 * 1024 * 1024;
 
 router.put("/", async (req, res) => {
   const contentLength = Number(req.headers["content-length"]);
-  const mediaType = req.headers["x-toonflow-media-type"];
-  const encodedFilename = req.headers["x-toonflow-filename"];
+  const mediaType = req.headers["x-narrastage-media-type"];
+  const encodedFilename = req.headers["x-narrastage-filename"];
   if (
     !Number.isSafeInteger(contentLength) ||
     contentLength < 1 ||

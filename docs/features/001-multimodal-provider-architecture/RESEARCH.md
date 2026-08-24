@@ -28,7 +28,7 @@
 - 当前 app 仓库只含 `data/web/index.html` 等编译产物；Git 历史里没有可维护的 Web 源码。直接修改单行 bundle 不满足可维护性要求。
 - 上游公开源码仓库为 [`HBAI-Ltd/Toonflow-web`](https://github.com/HBAI-Ltd/Toonflow-web)，本次核验 revision 为 `9c4cb0ec7d4f6b4067c7768e2df8cdc7f8587214`。它是 Vue 3/Vite 项目，当前没有自动化 test script。
 - `modelSelect.vue` 只理解 text/image/video 和 `${vendorId}:${modelName}`；`vendorConfig.vue` 硬编码旧 mode、音频与时长/分辨率表，并把 `inputValues` 整体回传；`stores/video.ts` 使用旧提交接口和客户端轮询。
-- 因此前端工作必须在 Toonflow-web 源码仓库完成，再由可复现构建产出 app 的 `data/web`；不能仅改后端，也不能手补构建产物。
+- 因此前端工作必须在 NarraStage-web 源码仓库完成，再由可复现构建产出 app 的 `data/web`；不能仅改后端，也不能手补构建产物。
 
 ### Electron
 
@@ -42,7 +42,7 @@
 ### DeepSeek V4 and Vision
 
 - 官方模型目录当前列出 `deepseek-v4-flash`、`deepseek-v4-pro` 与 2026-08-21 新增的实验模型 `deepseek-v4-flash-vision-exp`。后者接收 text + image，输出 text。
-- 支持 JPEG/PNG/GIF/WebP。Chat Completions 的图片限 user 消息；Responses API 还允许 developer message 和 tool output image。Toonflow 首期 UI 选择更窄的 user-attachment 产品约束。输入可用 base64 data URL、外部 HTTPS URL、Files API `file_id`/`file_data`；`detail` 支持 low/high/original/auto。
+- 支持 JPEG/PNG/GIF/WebP。Chat Completions 的图片限 user 消息；Responses API 还允许 developer message 和 tool output image。NarraStage 首期 UI 选择更窄的 user-attachment 产品约束。输入可用 base64 data URL、外部 HTTPS URL、Files API `file_id`/`file_data`；`detail` 支持 low/high/original/auto。
 - 主要限制：请求体 48 MiB；外链单图 32 MiB、URL 8192 字符；Files 单图 64 MiB；单请求最多 600 图；含 Files 时图片总量最高 200 MiB。外部 URL 是不可信输入，Files 是有生命周期的 provider asset。
 - 视觉模型同时覆盖 OpenAI-compatible Chat Completions、Responses 与 Anthropic Messages。产品 contract 不应绑定其中一种 wire shape。
 - `@ai-sdk/deepseek@3.0.31` 已包含模型 ID、thinking/reasoning effort 和 Files。正式 adapter 优先复用其成熟实现，并以 contract tests 锁定 reasoning/tool/multimodal round trip；不把 SDK 类型直接暴露给产品域。
@@ -61,7 +61,7 @@ Sources: [H3 guide](https://platform.minimax.io/docs/guides/video-generation), [
 ### fal.ai as aggregator
 
 - fal 是商业/API 执行平台，不是其托管模型的原始厂商。H3 在 fal 上分成 text-to-video、image-to-video、reference-to-video endpoint；它们共享 fal queue/storage/auth，但输入 schema 和平台选项不同。
-- `@fal-ai/client` 提供 storage upload、queue submit/status/result/cancel 和 webhook。长任务的 `request_id` 必须持久化；结果 URL 可能过期，需在成功后导入 Toonflow-owned storage。
+- `@fal-ai/client` 提供 storage upload、queue submit/status/result/cancel 和 webhook。长任务的 `request_id` 必须持久化；结果 URL 可能过期，需在成功后导入 NarraStage-owned storage。
 - fal 官方明确要求浏览器/GUI 不暴露 `FAL_KEY`，应由服务端代理。运行中取消是 best effort，job 必须保留正交的 cancel intent，不能把本地停止等待当作远端已取消。
 - 正确抽象是：模型归属与执行渠道分离。Canonical model `minimax:h3` 可有 Provider `minimax` + AccessChannel `official` 与 Provider `fal` + AccessChannel `aggregator` 两个 offering；fal endpoint 是 offering 内的 operation。Provider ID 不使用 `minimax-direct`，UI 可显示“MiniMax Official”。
 - fal 不应成为无条件全局主入口，也不应因“官方”标签便永久降级为备选。策略先过滤能力、凭据、地区、生命周期、健康和验收证据，再根据完整请求价格、延迟和数据政策选路。这既允许 fal 成为 H3 当前主入口，又不让模型语义、前端 ID 和数据迁移绑定 fal。
@@ -80,10 +80,10 @@ Sources: [MiniMax 国内按量计费](https://platform.minimaxi.com/docs/guides/
 
 ### Google Gemini
 
-- OpenAI compatibility 适合迁移已有 client；Google 对新项目建议使用原生 Gemini API。Toonflow 的正式 Google provider 不应建立在 compatibility endpoint 上。
+- OpenAI compatibility 适合迁移已有 client；Google 对新项目建议使用原生 Gemini API。NarraStage 的正式 Google provider 不应建立在 compatibility endpoint 上。
 - 当前一等候选包括：`gemini-3.7-flash`（GA，text/image/video/audio/PDF → text）、`gemini-3.1-flash-image`（Nano Banana 2）、`gemini-3.1-flash-lite-image`、`gemini-3-pro-image`、`gemini-omni-flash-preview` 与 Veo 3.1 full/fast/lite preview 系列。旧 Imagen 与 Veo 2/3 已进入或完成退役窗口，证明静态永久模型表不可行。
-- Files API 单文件最高 2 GB、项目 20 GB、48 小时自动删除；它是 provider asset，不是 Toonflow 永久资产。Interactions、Grounding/Search、Live 和媒体生成必须作为独立 capability 声明，不能因同属 Gemini 就自动视为支持。Omni 的继续编辑使用 `previous_interaction_id`，因此 Toonflow 以已完成父 job 表达 provider-state continuation，不向 renderer 暴露原始 state token。
-- 当前 Omni 视频限制为 3–10 秒、720P、16:9/9:16；不接受音频参考，多视频参考不支持，文档声明的视频参考表面仍有已知不可用限制。Toonflow 只启用已验证可表达的 text/image 与有状态继续编辑模式，对这些缺口 fail closed。
+- Files API 单文件最高 2 GB、项目 20 GB、48 小时自动删除；它是 provider asset，不是 NarraStage 永久资产。Interactions、Grounding/Search、Live 和媒体生成必须作为独立 capability 声明，不能因同属 Gemini 就自动视为支持。Omni 的继续编辑使用 `previous_interaction_id`，因此 NarraStage 以已完成父 job 表达 provider-state continuation，不向 renderer 暴露原始 state token。
+- 当前 Omni 视频限制为 3–10 秒、720P、16:9/9:16；不接受音频参考，多视频参考不支持，文档声明的视频参考表面仍有已知不可用限制。NarraStage 只启用已验证可表达的 text/image 与有状态继续编辑模式，对这些缺口 fail closed。
 - 当前 `@ai-sdk/google@4.0.50` 源码已提供 language/image/video/speech/files/interactions/realtime/tools。优先复用；只有官方新能力尚未暴露时才使用窄 `@google/genai` escape hatch。
 
 Sources: [current models](https://ai.google.dev/gemini-api/docs/models), [Gemini 3.7 Flash](https://ai.google.dev/gemini-api/docs/latest-model), [Nano Banana](https://ai.google.dev/gemini-api/docs/image-generation), [Veo](https://ai.google.dev/gemini-api/docs/veo), [Gemini Omni](https://ai.google.dev/gemini-api/docs/omni), [Files](https://ai.google.dev/gemini-api/docs/generate-content/files), [Interactions](https://ai.google.dev/gemini-api/docs/interactions-overview), [deprecations](https://ai.google.dev/gemini-api/docs/deprecations).
@@ -108,7 +108,7 @@ Sources: [AI SDK provider development](https://github.com/vercel/ai/blob/main/co
 ## Credential and live-test inventory
 
 - 只做存在性核验，未输出或复制值：当前进程有 `DEEPSEEK_API_KEY`、`GEMINI_API_KEY`。
-- KnipCut 的权限受限本地配置中，fal provider credential 非空；实现阶段仅通过临时进程注入使用，不复制进源码、fixture、日志或 Toonflow 数据库。
+- KnipCut 的权限受限本地配置中，fal provider credential 非空；实现阶段仅通过临时进程注入使用，不复制进源码、fixture、日志或 NarraStage 数据库。
 - `MINIMAX_API_KEY` 当前缺失。MiniMax official adapter 先用官方 schema/录制的脱敏响应/mock server 完成全部自动化合同；H3 真实链路先通过 fal offering 验收，official live suite 保持 credential-gated。
 - 所有付费 live suites 必须设置单次预算上限并串行执行；fixtures 在录制时自动清理 authorization、request payload 中的敏感素材 URL 和 provider identifiers。
 
@@ -116,8 +116,8 @@ Sources: [AI SDK provider development](https://github.com/vercel/ai/blob/main/co
 
 | Area | Decision | Reason |
 |---|---|---|
-| Language/image common protocol | 复用 AI SDK，外包一层 Toonflow contract | 已覆盖 streaming/tools/multimodal/provider metadata，且能屏蔽 experimental API 漂移。 |
-| DeepSeek/Google | 使用现有官方 AI SDK provider | 减少手写 wire protocol；以 Toonflow contract tests 固定语义。 |
+| Language/image common protocol | 复用 AI SDK，外包一层 NarraStage contract | 已覆盖 streaming/tools/multimodal/provider metadata，且能屏蔽 experimental API 漂移。 |
+| DeepSeek/Google | 使用现有官方 AI SDK provider | 减少手写 wire protocol；以 NarraStage contract tests 固定语义。 |
 | fal | 增加 `@fal-ai/client` | queue/storage/cancel 是平台通用能力，直接复用维护价值最高。 |
 | MiniMax H3 official | 自建窄 v2 adapter | 当前依赖没有完整表达 role-tagged H3 与取消协议。 |
 | Durable jobs | SQLite-backed runner | 匹配本地 Electron，不引入 Temporal；operation 保持可迁移。 |
@@ -128,5 +128,5 @@ Sources: [AI SDK provider development](https://github.com/vercel/ai/blob/main/co
 ## Remaining uncertainty
 
 - 上游模型价格、配额和 preview 生命周期会变化；curated catalog 需要 `lastVerifiedAt`、lifecycle 和启动时非权威探测，不能自动把新模型暴露给生产用户。
-- `@ai-sdk/google` video/interactions 与 AI SDK VideoModel V4 仍含 experimental 表面；必须用 Toonflow 稳定 contract 隔离。
+- `@ai-sdk/google` video/interactions 与 AI SDK VideoModel V4 仍含 experimental 表面；必须用 NarraStage 稳定 contract 隔离。
 - MiniMax official 在获得 Key 前不能声称 live accepted；产品可显示“adapter ready / credential missing / live unverified”的独立状态。

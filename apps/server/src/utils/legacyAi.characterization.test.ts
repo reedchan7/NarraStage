@@ -4,7 +4,7 @@ import { readFile } from "node:fs/promises";
 const sourcePath = new URL("./ai.ts", import.meta.url);
 
 describe("legacy AI compatibility seam", () => {
-  test("keeps vendor:model lookup and Toonflow-owned save behavior during migration", async () => {
+  test("keeps vendor:model lookup and NarraStage-owned save behavior during migration", async () => {
     const source = await readFile(sourcePath, "utf8");
 
     expect(source).toContain("modelName.split(/:(.+)/)");

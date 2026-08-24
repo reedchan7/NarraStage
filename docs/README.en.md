@@ -1,7 +1,7 @@
-<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=200&section=header&text=Toonflow&fontSize=90&fontColor=ffffff&animation=fadeIn&fontAlignY=50" width="100%"/>
+<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=200&section=header&text=NarraStage&fontSize=90&fontColor=ffffff&animation=fadeIn&fontAlignY=50" width="100%"/>
 
 <p>
-  <a href="https://github.com/reedchan7/Toonflow-app">
+  <a href="https://github.com/reedchan7/NarraStage">
     <img src="https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=github&logoColor=white" alt="GitHub" />
   </a>
 </p>
@@ -18,43 +18,43 @@
 
 <div align="center">
   <p align="center">
-    <img src="./logo.png" alt="Toonflow Logo" height="120"/>
+    <img src="./logo.png" alt="NarraStage Logo" height="120"/>
   </p>
 
   <p align="center">
     <a href="https://git.io/typing-svg" target="_blank">
       <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://readme-typing-svg.demolab.com?font=Fira+Code&size=40&duration=3000&pause=1000&color=FFFFFF&center=true&vCenter=true&width=600&lines=Toonflow;AI+Short+Drama+Factory;Just+a+click%2C+novels+turn+into+episodes+in+seconds!" />
-        <img alt="Typing SVG" src="https://readme-typing-svg.demolab.com?font=Fira+Code&size=40&duration=3000&pause=1000&color=000000&center=true&vCenter=true&width=600&lines=Toonflow;AI+Short+Drama+Factory;Just+a+click%2C+novels+turn+into+episodes+in+seconds!" />
+        <source media="(prefers-color-scheme: dark)" srcset="https://readme-typing-svg.demolab.com?font=Fira+Code&size=40&duration=3000&pause=1000&color=FFFFFF&center=true&vCenter=true&width=600&lines=NarraStage;AI+Short+Drama+Factory;Just+a+click%2C+novels+turn+into+episodes+in+seconds!" />
+        <img alt="Typing SVG" src="https://readme-typing-svg.demolab.com?font=Fira+Code&size=40&duration=3000&pause=1000&color=000000&center=true&vCenter=true&width=600&lines=NarraStage;AI+Short+Drama+Factory;Just+a+click%2C+novels+turn+into+episodes+in+seconds!" />
       </picture>
     </a>
   </p>
 
   <p align="center">
-    <a href="https://github.com/reedchan7/Toonflow-app/stargazers">
-      <img src="https://img.shields.io/github/stars/reedchan7/Toonflow-app?style=for-the-badge&logo=github" alt="Stars Badge" />
+    <a href="https://github.com/reedchan7/NarraStage/stargazers">
+      <img src="https://img.shields.io/github/stars/reedchan7/NarraStage?style=for-the-badge&logo=github" alt="Stars Badge" />
     </a>
     <a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank">
       <img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=for-the-badge" alt="Apache-2.0 License Badge" />
     </a>
-    <a href="https://github.com/reedchan7/Toonflow-app/releases">
-      <img alt="release" src="https://img.shields.io/github/v/release/reedchan7/Toonflow-app?style=for-the-badge" />
+    <a href="https://github.com/reedchan7/NarraStage/releases">
+      <img alt="release" src="https://img.shields.io/github/v/release/reedchan7/NarraStage?style=for-the-badge" />
     </a>
   </p>
   <p align="center">
-    <a href="https://github.com/reedchan7/Toonflow-app/network/members">
-      <img src="https://img.shields.io/github/forks/reedchan7/Toonflow-app?style=for-the-badge&logo=github&color=orange" alt="Forks Badge" />
+    <a href="https://github.com/reedchan7/NarraStage/network/members">
+      <img src="https://img.shields.io/github/forks/reedchan7/NarraStage?style=for-the-badge&logo=github&color=orange" alt="Forks Badge" />
     </a>
   </p>
   <p align="center">
-    <a href="https://github.com/reedchan7/Toonflow-app/issues">
-      <img src="https://img.shields.io/github/issues/reedchan7/Toonflow-app?style=for-the-badge&color=F48D73" alt="Issues" />
+    <a href="https://github.com/reedchan7/NarraStage/issues">
+      <img src="https://img.shields.io/github/issues/reedchan7/NarraStage?style=for-the-badge&color=F48D73" alt="Issues" />
     </a>
-    <a href="https://github.com/reedchan7/Toonflow-app/graphs/contributors">
-      <img src="https://img.shields.io/github/contributors/reedchan7/Toonflow-app?style=for-the-badge&color=2088FF" alt="Contributors" />
+    <a href="https://github.com/reedchan7/NarraStage/graphs/contributors">
+      <img src="https://img.shields.io/github/contributors/reedchan7/NarraStage?style=for-the-badge&color=2088FF" alt="Contributors" />
     </a>
-    <a href="https://github.com/reedchan7/Toonflow-app/commits">
-      <img src="https://img.shields.io/github/last-commit/reedchan7/Toonflow-app?style=for-the-badge&color=blueviolet" alt="Last Commit" />
+    <a href="https://github.com/reedchan7/NarraStage/commits">
+      <img src="https://img.shields.io/github/last-commit/reedchan7/NarraStage?style=for-the-badge&color=blueviolet" alt="Last Commit" />
     </a>
   </p>
   <p align="center">
@@ -64,14 +64,14 @@
     <img src="https://ziadoua.github.io/m3-Markdown-Badges/badges/Electron/electron2.svg" alt="Electron" />
   </p>
   
-  > **Toonflow 2** is a Bun 1.4, TypeScript 7, and Electron 43 AI workstation covering planning, scriptwriting, storyboarding, and final output.
+  > **NarraStage 2** is a Bun 1.4, TypeScript 7, and Electron 43 AI workstation covering planning, scriptwriting, storyboarding, and final output.
 </div>
 
 ---
 
 # 🌐 Multi-language Support
 
-Toonflow supports the following interface languages:
+NarraStage supports the following interface languages:
 
 | Language             | Language              |
 | -------------------- | --------------------- |
@@ -89,7 +89,7 @@ Toonflow supports the following interface languages:
 
 # 🌟 Key Features
 
-Toonflow is an AI workstation designed for short drama production, building a complete closed loop around "Planning → Scriptwriting → Storyboarding → Final Output," supporting a localized, programmable, and continuously iterable production workflow.
+NarraStage is an AI workstation designed for short drama production, building a complete closed loop around "Planning → Scriptwriting → Storyboarding → Final Output," supporting a localized, programmable, and continuously iterable production workflow.
 
 - ✅ **Infinite Canvas Production Workbench**  
   Organize scripts, characters, storyboards, assets, and video nodes in an infinite canvas-like layout, supporting free arrangement, backtracking, and parallel production without linear constraints.
@@ -130,9 +130,9 @@ Toonflow is an AI workstation designed for short drama production, building a co
 ## 📺 Video Tutorial
 
 https://www.bilibili.com/video/BV1oXD7BqEqJ
-[![Toonflow 12-minute Quick Start AI Video](./videoCover.jpg)](https://www.bilibili.com/video/BV1oXD7BqEqJ)
+[![NarraStage 12-minute Quick Start AI Video](./videoCover.jpg)](https://www.bilibili.com/video/BV1oXD7BqEqJ)
 
-**Toonflow 12-minute Quick Start AI Video**
+**NarraStage 12-minute Quick Start AI Video**
 👉 [Click to Watch](https://www.bilibili.com/video/BV1oXD7BqEqJ)
 
 📱 Scan with WeChat to watch
@@ -143,7 +143,7 @@ https://www.bilibili.com/video/BV1oXD7BqEqJ
 
 # 📸 Demo Screenshots & Video
 
-The following screenshots and video are from a short AI drama demo made with Toonflow, completed in about 2 hours, covering script generation, storyboard creation, and editing.
+The following screenshots and video are from a short AI drama demo made with NarraStage, completed in about 2 hours, covering script generation, storyboard creation, and editing.
 
 <div align="center">
 <table>
@@ -219,9 +219,9 @@ Before installing and using this software, please prepare the following:
 
 | OS      | GitHub                                                       | Notes                         |
 | :-----: | :----------------------------------------------------------- | :---------------------------- |
-| Windows | [Release](https://github.com/reedchan7/Toonflow-app/releases) | Official release package      |
-| Linux   | [Release](https://github.com/reedchan7/Toonflow-app/releases) | Official release package      |
-| macOS   | [Release](https://github.com/reedchan7/Toonflow-app/releases) | Official release package      |
+| Windows | [Release](https://github.com/reedchan7/NarraStage/releases) | Official release package      |
+| Linux   | [Release](https://github.com/reedchan7/NarraStage/releases) | Official release package      |
+| macOS   | [Release](https://github.com/reedchan7/NarraStage/releases) | Official release package      |
 
 > [!CAUTION]
 > On macOS, go to Settings > Privacy & Security to configure security settings; otherwise, the app may not open due to certificate issues.
@@ -252,16 +252,16 @@ Build directly from existing local source code, suitable for developers or users
 
 ```shell
 # Clone the project first (skip if already cloned)
-git clone https://github.com/reedchan7/Toonflow-app.git
-cd Toonflow-app
+git clone https://github.com/reedchan7/NarraStage.git
+cd NarraStage
 
 # Build and start locally using Makefile
 make docker-build
 make docker-run
 
 # Or build manually
-docker build -t toonflow .
-docker run -d -p <local_port>:10588 -v <local_data_path>:/app/data toonflow
+docker build -t narrastage .
+docker run -d -p <local_port>:10588 -v <local_data_path>:/app/data narrastage
 
 # Access the page at the corresponding port path /index.html
 # Example: http://localhost:10588/index.html
@@ -312,8 +312,8 @@ bun add --global pm2
 
 ```bash
 cd /opt
-git clone https://github.com/reedchan7/Toonflow-app.git
-cd Toonflow-app
+git clone https://github.com/reedchan7/NarraStage.git
+cd NarraStage
 make install
 make build
 ```
@@ -324,7 +324,7 @@ Create `pm2.json` file:
 
 ```json
 {
-  "name": "toonflow-app",
+  "name": "narrastage",
   "script": "data/serve/app.js",
   "interpreter": "bun",
   "instances": "max",
@@ -359,7 +359,7 @@ pm2 save
 
 ```bash
 pm2 list              # View processes
-pm2 logs toonflow-app # View logs
+pm2 logs narrastage # View logs
 pm2 restart all       # Restart services
 pm2 monit             # Monitoring dashboard
 ```
@@ -400,8 +400,8 @@ pm2 monit             # Monitoring dashboard
    **Clone from GitHub:**
 
    ```bash
-   git clone https://github.com/reedchan7/Toonflow-app.git
-   cd Toonflow-app
+   git clone https://github.com/reedchan7/NarraStage.git
+   cd NarraStage
    ```
 
 2. **Install Dependencies**
@@ -545,11 +545,11 @@ pm2 monit             # Monitoring dashboard
 
 # 🔗 Repository and maintenance
 
-- Current repository: [reedchan7/Toonflow-app](https://github.com/reedchan7/Toonflow-app)
-- Issues: [GitHub Issues](https://github.com/reedchan7/Toonflow-app/issues)
+- Current repository: [reedchan7/NarraStage](https://github.com/reedchan7/NarraStage)
+- Issues: [GitHub Issues](https://github.com/reedchan7/NarraStage/issues)
 - Upstream project: [HBAI-Ltd/Toonflow-app](https://github.com/HBAI-Ltd/Toonflow-app)
 
-This repository is an independently maintained fork of Toonflow. Use the current repository for downloads, issues, and contributions.
+This repository is an independently maintained fork of NarraStage. Use the current repository for downloads, issues, and contributions.
 
 ---
 
@@ -561,6 +561,6 @@ This project is licensed under the [Apache License 2.0](../LICENSE), with no add
 
 # 🙏 Acknowledgements
 
-Thanks to the [upstream Toonflow project](https://github.com/HBAI-Ltd/Toonflow-app) and all open-source authors and contributors whose work supports this fork. Copyright in upstream code remains with its original owners; contributors retain copyright in changes made to this fork.
+Thanks to the [original upstream project](https://github.com/HBAI-Ltd/Toonflow-app) and all open-source authors and contributors whose work supports this fork. Copyright in upstream code remains with its original owners; contributors retain copyright in changes made to this fork.
 
 <img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=100&section=footer" width="100%"/>

@@ -9,7 +9,7 @@ function CredentialSlot({ provider, slot }: { provider: ProviderStatus; slot: Pr
   const { t } = useI18n();
   const queryClient = useQueryClient();
   const [secret, setSecret] = useState("");
-  const bridge = window.toonflowCredentials;
+  const bridge = window.narrastageCredentials;
   const writable = Boolean(bridge && slot.writable);
   const mutation = useMutation({
     mutationFn: async (action: "set" | "delete") => {
@@ -96,7 +96,7 @@ export function ProvidersPage() {
     <div className="page-frame">
       <header className="page-header">
         <div>
-          <p className="eyebrow">TOONFLOW / RUNTIME</p>
+          <p className="eyebrow">NARRASTAGE / RUNTIME</p>
           <h1>{t("providers.title")}</h1>
           <p>{t("providers.description")}</p>
         </div>

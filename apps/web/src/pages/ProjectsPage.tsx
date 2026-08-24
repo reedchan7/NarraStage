@@ -13,7 +13,7 @@ const projectDefaults: Omit<CreateProjectInput, "name" | "intro" | "artStyle" | 
   directorManual: "",
   imageModel: "grsai:nano-banana-2",
   imageOfferingId: "google:nano-banana-2-lite:official",
-  videoModel: "toonflow:Kling-Video-O1",
+  videoModel: "narrastage:Kling-Video-O1",
   imageQuality: "1K",
   mode: "text",
   videoGenerationSelection: {
@@ -60,7 +60,7 @@ export function ProjectsPage() {
     <div className="page-frame">
       <header className="page-header">
         <div>
-          <p className="eyebrow">TOONFLOW / LIBRARY</p>
+          <p className="eyebrow">NARRASTAGE / LIBRARY</p>
           <h1>{t("projects.title")}</h1>
           <p>{t("projects.description")}</p>
         </div>

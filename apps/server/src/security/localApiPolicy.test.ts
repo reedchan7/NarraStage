@@ -16,7 +16,7 @@ describe("local API network policy", () => {
       resolveLocalApiPolicy({
         runtime: "standalone",
         nodeEnv: "prod",
-        env: { TOONFLOW_HOST: "0.0.0.0" },
+        env: { NARRASTAGE_HOST: "0.0.0.0" },
       }),
     ).toThrow("local_api.allowed_origins_required");
 
@@ -24,11 +24,11 @@ describe("local API network policy", () => {
       runtime: "standalone",
       nodeEnv: "prod",
       env: {
-        TOONFLOW_HOST: "0.0.0.0",
-        TOONFLOW_ALLOWED_ORIGINS: "https://toonflow.example",
+        NARRASTAGE_HOST: "0.0.0.0",
+        NARRASTAGE_ALLOWED_ORIGINS: "https://narrastage.example",
       },
     });
-    expect(policy.isOriginAllowed("https://toonflow.example")).toBe(true);
+    expect(policy.isOriginAllowed("https://narrastage.example")).toBe(true);
     expect(policy.isOriginAllowed("https://attacker.example")).toBe(false);
   });
 

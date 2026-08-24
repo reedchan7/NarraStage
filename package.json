@@ -1,17 +1,17 @@
 {
-  "name": "toonflow",
+  "name": "narrastage",
   "version": "2.1.0",
   "private": true,
-  "description": "Bun-powered AI workstation for turning stories and scripts into short-form animated productions.",
-  "homepage": "https://github.com/reedchan7/Toonflow-app#readme",
+  "description": "NarraStage is an AI production studio for turning stories into scripts, storyboards, images, and finished video.",
+  "homepage": "https://github.com/reedchan7/NarraStage#readme",
   "bugs": {
-    "url": "https://github.com/reedchan7/Toonflow-app/issues"
+    "url": "https://github.com/reedchan7/NarraStage/issues"
   },
   "license": "Apache-2.0",
   "author": "reedchan7",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/reedchan7/Toonflow-app.git"
+    "url": "git+https://github.com/reedchan7/NarraStage.git"
   },
   "workspaces": [
     "apps/*",
@@ -40,7 +40,7 @@
     "provenance:check": "bun scripts/check-web-provenance.ts",
     "provenance:source:check": "bun scripts/check-web-provenance.ts",
     "release:evidence": "bun scripts/check-release-evidence.ts",
-    "secrets:check": "cross-env TOONFLOW_SECRET_SCAN_CANARY=toonflow-release-canary-not-for-packaging bun scripts/check-secrets.ts",
+    "secrets:check": "cross-env NARRASTAGE_SECRET_SCAN_CANARY=narrastage-release-canary-not-for-packaging bun scripts/check-secrets.ts",
     "benchmark:provider-kernel": "bun scripts/benchmark-provider-kernel.ts",
     "benchmark:http": "bun scripts/benchmark-http.ts",
     "release:check": "bun run provenance:source:check && bun run benchmark:provider-kernel && bun run release:evidence && bun run secrets:check",
@@ -133,8 +133,8 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@narrastage/contracts": "workspace:*",
     "@rmp135/sql-ts": "^2.2.0",
-    "@toonflow/contracts": "workspace:*",
     "@types/bun": "1.4.0",
     "@types/graphlib": "^2.1.12",
     "@types/jsonwebtoken": "^9.0.10",

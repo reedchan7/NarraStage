@@ -11,10 +11,10 @@ async function git(root: string, ...args: string[]) {
     cwd: root,
     env: {
       ...process.env,
-      GIT_AUTHOR_NAME: "Toonflow Test",
-      GIT_AUTHOR_EMAIL: "test@toonflow.local",
-      GIT_COMMITTER_NAME: "Toonflow Test",
-      GIT_COMMITTER_EMAIL: "test@toonflow.local",
+      GIT_AUTHOR_NAME: "NarraStage Test",
+      GIT_AUTHOR_EMAIL: "test@narrastage.local",
+      GIT_COMMITTER_NAME: "NarraStage Test",
+      GIT_COMMITTER_EMAIL: "test@narrastage.local",
     },
     stderr: "pipe",
     stdout: "pipe",
@@ -31,7 +31,7 @@ afterEach(async () => {
 
 describe("repository content revision", () => {
   test("tracks scoped bytes without becoming stale after a metadata-only commit", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "toonflow-provenance-"));
+    const root = await mkdtemp(path.join(tmpdir(), "narrastage-provenance-"));
     fixtures.push(root);
     await mkdir(path.join(root, "apps/web/src"), { recursive: true });
     await writeFile(path.join(root, "package.json"), "{}\n");

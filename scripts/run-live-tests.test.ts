@@ -22,9 +22,9 @@ describe("live test authorization", () => {
     expect(() =>
       assertLiveTestAuthorization(preview, {
         FAL_KEY: "configured",
-        TOONFLOW_LIVE_TEST_MAX_USD: "1.00",
+        NARRASTAGE_LIVE_TEST_MAX_USD: "1.00",
       }),
-    ).toThrow(/TOONFLOW_LIVE_TESTS=1/);
+    ).toThrow(/NARRASTAGE_LIVE_TESTS=1/);
   });
 
   test("rejects a suite whose estimated maximum exceeds the approved budget", () => {
@@ -33,8 +33,8 @@ describe("live test authorization", () => {
     expect(() =>
       assertLiveTestAuthorization(preview, {
         FAL_KEY: "configured",
-        TOONFLOW_LIVE_TESTS: "1",
-        TOONFLOW_LIVE_TEST_MAX_USD: "0.50",
+        NARRASTAGE_LIVE_TESTS: "1",
+        NARRASTAGE_LIVE_TEST_MAX_USD: "0.50",
       }),
     ).toThrow(/exceeds approved budget/);
   });
@@ -44,8 +44,8 @@ describe("live test authorization", () => {
 
     assertLiveTestAuthorization(preview, {
       FAL_KEY: "configured",
-      TOONFLOW_LIVE_TESTS: "1",
-      TOONFLOW_LIVE_TEST_MAX_USD: "0.60",
+      NARRASTAGE_LIVE_TESTS: "1",
+      NARRASTAGE_LIVE_TEST_MAX_USD: "0.60",
     });
 
     expect(preview).toEqual({
@@ -113,7 +113,7 @@ describe("live test authorization", () => {
       },
       executorId: "ci-executor",
       executorPrivateKey: keys.privateKey,
-      repository: "reedchan7/Toonflow-app",
+      repository: "reedchan7/NarraStage",
       workflow: "provider-live-acceptance",
       environment: "acceptance",
       commitSha: "1".repeat(40),
@@ -121,8 +121,8 @@ describe("live test authorization", () => {
       executorManifestSha256: "d".repeat(64),
       env: {
         DEEPSEEK_API_KEY: "configured",
-        TOONFLOW_LIVE_TESTS: "1",
-        TOONFLOW_LIVE_TEST_MAX_USD: "0.05",
+        NARRASTAGE_LIVE_TESTS: "1",
+        NARRASTAGE_LIVE_TEST_MAX_USD: "0.05",
       },
       now: () => new Date("2026-08-23T12:00:00.000Z"),
     });
@@ -144,7 +144,7 @@ describe("live test authorization", () => {
           {
             id: "ci-executor",
             publicKeyPem: keys.publicKey.export({ type: "spki", format: "pem" }).toString(),
-            repository: "reedchan7/Toonflow-app",
+            repository: "reedchan7/NarraStage",
             workflow: "provider-live-acceptance",
             environments: ["acceptance"],
           },

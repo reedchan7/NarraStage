@@ -8,7 +8,7 @@
 
 - deployment branch policy 只允许 default branch；
 - 至少一名 required reviewer，执行付费任务前由其审批预算和 offering；
-- Provider Key 与 `TOONFLOW_EXECUTOR_PRIVATE_KEY_PEM` 只存放在该 Environment，不放 repo-level secrets；
+- Provider Key 与 `NARRASTAGE_EXECUTOR_PRIVATE_KEY_PEM` 只存放在该 Environment，不放 repo-level secrets；
 - executor 公钥、repository、workflow 与 environment 写入 `data/contracts/provider-evidence-trust.json`。
 
 缺少任一项时不得把 live workflow 的产物用于发布。私钥不得写入仓库、artifact、日志或评审决策文件。
@@ -20,8 +20,8 @@
 本地等价入口为：
 
 ```sh
-TOONFLOW_LIVE_TESTS=1 \
-TOONFLOW_LIVE_TEST_MAX_USD=<approved-total> \
+NARRASTAGE_LIVE_TESTS=1 \
+NARRASTAGE_LIVE_TEST_MAX_USD=<approved-total> \
 bun run live:test -- \
   --offering <offering-id> \
   --case-max-usd <case-cap> \
@@ -69,7 +69,7 @@ bun run live:review -- \
 分数范围为 0–4。Blind reviewer 必须覆盖报告中的全部 case，hard failure 只能选 frozen case 预注册的定义。签名时再次完整复验报告和 artifact，防止准备评审包后的替换：
 
 ```sh
-TOONFLOW_REVIEWER_PRIVATE_KEY_PEM='<private-key>' \
+NARRASTAGE_REVIEWER_PRIVATE_KEY_PEM='<private-key>' \
 bun run live:review -- \
   --report <input-report>/<run-id>.json \
   --artifact-dir <downloaded-run-artifact-directory> \

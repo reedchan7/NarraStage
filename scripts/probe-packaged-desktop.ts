@@ -9,22 +9,22 @@ function packagedExecutable(repositoryRoot: string): string {
       repositoryRoot,
       "dist",
       process.arch === "arm64" ? "mac-arm64" : "mac",
-      "ToonFlow.app",
+      "NarraStage.app",
       "Contents",
       "MacOS",
-      "ToonFlow",
+      "NarraStage",
     );
   }
   if (process.platform === "win32") {
-    return path.join(repositoryRoot, "dist", "win-unpacked", "ToonFlow.exe");
+    return path.join(repositoryRoot, "dist", "win-unpacked", "NarraStage.exe");
   }
-  return path.join(repositoryRoot, "dist", "linux-unpacked", "toonflow");
+  return path.join(repositoryRoot, "dist", "linux-unpacked", "narrastage");
 }
 
 const repositoryRoot = path.resolve(import.meta.dir, "..");
 const executable = packagedExecutable(repositoryRoot);
 await access(executable);
-const userDataDirectory = await mkdtemp(path.join(tmpdir(), "toonflow-packaged-probe."));
+const userDataDirectory = await mkdtemp(path.join(tmpdir(), "narrastage-packaged-probe."));
 const legacyDataDirectory = path.join(userDataDirectory, "data");
 const legacyRendererCanary = "legacy-vue-renderer-canary";
 const customVendorCanary = "custom-vendor-survives-upgrade";
@@ -90,7 +90,7 @@ const child = Bun.spawn([executable], {
   env: {
     ...process.env,
     NODE_ENV: "prod",
-    TOONFLOW_USER_DATA_DIR: userDataDirectory,
+    NARRASTAGE_USER_DATA_DIR: userDataDirectory,
   },
   stderr: "pipe",
   stdout: "pipe",
@@ -139,8 +139,8 @@ try {
     method: "PUT",
     headers: {
       Authorization: login.data.token,
-      "X-Toonflow-Media-Type": "image/png",
-      "X-Toonflow-Filename": "packaged-owned-asset.png",
+      "X-NarraStage-Media-Type": "image/png",
+      "X-NarraStage-Filename": "packaged-owned-asset.png",
     },
     body: ownedAssetBytes,
   });

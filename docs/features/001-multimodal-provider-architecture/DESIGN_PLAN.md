@@ -1,13 +1,13 @@
 # Approved Design Plan — Feature 001 全栈多模态 Provider Platform
 
 - Status: Implemented local candidate; contract/mocks, Web integration, Electron packaging and security gates complete; paid live/product acceptance remains gated
-- Backend/client repository: `reedchan7/Toonflow-app`
+- Backend/client repository: `reedchan7/NarraStage`
 - Web source baseline: `HBAI-Ltd/Toonflow-web@9c4cb0ec7d4f6b4067c7768e2df8cdc7f8587214`
 - Architecture source of truth: [SPEC.md](./SPEC.md)
 
 ## Delivery strategy
 
-采用可独立验收的 vertical slices。每个 slice 先写公开 contract/失败测试，再实现；不直接编辑 `data/web/index.html`。创建或维护 `reedchan7/Toonflow-web` fork 后，在 Web 源码完成变更，app 仅接收由锁定 revision 构建的产物。
+采用可独立验收的 vertical slices。每个 slice 先写公开 contract/失败测试，再实现；不直接编辑 `data/web/index.html`。创建或维护 `reedchan7/NarraStage-web` fork 后，在 Web 源码完成变更，app 仅接收由锁定 revision 构建的产物。
 
 实现最终采用本地 content-addressed candidate：Web 源码仍在独立仓库，`scripts/package-web.ts` 校验 OpenAPI 与 generated client 后，以 backend/Web content revision、锁文件和 bundle SHA-256 生成清单，再原子替换 Electron 内嵌 Web。连续两次打包已得到相同清单与 bundle；未创建远端 fork、提交或发布。
 
@@ -18,11 +18,11 @@
 ### Work
 
 - 冻结当前 backend revision、SQLite fixture 和 Web baseline；记录 backend/Web commit 与现有 bundle hash。
-- 建立 `reedchan7/Toonflow-web` 的可维护 fork/branch、双 remote 与干净构建说明。
+- 建立 `reedchan7/NarraStage-web` 的可维护 fork/branch、双 remote 与干净构建说明。
 - 为当前 text/image/video/model selection/vendor settings 写 characterization tests；锁定旧 `${vendorId}:${modelName}`、任务状态和资产返回行为。
 - 在 app CI 中加入 Web revision + API contract version manifest；构建时从固定 Web revision 产出单文件 bundle并执行 hash/provenance 检查。
 - 定义 handshake：服务端 `/api/meta` 返回 SemVer `contractVersion`、`openapiSha256`、backend/Web revision；Web 构建内含 `supportedContractRange` 与 generated-client source hash。major 表示 breaking，minor 只允许 additive；CI/固定 Electron bundle 要求目标 artifact exact hash，standalone runtime 只按 range fail closed，hash 差异用于诊断。
-- 建立 paid-live test runner：串行、显式 `TOONFLOW_LIVE_TEST_MAX_USD`、凭据 presence check、请求次数/预计最高成本预览、脱敏录制器。
+- 建立 paid-live test runner：串行、显式 `NARRASTAGE_LIVE_TEST_MAX_USD`、凭据 presence check、请求次数/预计最高成本预览、脱敏录制器。
 
 ### Exit gate
 
@@ -86,7 +86,7 @@
 - 实现 lease/heartbeat runner、attempt `prepared/send_started` boundary、at-most-once automatic submit、provider idempotency key support、bounded backoff+jitter、deadline 和 recovery。
 - 实现 `submission_unknown` 与 reconcile：provider lookup、audited `adopt_handle / confirm_not_submitted + new attempt / abandon`；禁止不确定提交后的跨 offering fallback。
 - 按 SPEC transition table 实现主状态与正交 `cancelRequestedAt/cancelReason`；`abandoned` 为未知提交的显式终态。将 `cancel_queued`、`request_cancel_running`、`delete_remote_record` 拆开；覆盖 preparing/submitting/unknown/importing、handle-late、cancel-success race，用户 cancel 永不删除 terminal MiniMax record。
-- 实现 AssetGateway：metadata probe、streaming upload/download、hash、expiry cache、cleanup、统一 outbound URL policy、Toonflow-owned import。所有输入/输出 fetch 覆盖 redirect revalidation、DNS pinning/rebinding、IPv4-mapped IPv6、proxy disable、auth stripping、双重 size/timeout 和 temp cleanup。
+- 实现 AssetGateway：metadata probe、streaming upload/download、hash、expiry cache、cleanup、统一 outbound URL policy、NarraStage-owned import。所有输入/输出 fetch 覆盖 redirect revalidation、DNS pinning/rebinding、IPv4-mapped IPv6、proxy disable、auth stripping、双重 size/timeout 和 temp cleanup。
 - 提供 job submit/get/list/cancel/retry-safe API；Socket namespace 只发布 `{jobId, version}` 变更通知。
 
 ### Web/Electron
@@ -106,7 +106,7 @@
 
 ### Adapter/catalog
 
-- 用 `@ai-sdk/deepseek` 适配 Pro、Flash、Flash Vision Experimental；Toonflow manifest 明确 lifecycle 和 supported operations。
+- 用 `@ai-sdk/deepseek` 适配 Pro、Flash、Flash Vision Experimental；NarraStage manifest 明确 lifecycle 和 supported operations。
 - 覆盖 thinking enabled/disabled/adaptive、reasoning effort、stream/tool continuity、Responses/Files 所需语义。
 - Vision input normalizer 支持 JPEG/PNG/GIF/WebP、inline/HTTPS/Files、detail 和 user-message-only；按官方限制 preflight 并通过 AssetGateway 选择传输方式。
 
@@ -144,7 +144,7 @@
 
 - fal queue/storage/cancel fixture、三 endpoint schema、running cancel best-effort、expired result URL、usage/error mapping。
 - MiniMax official 使用官方 OpenAPI-derived fixtures + local mock server 覆盖 create/query/list/cancel 与所有边界。
-- 从 KnipCut 受保护配置向 live child process 临时注入 fal credential，串行跑 H3 text/image/reference 与 cancel；不复制 credential 到 Toonflow。用第二个 fal fixture manifest 证明 transport 可复用。`MINIMAX_API_KEY` 未提供时 official live case 明确 skip。
+- 从 KnipCut 受保护配置向 live child process 临时注入 fal credential，串行跑 H3 text/image/reference 与 cancel；不复制 credential 到 NarraStage。用第二个 fal fixture manifest 证明 transport 可复用。`MINIMAX_API_KEY` 未提供时 official live case 明确 skip。
 
 ### Exit gate
 
@@ -190,7 +190,7 @@
 
 ## Planned repository boundaries
 
-### Toonflow-app
+### NarraStage
 
 - `src/providers/`: domain, registry, policy, ports, built-in adapters, legacy adapter。
 - `src/generation/`: service, durable runner, state machine, reconciliation。
@@ -201,7 +201,7 @@
 - `scripts/preload.ts`, Electron lifecycle/build provenance。
 - `tests/contract`, `tests/integration`, `tests/fault`, `tests/live`, `tests/electron`。
 
-### Toonflow-web
+### NarraStage-web
 
 - `src/api/generated/`: generated v2 client; no hand editing。
 - `src/features/providers/`: provider credentials/health/settings。

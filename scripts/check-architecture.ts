@@ -18,9 +18,9 @@ const webClient = await readFile(
   path.resolve(import.meta.dir, "..", "apps/web/src/api/client.ts"),
   "utf8",
 );
-if (!webClient.includes('from "@toonflow/contracts"')) {
-  throw new Error("Web API client must consume generated @toonflow/contracts types");
+if (!webClient.includes('from "@narrastage/contracts"')) {
+  throw new Error("Web API client must consume generated @narrastage/contracts types");
 }
-if (!webClient.includes('from "@toonflow/contracts/source"')) {
+if (!webClient.includes('from "@narrastage/contracts/source"')) {
   throw new Error("Web API client must consume generated contract compatibility metadata");
 }

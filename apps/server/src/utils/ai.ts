@@ -55,7 +55,7 @@ const AiTypeValues: AiType[] = [
 ];
 
 type AiSdkInput = Omit<Parameters<typeof generateText>[0], "model">;
-type ToonflowAiSdkInput = AiSdkInput & { providerGrounding?: boolean };
+type NarraStageAiSdkInput = AiSdkInput & { providerGrounding?: boolean };
 
 function requiredInputFeature(mediaType: string) {
   if (mediaType.startsWith("image/")) return "image_input" as const;
@@ -126,7 +126,7 @@ function inlineImageDetails(input: AiSdkInput) {
       const isReference =
         typeof data === "object" && data !== null && "type" in data && data.type === "reference";
       if (isReference) continue;
-      const detail = part.providerOptions?.toonflow?.imageDetail;
+      const detail = part.providerOptions?.narrastage?.imageDetail;
       details.push(
         detail === "auto" || detail === "low" || detail === "high" || detail === "original"
           ? detail
@@ -302,7 +302,7 @@ class AiText {
     this.think = think;
     this.thinkLevel = thinkLevel;
   }
-  private async resolveModel(input: ToonflowAiSdkInput, middleware?: any | any[]) {
+  private async resolveModel(input: NarraStageAiSdkInput, middleware?: any | any[]) {
     const switchAiDevTool = await u.db("o_setting").where("key", "switchAiDevTool").first();
     const modelName = await resolveModelName(this.AiType);
     const offering = builtinCatalog.offerings.find((candidate) => candidate.id === modelName);
@@ -344,7 +344,7 @@ class AiText {
         : baseModel;
     return { model, providerOptions, providerTools };
   }
-  async invoke(input: ToonflowAiSdkInput) {
+  async invoke(input: NarraStageAiSdkInput) {
     const config = await getModelConfig(this.AiType);
     const resolved = await this.resolveModel(input);
     const { providerGrounding: _providerGrounding, ...sdkInput } = input;

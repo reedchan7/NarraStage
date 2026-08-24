@@ -11,7 +11,7 @@
 
 ## Problem and evidence
 
-Toonflow 当前的 vendor-script 机制适合快速接单个 endpoint，但它把模型身份、API 供应商、能力声明、异步轮询和用户配置混在一段可编辑脚本里。H3、fal queue、Veo 和视觉 Files 输入已经超出四个同步函数与字符串 mode DSL 能忠实表达的范围；Web 只能在请求时猜参数，Electron 退出后也不能恢复已付费任务。
+NarraStage 当前的 vendor-script 机制适合快速接单个 endpoint，但它把模型身份、API 供应商、能力声明、异步轮询和用户配置混在一段可编辑脚本里。H3、fal queue、Veo 和视觉 Files 输入已经超出四个同步函数与字符串 mode DSL 能忠实表达的范围；Web 只能在请求时猜参数，Electron 退出后也不能恢复已付费任务。
 
 | Evidence | Class | Consequence |
 |---|---|---|
@@ -19,7 +19,7 @@ Toonflow 当前的 vendor-script 机制适合快速接单个 endpoint，但它�
 | H3 与 fal 使用异步 operation，现有轮询藏在函数内部 | observed | request id、取消、恢复、幂等与阶段延迟不可见 |
 | model schema 在脚本与 Web 中重复且松散 | observed | 非法素材组合可能在付费提交后才失败 |
 | `node:vm` 获得网络与宿主工具 | observed | 只能视为 trusted local，不是第三方插件安全边界 |
-| Web 源码位于独立 Toonflow-web 仓库，app 只含 bundle | observed | 必须建立跨仓库 contract 与可复现前端构建 |
+| Web 源码位于独立 NarraStage-web 仓库，app 只含 bundle | observed | 必须建立跨仓库 contract 与可复现前端构建 |
 | Electron 当前没有凭据 vault/窄 preload bridge | observed | API Key 可能继续进入普通配置、renderer 或 SQLite |
 | DeepSeek 视觉、Gemini 与 H3 模型生命周期快速变化 | observed | “静态模型名 + 永久支持”会持续过期 |
 
@@ -54,7 +54,7 @@ Toonflow 当前的 vendor-script 机制适合快速接单个 endpoint，但它�
 - 产品同时运行于 Bun/Express 服务端、独立 Vue Web 和 Electron 桌面端；默认没有公网 webhook。
 - renderer、REST 响应、日志、job payload、OpenAPI 与 Socket 事件均不得包含 secret。
 - provider operation 必须带 schema version 且可 JSON 序列化；大媒体不得嵌入 job JSON。
-- provider 返回的 URL 与 redirect 均按不可信输入处理；最终结果必须进入 Toonflow-owned storage。
+- provider 返回的 URL 与 redirect 均按不可信输入处理；最终结果必须进入 NarraStage-owned storage。
 - unsupported 与 unavailable 是不同状态；未知参数、隐式降级和静默 provider fallback 均被禁止。
 - 现有 `${vendorId}:${modelName}` 可继续读取；新 API 使用结构化 ID，不再依赖字符串 split。
 - 构建产物必须能追溯 backend revision、Web revision 和 API contract version。
@@ -71,7 +71,7 @@ Toonflow 当前的 vendor-script 机制适合快速接单个 endpoint，但它�
 - **CapabilitySchema:** 服务端权威的输入/输出/限制 schema，并附语义化 UI schema、warning 和显式 coercion。Web 可复用生成表单，服务端必须重新验证。
 - **OfferingPolicy:** 从符合 operation 与 capability 的 offering 中选择执行渠道。用户可 pin；auto 策略才可排序。
 - **CredentialRef:** 指向 vault/env secret 的不透明引用；Provider adapter 只能在执行瞬间解析。
-- **MediaAssetRef / ProviderAssetRef:** Toonflow 永久资产与短期 provider 上传物分离，后者记录过期时间和 cleanup 信息。
+- **MediaAssetRef / ProviderAssetRef:** NarraStage 永久资产与短期 provider 上传物分离，后者记录过期时间和 cleanup 信息。
 - **GenerationResult:** 统一承载零到多个 typed artifacts、可选文本、usage/cost、provider metadata 与 provenance；image/video adapter 不再退化成单个 URL 字符串。
 - **GenerationJob:** 持久化 product request、chosen offering、operation、opaque provider handle、状态、lease、next poll、usage 与错误。
 - **ProviderError:** `auth | invalid_input | billing | quota | rate_limit | moderation | unavailable | timeout | cancelled | invalid_response | submission_unknown`，含 retryability、request id 和脱敏 detail。
@@ -150,7 +150,7 @@ GenerationService
 - Provider 配置只保存 `CredentialRef` 和非敏感字段。API 只返回 configured/source/health，不返回 key、尾号或可逆密文。
 - Electron 是唯一允许 UI 写入 secret 的形态：renderer → 窄 preload IPC → main-process CredentialVault；REST 明确拒绝 secret 字段。异步 `safeStorage` 的 ciphertext 存在 `userData` 下专用 versioned vault file，采用 owner-only 权限、temp write + fsync + atomic rename、逐条 provider/slot metadata、删除 tombstone 和 key-rotation/re-encrypt 记录；Linux `basic_text` 或加密不可用时 fail closed。
 - Standalone Web/server 只读取环境变量或部署 secret reference，设置页仅显示 configured/source/health 并给出部署说明，不能保存/替换 secret。远程部署的 HTTPS secret manager/管理授权不在本期；普通 API 仍需显式 allowed origins，desktop/local mode 绑定 loopback。
-- KnipCut fal credential 只允许在 live-test child process 临时注入，不进入 Toonflow vault。vault ciphertext 可随本机备份保存，但不可导出明文，且跨用户/机器恢复不保证可解密。
+- KnipCut fal credential 只允许在 live-test child process 临时注入，不进入 NarraStage vault。vault ciphertext 可随本机备份保存，但不可导出明文，且跨用户/机器恢复不保证可解密。
 - 升级时先按内置 credential schema 与 legacy `inputs[].type=password` 识别 secret，写入 vault并读回验证，再用 credential ref 替换明文；LegacyVendorAdapter 仅在内存副本中解析这些 ref 后执行脚本。未声明为 password 的自定义字段不做猜测迁移，并在 UI 提示作者修正 schema。失败则保持旧值并阻止启用对应 adapter。
 - Credential migration 是单向安全迁移。回滚只支持新二进制内关闭 feature/adapter；旧二进制 downgrade 不在回滚合同内，因为既有旧版本无法理解 ref。受管理的 updater 记录 minimum compatible version 并阻止降级；手工启动旧二进制可能失去 provider 认证能力。用户可删除/重录 credential，但不会生成含明文的 downgrade backup。
 
@@ -161,7 +161,7 @@ GenerationService
 - 对可计价操作，preflight 同时显示各 offering 的原币/用户显示币估算、汇率时间和价格时效。用户 pin 时不因价差自动改道；auto 要在提交前说明选路原因。
 - DeepSeek Vision 在对话/Agent 输入中支持图片 attachment、detail 与 Files reuse；UI 提前显示格式/大小/数量限制，且禁止把图片附到非 user message。
 - 媒体生成统一显示 queued/preparing/submitting/running/importing/cancel requested/terminal，刷新或重启后恢复；错误展示统一类别、provider request id 与可操作建议。
-- Toonflow-web 使用后端 OpenAPI 生成 client；app 发布流水线从固定 Web revision 构建 `data/web`，并执行 contract compatibility。Electron main process启动 runner、暴露窄凭据 bridge，并在退出时释放 lease，不把已确认远端任务误标失败。
+- NarraStage-web 使用后端 OpenAPI 生成 client；app 发布流水线从固定 Web revision 构建 `data/web`，并执行 contract compatibility。Electron main process启动 runner、暴露窄凭据 bridge，并在退出时释放 lease，不把已确认远端任务误标失败。
 - OpenAPI artifact 由后端生成并附 SHA-256；`/api/meta` 返回 SemVer `contractVersion`、`openapiSha256`、backend/Web revision。Web 构建内嵌 `supportedContractRange` 与生成 client 的 source hash；major 只用于 breaking change，minor 只允许 additive。CI 与固定 Electron bundle 要求目标 artifact exact hash；standalone Web runtime 只以 SemVer range 判兼容，hash 仅用于诊断/追溯，避免 additive minor 被误阻断。
 
 ## Design decisions
@@ -245,7 +245,7 @@ Support levels have fixed meaning: `implemented` = code/schema exists；`contrac
   Verify: copied-database migration suite.
 - **RC-002** GIVEN现有 language agent WHEN使用旧 provider THEN THE SYSTEM SHALL 继续 stream text 和 tool results。
   Verify: characterization fixtures for current agents.
-- **RC-003** GIVEN现有 image/video consumer WHEN job 成功 THEN THE SYSTEM SHALL 继续得到 Toonflow-owned asset identity，而非临时 provider URL。
+- **RC-003** GIVEN现有 image/video consumer WHEN job 成功 THEN THE SYSTEM SHALL 继续得到 NarraStage-owned asset identity，而非临时 provider URL。
   Verify: route integration tests.
 - **RC-004** GIVEN用户继续使用 custom vendor script WHEN打开设置和执行 THEN THE SYSTEM SHALL 在 trusted-local 标签下保持 load/test/delete 能力。
   Verify: legacy adapter UI/API regression suite.
@@ -319,7 +319,7 @@ Support levels have fixed meaning: `implemented` = code/schema exists；`contrac
 ## Limitations
 
 - 本 SPEC 不保证第三方模型质量、价格、配额、地区或 uptime；这些在 live acceptance 时记录时间戳。
-- AI SDK video/interactions 仍可能是 experimental；Toonflow contract 只能降低升级影响，不能消除上游变化。
+- AI SDK video/interactions 仍可能是 experimental；NarraStage contract 只能降低升级影响，不能消除上游变化。
 - Electron Linux secret store 不可用时将拒绝持久化，用户必须提供环境变量或配置系统 keyring。
 - 此 SPEC 已选择 Capability Kernel + durable jobs + legacy adapter；详细顺序与仓库改动边界见 PLAN。
 

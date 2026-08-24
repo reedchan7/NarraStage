@@ -1,5 +1,5 @@
 {
-  "name": "@toonflow/web",
+  "name": "@narrastage/web",
   "version": "2.1.0",
   "private": true,
   "license": "Apache-2.0",
@@ -17,8 +17,8 @@
     "license": "bun scripts/license.ts"
   },
   "dependencies": {
+    "@narrastage/contracts": "workspace:*",
     "@tanstack/react-query": "5.102.2",
-    "@toonflow/contracts": "workspace:*",
     "lucide-react": "1.33.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",

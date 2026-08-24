@@ -619,10 +619,10 @@ function imageCases(): readonly AcceptanceCase[] {
       id: "generate-portrait",
       group: "generate",
       operations: ["image.generate"],
-      prompt: "A vertical editorial poster with the exact text TOONFLOW and a black background.",
+      prompt: "A vertical editorial poster with the exact text NARRASTAGE and a black background.",
       mode: "text",
       options: { aspectRatio: "9:16", imageSize: "1K" },
-      expectedFacts: ["TOONFLOW text", "black background"],
+      expectedFacts: ["NARRASTAGE text", "black background"],
     }),
     mediaCase({
       id: "generate-landscape",
@@ -661,11 +661,11 @@ function imageCases(): readonly AcceptanceCase[] {
       id: "edit-text-control",
       group: "edit",
       operations: ["image.edit"],
-      prompt: "Replace visible title text with exactly TOONFLOW while preserving composition.",
+      prompt: "Replace visible title text with exactly NARRASTAGE while preserving composition.",
       mode: "reference",
       options: { imageSize: "1K" },
       assets: [{ fixtureId: "videoCover", role: "reference_image" }],
-      expectedFacts: ["exact text TOONFLOW", "composition preserved"],
+      expectedFacts: ["exact text NARRASTAGE", "composition preserved"],
     }),
   ];
 }

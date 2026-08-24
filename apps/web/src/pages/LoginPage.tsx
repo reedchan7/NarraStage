@@ -57,7 +57,7 @@ export function LoginPage() {
       </section>
       <section className="login-panel" aria-labelledby="login-title">
         <div className="login-form-wrap">
-          <p className="eyebrow">TOONFLOW / WORKSPACE</p>
+          <p className="eyebrow">NARRASTAGE / WORKSPACE</p>
           <h2 id="login-title">{t("login.title")}</h2>
           <p>{t("login.description")}</p>
           <form onSubmit={submit} className="stack-form">

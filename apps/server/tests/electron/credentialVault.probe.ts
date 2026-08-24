@@ -4,11 +4,11 @@ import path from "node:path";
 import { ElectronCredentialVault } from "@/security/credentials/electronVault";
 
 async function run(): Promise<void> {
-  const probeDirectory = process.env.TOONFLOW_ELECTRON_VAULT_PROBE_DIR;
+  const probeDirectory = process.env.NARRASTAGE_ELECTRON_VAULT_PROBE_DIR;
   if (
     !probeDirectory ||
     !path.isAbsolute(probeDirectory) ||
-    !path.basename(path.dirname(probeDirectory)).startsWith("toonflow-electron-vault-probe.")
+    !path.basename(path.dirname(probeDirectory)).startsWith("narrastage-electron-vault-probe.")
   ) {
     throw new Error("credential.probe_temp_directory_required");
   }

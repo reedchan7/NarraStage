@@ -22,7 +22,7 @@ Repository: https://github.com/testing-library/user-event
 
 -----------------------------
 
-Name: @toonflow/contracts
+Name: @narrastage/contracts
 License: UNLICENSED
 Repository: N/A
 

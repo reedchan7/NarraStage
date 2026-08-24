@@ -25,7 +25,7 @@
 | `HANDOFF.md` untracked | `0e9a4135bff575e4072e1f2f2e405921b259c7918853e69794798bfb978aa725` | prior task/user | yes |
 | `docs/features/002-multi-client-monorepo/SPEC.md` untracked | `e9a69d0af8eb35255647b4441abd2bd73984695d45683098f54c7c45acef4c6e` | task | no |
 | `docs/features/002-multi-client-monorepo/RESEARCH.md` untracked | `bb6bdc9375e48dacd5dfa2cde1f80c9c4e37db76f8a4dd71b0a5cb5e1615b108` | task | no |
-| `../Toonflow-web` branch `master` | `00aa348` and clean against `fork/master` | sibling source | yes; import reads only |
+| `../NarraStage-web` branch `master` | `00aa348` and clean against `fork/master` | sibling source | yes; import reads only |
 | `data/db2.sqlite` ignored runtime data | current byte digest recorded before each runtime probe | user data | yes; tests use isolated copies |
 
 ## Global constraints (verbatim from SPEC)
@@ -52,8 +52,8 @@
 |---|---:|---|---|---|
 | `bun run check` | 0 | server full quality gate | 208 pass, 0 fail, 1145 expectations across 74 files | clean |
 | `bun run build` | 1 | embedded Web provenance | `embedded Web backend source revision mismatch: expected 6f147c5...+tree.ac9da..., received e2a2547...+tree.26c161...` | known-red before product edits |
-| `corepack yarn type-check && corepack yarn test:run && corepack yarn build-only` in `../Toonflow-web` | 0 | sibling Web full local gate | 40 pass, 0 fail; 11,302 modules; 26,953.39 kB `index.html` | clean |
-| `bun start` plus Browser open `http://localhost:10588` | 0 | packaged runtime baseline | URL `/#/project`, title `Toonflow`, heading `欢迎使用 ToonFlow`, project shell visible | clean; read-only UI probe |
+| `corepack yarn type-check && corepack yarn test:run && corepack yarn build-only` in `../NarraStage-web` | 0 | sibling Web full local gate | 40 pass, 0 fail; 11,302 modules; 26,953.39 kB `index.html` | clean |
+| `bun start` plus Browser open `http://localhost:10588` | 0 | packaged runtime baseline | URL `/#/project`, title `NarraStage`, heading `欢迎使用 NarraStage`, project shell visible | clean; read-only UI probe |
 
 ## Blast-radius coverage ledger
 
@@ -77,7 +77,7 @@
 | `src/contracts/packaging.test.ts` legacy path assertions | AC-002, AC-007, RC-006 | update app paths and retain one-renderer/fail-closed semantics |
 | `src/providers/legacy/modelListApi.test.ts` Express factory setup | AC-005, RC-002 | invoke the Hono testable API factory; retain status/body assertion |
 | `src/core.test.ts` route-source paths | AC-002, AC-005 | update server-root paths; retain exclusion and deterministic hash meaning |
-| `../Toonflow-web/src/**/*.test.ts` Vue component/store harnesses | AC-003, AC-009-012, NFR-005/006/008 | replace with React/portable-store tests for the same product contracts; retain provider/job/idempotency assertions |
+| `../NarraStage-web/src/**/*.test.ts` Vue component/store harnesses | AC-003, AC-009-012, NFR-005/006/008 | replace with React/portable-store tests for the same product contracts; retain provider/job/idempotency assertions |
 
 ## Slices
 
@@ -85,12 +85,12 @@
   - Covers: AC-001, AC-002, AC-004, AC-006, NFR-010
   - Blocked by: none · Risk: medium; history import and lockfile convergence can hide sibling-path coupling
   - Files: import sibling repository at `apps/web`; create app/package manifests and `packages/contracts`; modify root `package.json`, `bun.lock`, `tsconfig.json`, `Makefile`, architecture checks, OpenAPI generation, and release workflow
-  - Interfaces: produces root workspace commands and `@toonflow/contracts`; consumes existing OpenAPI artifact and sibling commit `00aa348`
+  - Interfaces: produces root workspace commands and `@narrastage/contracts`; consumes existing OpenAPI artifact and sibling commit `00aa348`
   - Oracle order: workspace policy rejects sibling path; generated contract imports without server source; frozen install/check resolves one lockfile
   - Approved test migrations: package gate, packaging path, route path tests
   - Affected verify: `bun install && bun run workspace:check && bun run contracts:check` → exit 0
   - Manual/scripted probe: `make help` lists server, Web, desktop, aggregate build/test commands
-  - Rollback: revert S1 commit if any source or package command still requires `../Toonflow-web`
+  - Rollback: revert S1 commit if any source or package command still requires `../NarraStage-web`
   - Checkpoint: `0ea559af07f5ad8c4d0f477681cc6a44b0b71780`
   - Evidence: frozen root install, workspace policy, contract generation/typecheck, repository-local Web package, and provenance check passed; server 212/212 and imported Web 40/40 tests passed; Vite built 11,300 modules into a deterministic single-file renderer; `make help` exposes all app commands.
 
@@ -209,7 +209,7 @@
 
 - Signed provider evidence and trust documents are empty by design — Feature 001 — no release claim or key mutation in this plan.
 - `data/db2.sqlite` is ignored user runtime data — repository root — never delete or use directly in destructive tests.
-- Sibling `../Toonflow-web` remains clean and unchanged — imported read-only; future archival is outside this repository task.
+- Sibling `../NarraStage-web` remains clean and unchanged — imported read-only; future archival is outside this repository task.
 
 ## Review log
 

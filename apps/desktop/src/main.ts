@@ -25,8 +25,17 @@ if (!ownsSingleInstanceLock) app.quit();
 const IMMUTABLE_RUNTIME_ENTRIES = new Set(["assets", "contracts", "models", "serve", "web"]);
 const MUTABLE_RUNTIME_ENTRIES = new Set(["skills", "vendor"]);
 const buildDirectory = path.dirname(fileURLToPath(import.meta.url));
-const isolatedUserDataDirectory = process.env.TOONFLOW_USER_DATA_DIR?.trim();
+const isolatedUserDataDirectory =
+  process.env.NARRASTAGE_USER_DATA_DIR?.trim() ?? process.env.TOONFLOW_USER_DATA_DIR?.trim();
 if (isolatedUserDataDirectory) app.setPath("userData", path.resolve(isolatedUserDataDirectory));
+
+if (!isolatedUserDataDirectory) {
+  const currentUserDataDirectory = app.getPath("userData");
+  const legacyUserDataDirectory = path.join(path.dirname(currentUserDataDirectory), "ToonFlow");
+  if (!fs.existsSync(currentUserDataDirectory) && fs.existsSync(legacyUserDataDirectory)) {
+    fs.renameSync(legacyUserDataDirectory, currentUserDataDirectory);
+  }
+}
 
 function copyDir(src: string, dest: string): void {
   if (!fs.existsSync(src)) return;
@@ -181,7 +190,7 @@ let closeServeFn: (() => Promise<void>) | undefined;
 if (ownsSingleInstanceLock)
   app.whenReady().then(async () => {
     try {
-      process.env.TOONFLOW_DATA_DIR = app.isPackaged
+      process.env.NARRASTAGE_DATA_DIR = app.isPackaged
         ? path.join(app.getPath("userData"), "data")
         : path.join(process.cwd(), "data");
       const persistedCredentialVault = new ElectronCredentialVault(
@@ -210,11 +219,11 @@ if (ownsSingleInstanceLock)
           trustedRendererPath,
         );
       };
-      ipcMain.handle("toonflow:credentials:status", async (event, request) => {
+      ipcMain.handle("narrastage:credentials:status", async (event, request) => {
         trustedRequest(event);
         return credentialVault.status(credentialStatusRequestSchema.parse(request));
       });
-      ipcMain.handle("toonflow:credentials:set", async (event, request) => {
+      ipcMain.handle("narrastage:credentials:set", async (event, request) => {
         trustedRequest(event);
         const parsed = credentialSetRequestSchema.parse(request);
         await credentialVault.set(
@@ -223,22 +232,22 @@ if (ownsSingleInstanceLock)
         );
         return credentialVault.status(parsed);
       });
-      ipcMain.handle("toonflow:credentials:delete", async (event, request) => {
+      ipcMain.handle("narrastage:credentials:delete", async (event, request) => {
         trustedRequest(event);
         const parsed = credentialDeleteRequestSchema.parse(request);
         await credentialVault.delete(parsed);
         return credentialVault.status(parsed);
       });
-      ipcMain.handle("toonflow:window:minimize", async (event) => {
+      ipcMain.handle("narrastage:window:minimize", async (event) => {
         trustedRequest(event);
         mainWindow?.minimize();
       });
-      ipcMain.handle("toonflow:window:toggle-maximize", async (event) => {
+      ipcMain.handle("narrastage:window:toggle-maximize", async (event) => {
         trustedRequest(event);
         if (mainWindow?.isMaximized()) mainWindow.unmaximize();
         else mainWindow?.maximize();
       });
-      ipcMain.handle("toonflow:window:close", async (event) => {
+      ipcMain.handle("narrastage:window:close", async (event) => {
         trustedRequest(event);
         mainWindow?.close();
       });

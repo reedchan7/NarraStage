@@ -29,7 +29,7 @@ export function JobsPage() {
     <div className="page-frame">
       <header className="page-header">
         <div>
-          <p className="eyebrow">TOONFLOW / JOBS</p>
+          <p className="eyebrow">NARRASTAGE / JOBS</p>
           <h1>生成任务</h1>
           <p>恢复、核对并继续处理持久化的图像与视频任务。</p>
         </div>

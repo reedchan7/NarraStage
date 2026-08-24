@@ -23,7 +23,7 @@ afterEach(async () => {
 });
 
 test("raw asset upload streams into principal-owned storage and rejects MIME spoofing", async () => {
-  const directory = await mkdtemp(path.join(os.tmpdir(), "toonflow-asset-upload-api-"));
+  const directory = await mkdtemp(path.join(os.tmpdir(), "narrastage-asset-upload-api-"));
   directories.push(directory);
   const database = knex({
     client: "sqlite3",
@@ -50,8 +50,8 @@ test("raw asset upload streams into principal-owned storage and rejects MIME spo
       method: "PUT",
       headers: {
         "content-type": "application/octet-stream",
-        "x-toonflow-media-type": mediaType,
-        "x-toonflow-filename": encodeURIComponent("brief.pdf"),
+        "x-narrastage-media-type": mediaType,
+        "x-narrastage-filename": encodeURIComponent("brief.pdf"),
       },
       body: pdf,
     });

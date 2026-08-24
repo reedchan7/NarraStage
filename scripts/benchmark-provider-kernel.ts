@@ -27,7 +27,7 @@ for (let index = 0; index < iterations; index += 1) {
   );
 }
 const elapsedMs = performance.now() - startedAt;
-const maximumMs = Number(process.env.TOONFLOW_PROVIDER_BENCHMARK_MAX_MS ?? 2_000);
+const maximumMs = Number(process.env.NARRASTAGE_PROVIDER_BENCHMARK_MAX_MS ?? 2_000);
 if (!Number.isFinite(maximumMs) || maximumMs <= 0 || elapsedMs > maximumMs) {
   throw new Error(
     `provider.kernel_benchmark_failed:${elapsedMs.toFixed(2)}ms>${maximumMs.toFixed(2)}ms`,

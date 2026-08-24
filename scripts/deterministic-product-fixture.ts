@@ -3,8 +3,8 @@ import { readFile } from "node:fs/promises";
 import type { AddressInfo } from "node:net";
 import path from "node:path";
 import { serve } from "@hono/node-server";
-import contractSource from "@toonflow/contracts/source";
-import type { operations } from "@toonflow/contracts";
+import contractSource from "@narrastage/contracts/source";
+import type { operations } from "@narrastage/contracts";
 import { Hono } from "hono";
 import { Server as SocketServer } from "socket.io";
 
@@ -261,7 +261,7 @@ export async function startDeterministicProductFixture(requestedPort = 0) {
           imageOfferingId: "deterministic:image",
           imageQuality: "1K",
           mode: "text",
-          videoModel: "toonflow:Kling-Video-O1",
+          videoModel: "narrastage:Kling-Video-O1",
           videoCatalogMode: "builtin",
           videoCanonicalModelId: "deterministic:video-v1",
           videoOfferingId: "deterministic:video",
@@ -447,8 +447,8 @@ export async function startDeterministicProductFixture(requestedPort = 0) {
     return context.json(envelope(job));
   });
   app.put("/api/v2/media-assets/upload", async (context) => {
-    const mediaType = context.req.header("x-toonflow-media-type") ?? "";
-    const filename = decodeURIComponent(context.req.header("x-toonflow-filename") ?? "");
+    const mediaType = context.req.header("x-narrastage-media-type") ?? "";
+    const filename = decodeURIComponent(context.req.header("x-narrastage-filename") ?? "");
     const bytes = await context.req.arrayBuffer();
     const kind = mediaType.split("/", 1)[0];
     if (!filename || bytes.byteLength === 0 || !["image", "video", "audio"].includes(kind)) {
@@ -611,7 +611,7 @@ export async function startDeterministicProductFixture(requestedPort = 0) {
 
 if (import.meta.main) {
   const fixture = await startDeterministicProductFixture(
-    Number(process.env.TOONFLOW_ACCEPTANCE_PORT ?? 10588),
+    Number(process.env.NARRASTAGE_ACCEPTANCE_PORT ?? 10588),
   );
   console.log(`DETERMINISTIC_FIXTURE_PORT=${fixture.port}`);
   const close = async () => {

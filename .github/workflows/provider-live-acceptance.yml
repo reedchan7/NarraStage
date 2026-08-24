@@ -44,12 +44,12 @@ jobs:
     environment: provider-acceptance
     timeout-minutes: 180
     env:
-      TOONFLOW_LIVE_TESTS: "1"
-      TOONFLOW_LIVE_TEST_MAX_USD: ${{ inputs.totalMaxUsd }}
-      TOONFLOW_DEPLOYMENT_REGION: global
-      TOONFLOW_EXECUTOR_ID: github-provider-acceptance-v1
-      TOONFLOW_EXECUTOR_WORKFLOW: provider-live-acceptance
-      TOONFLOW_EXECUTOR_ENVIRONMENT: provider-acceptance
+      NARRASTAGE_LIVE_TESTS: "1"
+      NARRASTAGE_LIVE_TEST_MAX_USD: ${{ inputs.totalMaxUsd }}
+      NARRASTAGE_DEPLOYMENT_REGION: global
+      NARRASTAGE_EXECUTOR_ID: github-provider-acceptance-v1
+      NARRASTAGE_EXECUTOR_WORKFLOW: provider-live-acceptance
+      NARRASTAGE_EXECUTOR_ENVIRONMENT: provider-acceptance
       DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
       FAL_KEY: ${{ secrets.FAL_KEY }}
       GOOGLE_GENERATIVE_AI_API_KEY: ${{ secrets.GOOGLE_GENERATIVE_AI_API_KEY }}
@@ -73,8 +73,8 @@ jobs:
           slug="$(printf '%s' '${{ inputs.offeringId }}' | tr ':/' '--')"
           run_id="github-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${slug}"
           printf 'run_id=%s\n' "$run_id" >> "$GITHUB_OUTPUT"
-          printf 'artifact_dir=%s\n' "$RUNNER_TEMP/toonflow-provider-artifacts" >> "$GITHUB_OUTPUT"
-          printf 'report=%s\n' "$RUNNER_TEMP/toonflow-live-reports/$run_id.json" >> "$GITHUB_OUTPUT"
+          printf 'artifact_dir=%s\n' "$RUNNER_TEMP/narrastage-provider-artifacts" >> "$GITHUB_OUTPUT"
+          printf 'report=%s\n' "$RUNNER_TEMP/narrastage-live-reports/$run_id.json" >> "$GITHUB_OUTPUT"
 
       - name: Preview exact cases and budget
         run: >-
@@ -85,7 +85,7 @@ jobs:
 
       - name: Execute real provider adapters and sign the report
         env:
-          TOONFLOW_EXECUTOR_PRIVATE_KEY_PEM: ${{ secrets.TOONFLOW_EXECUTOR_PRIVATE_KEY_PEM }}
+          NARRASTAGE_EXECUTOR_PRIVATE_KEY_PEM: ${{ secrets.NARRASTAGE_EXECUTOR_PRIVATE_KEY_PEM }}
         run: >-
           bun run live:test --
           --offering '${{ inputs.offeringId }}'

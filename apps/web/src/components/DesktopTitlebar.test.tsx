@@ -4,7 +4,7 @@ import { afterEach, describe, expect, test, vi } from "vitest";
 import { DesktopTitlebar } from "./DesktopTitlebar";
 
 afterEach(() => {
-  delete window.toonflowWindow;
+  delete window.narrastageWindow;
 });
 
 describe("DesktopTitlebar", () => {
@@ -12,7 +12,7 @@ describe("DesktopTitlebar", () => {
     const minimize = vi.fn(async () => undefined);
     const toggleMaximize = vi.fn(async () => undefined);
     const close = vi.fn(async () => undefined);
-    window.toonflowWindow = { minimize, toggleMaximize, close };
+    window.narrastageWindow = { minimize, toggleMaximize, close };
     const user = userEvent.setup();
 
     render(<DesktopTitlebar />);

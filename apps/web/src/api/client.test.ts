@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
-import contractSource from "@toonflow/contracts/source";
+import contractSource from "@narrastage/contracts/source";
 import { api, ApiError, contractRangeIncludes } from "@/api/client";
 
 afterEach(() => {
@@ -143,7 +143,7 @@ describe("typed API client", () => {
         operation: "image.generate",
         input: { values: { prompt: "moon harbor" }, assets: [] },
       }),
-    ).rejects.toEqual(new ApiError("客户端 API 契约与服务端不兼容，请更新 Toonflow 客户端", 426));
+    ).rejects.toEqual(new ApiError("客户端 API 契约与服务端不兼容，请更新 NarraStage 客户端", 426));
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock.mock.calls[0]?.[0]).toBe("/api/meta");
   });

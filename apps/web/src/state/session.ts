@@ -20,7 +20,7 @@ export const useSession = create<SessionState>()(
       },
     }),
     {
-      name: "toonflow.session.v2",
+      name: "narrastage.session.v2",
       version: 2,
       partialize: (state) => ({ session: state.session }),
     },

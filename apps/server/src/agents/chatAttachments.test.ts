@@ -38,7 +38,7 @@ describe("agent chat attachments", () => {
         data: { type: "data", data: onePixelPng },
         mediaType: "image/png",
         filename: "pixel.png",
-        providerOptions: { toonflow: { imageDetail: "original" } },
+        providerOptions: { narrastage: { imageDetail: "original" } },
       },
     ]);
   });

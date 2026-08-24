@@ -14,7 +14,7 @@ afterEach(async () => {
 });
 
 async function createRepository() {
-  const directory = await mkdtemp(path.join(os.tmpdir(), "toonflow-jobs-"));
+  const directory = await mkdtemp(path.join(os.tmpdir(), "narrastage-jobs-"));
   directories.push(directory);
   const database = knex({
     client: "sqlite3",

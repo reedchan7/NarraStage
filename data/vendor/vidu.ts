@@ -1,4 +1,4 @@
-//如需遥测AI请使用在toonflow安装目录运行npx @ai-sdk/devtools （要求在其他设置中打开遥测功能，且toonflow有权限在安装目录创建.devtools文件夹）
+//如需遥测AI请使用在narrastage安装目录运行npx @ai-sdk/devtools （要求在其他设置中打开遥测功能，且narrastage有权限在安装目录创建.devtools文件夹）
 // ==================== 类型定义 ====================
 // 文本模型
 interface TextModel {

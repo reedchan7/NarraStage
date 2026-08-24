@@ -10,7 +10,7 @@ const secretNames = [
   "FAL_API_KEY",
   "GEMINI_API_KEY",
   "GOOGLE_GENERATIVE_AI_API_KEY",
-  "TOONFLOW_SECRET_SCAN_CANARY",
+  "NARRASTAGE_SECRET_SCAN_CANARY",
 ] as const;
 const secrets = secretNames.flatMap((name) => {
   const value = process.env[name]?.trim();

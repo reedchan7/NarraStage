@@ -23,7 +23,7 @@ export class ErrorBoundary extends Component<Props, State> {
     if (this.state.error) {
       return (
         <main className="fatal-state">
-          <p className="eyebrow">TOONFLOW / RECOVERY</p>
+          <p className="eyebrow">NARRASTAGE / RECOVERY</p>
           <h1>界面遇到了问题</h1>
           <p>{this.state.error.message}</p>
           <button className="button primary" onClick={() => window.location.reload()} type="button">

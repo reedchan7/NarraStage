@@ -5,7 +5,7 @@ import path from "node:path";
 import { collectWorkspaceViolations } from "./check-workspaces";
 
 async function fixture(): Promise<string> {
-  const root = await mkdtemp(path.join(tmpdir(), "toonflow-workspace-"));
+  const root = await mkdtemp(path.join(tmpdir(), "narrastage-workspace-"));
   await mkdir(path.join(root, "apps/server"), { recursive: true });
   await mkdir(path.join(root, "apps/web"), { recursive: true });
   await mkdir(path.join(root, "apps/desktop"), { recursive: true });
@@ -48,12 +48,12 @@ describe("workspace policy", () => {
         path.join(root, "apps/web/package.json"),
         JSON.stringify({ name: "web", devDependencies: { typescript: "5.6.3" } }),
       );
-      await writeFile(path.join(root, "scripts/package-web.ts"), "../Toonflow-web");
+      await writeFile(path.join(root, "scripts/package-web.ts"), "../NarraStage-web");
       const violations = await collectWorkspaceViolations(root);
       expect(violations).toContain("secondary lockfile is forbidden: apps/web/yarn.lock");
       expect(violations).toContain("secondary lockfile is forbidden: apps/web/bun.lock");
       expect(violations).toContain("apps/web/package.json selects TypeScript below 7: 5.6.3");
-      expect(violations).toContain("scripts/package-web.ts contains ../Toonflow-web");
+      expect(violations).toContain("scripts/package-web.ts contains ../NarraStage-web");
     } finally {
       await rm(root, { recursive: true, force: true });
     }

@@ -28,15 +28,13 @@ const APP_VERSION: string = (() => {
 export default router.post(
   "/",
   validateFields({
-    source: z.enum(["toonflow", "github", "gitee", "atomgit"]),
-    url: z.url().nullable().optional(),
+    source: z.enum(["github", "gitee", "atomgit"]),
+    url: z.url(),
   }),
   async (req, res) => {
     const { source, url } = req.body;
 
-    const getUrl = url ?? "https://toonflow.oss-cn-beijing.aliyuncs.com/update.json";
-
-    const versionInfo = (await fetch(getUrl).then((res) => res.json())) as VersionInfo;
+    const versionInfo = (await fetch(url).then((res) => res.json())) as VersionInfo;
     if (!versionInfo) return res.status(400).send(error("无法获取版本信息"));
     const { version: tagger, time, data } = versionInfo;
 

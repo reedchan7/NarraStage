@@ -79,7 +79,7 @@ export class ProviderConnectionProbe {
     this.#fetch = options.fetch ?? fetch;
     this.#falProbe = options.falProbe;
     this.#deploymentRegion =
-      options.deploymentRegion ?? process.env.TOONFLOW_DEPLOYMENT_REGION ?? "global";
+      options.deploymentRegion ?? process.env.NARRASTAGE_DEPLOYMENT_REGION ?? "global";
   }
 
   async check(providerId: ProviderId): Promise<ProviderConnectionProbeResult> {
@@ -253,7 +253,7 @@ export class ProviderConnectionProbe {
       if (this.#falProbe) await this.#falProbe();
       else {
         await new FalQueueTransport({ credentialVault: this.#credentialVault }).upload(
-          new Blob(["toonflow-health"], { type: "text/plain" }),
+          new Blob(["narrastage-health"], { type: "text/plain" }),
         );
       }
       const endpointRevisions: Array<{ mode: string; endpoint: string; revision: string }> = [];

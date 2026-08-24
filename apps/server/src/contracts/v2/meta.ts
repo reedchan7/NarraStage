@@ -11,7 +11,7 @@ export async function getApiMeta() {
     contractVersion,
     openapiSha256: createOpenApiArtifact().sha256,
     backendRevision:
-      process.env.TOONFLOW_BACKEND_REVISION ?? webBuildManifest.backendRevision ?? "development",
+      process.env.NARRASTAGE_BACKEND_REVISION ?? webBuildManifest.backendRevision ?? "development",
     webRevision: webBuildManifest.webRevision,
   });
 }

@@ -2,7 +2,7 @@
 
 BUN ?= bun
 DOCKER ?= docker
-DOCKER_IMAGE ?= toonflow
+DOCKER_IMAGE ?= narrastage
 PORT ?= 10588
 DATA_DIR ?= $(CURDIR)/data
 

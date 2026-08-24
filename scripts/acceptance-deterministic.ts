@@ -100,8 +100,8 @@ try {
       method: "PUT",
       headers: {
         Authorization: authorization,
-        "X-Toonflow-Media-Type": "image/png",
-        "X-Toonflow-Filename": "keyframe.png",
+        "X-NarraStage-Media-Type": "image/png",
+        "X-NarraStage-Filename": "keyframe.png",
       },
       body: keyframe,
     }),

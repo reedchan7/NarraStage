@@ -26,9 +26,9 @@ describe("credential IPC boundary", () => {
   test("accepts only the packaged renderer or declared local development origin", () => {
     expect(() =>
       assertTrustedCredentialSender(
-        "file:///Applications/ToonFlow/index.html",
+        "file:///Applications/NarraStage/index.html",
         [],
-        "/Applications/ToonFlow/index.html",
+        "/Applications/NarraStage/index.html",
       ),
     ).not.toThrow();
     expect(() =>
@@ -41,7 +41,7 @@ describe("credential IPC boundary", () => {
       assertTrustedCredentialSender(
         "file:///tmp/attacker.html",
         [],
-        "/Applications/ToonFlow/index.html",
+        "/Applications/NarraStage/index.html",
       ),
     ).toThrow("credential.untrusted_renderer");
   });

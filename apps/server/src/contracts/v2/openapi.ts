@@ -107,7 +107,7 @@ export function createOpenApiArtifact() {
   const document = {
     openapi: "3.1.0",
     info: {
-      title: "Toonflow Provider API",
+      title: "NarraStage Provider API",
       version: contractVersion,
     },
     paths: {
@@ -291,13 +291,13 @@ export function createOpenApiArtifact() {
           operationId: "uploadOwnedMediaAsset",
           parameters: [
             {
-              name: "X-Toonflow-Media-Type",
+              name: "X-NarraStage-Media-Type",
               in: "header",
               required: true,
               schema: { type: "string" },
             },
             {
-              name: "X-Toonflow-Filename",
+              name: "X-NarraStage-Filename",
               in: "header",
               required: true,
               schema: { type: "string" },

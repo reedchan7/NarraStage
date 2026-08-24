@@ -19,7 +19,7 @@ afterEach(async () => {
 });
 
 test("worker conservatively reconciles a dropped submit and never loops into a second create", async () => {
-  const directory = await mkdtemp(path.join(os.tmpdir(), "toonflow-worker-submit-"));
+  const directory = await mkdtemp(path.join(os.tmpdir(), "narrastage-worker-submit-"));
   directories.push(directory);
   const database = knex({
     client: "sqlite3",

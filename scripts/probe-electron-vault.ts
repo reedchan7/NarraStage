@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 
 const repositoryRoot = path.resolve(import.meta.dir, "..");
-const temporaryRoot = await mkdtemp(path.join(tmpdir(), "toonflow-electron-vault-probe."));
+const temporaryRoot = await mkdtemp(path.join(tmpdir(), "narrastage-electron-vault-probe."));
 const vaultDirectory = path.join(temporaryRoot, "vault");
 await mkdir(vaultDirectory);
 const buildResult = await Bun.build({
@@ -28,7 +28,7 @@ try {
       cwd: repositoryRoot,
       env: {
         ...process.env,
-        TOONFLOW_ELECTRON_VAULT_PROBE_DIR: vaultDirectory,
+        NARRASTAGE_ELECTRON_VAULT_PROBE_DIR: vaultDirectory,
       },
       stderr: "pipe",
       stdout: "pipe",

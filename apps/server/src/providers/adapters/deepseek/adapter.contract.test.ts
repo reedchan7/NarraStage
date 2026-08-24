@@ -524,7 +524,7 @@ describe("DeepSeek V4 adapter contract", () => {
       },
     });
     const oversizedSources = [
-      { kind: "path" as const, path: "/definitely-not-present/toonflow-oversize.png" },
+      { kind: "path" as const, path: "/definitely-not-present/narrastage-oversize.png" },
       { kind: "blob" as const, blob: oversizedBlob },
     ];
 

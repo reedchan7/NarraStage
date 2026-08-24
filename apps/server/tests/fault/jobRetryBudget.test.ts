@@ -16,7 +16,7 @@ afterEach(async () => {
 });
 
 test("exhausted polling budget becomes a durable terminal failure instead of a hot loop", async () => {
-  const directory = await mkdtemp(path.join(os.tmpdir(), "toonflow-poll-budget-"));
+  const directory = await mkdtemp(path.join(os.tmpdir(), "narrastage-poll-budget-"));
   directories.push(directory);
   const database = knex({
     client: "sqlite3",
@@ -64,7 +64,7 @@ test("exhausted polling budget becomes a durable terminal failure instead of a h
 });
 
 test("job creation persists a finite observation deadline", async () => {
-  const directory = await mkdtemp(path.join(os.tmpdir(), "toonflow-job-deadline-"));
+  const directory = await mkdtemp(path.join(os.tmpdir(), "narrastage-job-deadline-"));
   directories.push(directory);
   const database = knex({
     client: "sqlite3",

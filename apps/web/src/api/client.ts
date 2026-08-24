@@ -1,5 +1,5 @@
-import contractSource from "@toonflow/contracts/source";
-import type { operations } from "@toonflow/contracts";
+import contractSource from "@narrastage/contracts/source";
+import type { operations } from "@narrastage/contracts";
 
 export interface ApiEnvelope<T> {
   code: number;
@@ -162,9 +162,9 @@ export function contractRangeIncludes(range: string, version: string): boolean {
 
 async function assertApiCompatibility(): Promise<void> {
   const expectedRange =
-    import.meta.env.VITE_TOONFLOW_CONTRACT_RANGE ?? `^${contractSource.contractVersion}`;
+    import.meta.env.VITE_NARRASTAGE_CONTRACT_RANGE ?? `^${contractSource.contractVersion}`;
   const expectedOpenApi =
-    import.meta.env.VITE_TOONFLOW_OPENAPI_SHA256 ?? contractSource.openapiSha256;
+    import.meta.env.VITE_NARRASTAGE_OPENAPI_SHA256 ?? contractSource.openapiSha256;
   const controller = new AbortController();
   const timeout = window.setTimeout(() => controller.abort(), 20_000);
   try {
@@ -183,7 +183,7 @@ async function assertApiCompatibility(): Promise<void> {
         meta.openapiSha256 === expectedOpenApi),
     );
     if (!response.ok || !compatibleVersion || !compatibleSchema) {
-      throw new ApiError("客户端 API 契约与服务端不兼容，请更新 Toonflow 客户端", 426);
+      throw new ApiError("客户端 API 契约与服务端不兼容，请更新 NarraStage 客户端", 426);
     }
   } catch (error) {
     if (error instanceof ApiError) throw error;
@@ -227,7 +227,7 @@ export async function apiRequest<T>(
     if (error instanceof DOMException && error.name === "AbortError") {
       throw new ApiError("请求超时，请检查服务是否正在运行", 408);
     }
-    throw new ApiError(error instanceof Error ? error.message : "无法连接 Toonflow 服务", 0);
+    throw new ApiError(error instanceof Error ? error.message : "无法连接 NarraStage 服务", 0);
   } finally {
     window.clearTimeout(timeout);
   }
@@ -370,8 +370,8 @@ export const api = {
       headers: {
         Accept: "application/json",
         Authorization: token,
-        "X-Toonflow-Media-Type": file.type,
-        "X-Toonflow-Filename": encodeURIComponent(file.name),
+        "X-NarraStage-Media-Type": file.type,
+        "X-NarraStage-Filename": encodeURIComponent(file.name),
       },
       credentials: "same-origin",
       body: file,

@@ -52,7 +52,7 @@ const publicResolver: OutboundResolver = async () => [{ address: "8.8.8.8", fami
 
 describe("secure provider asset import", () => {
   test("imports a decoded response into content-addressed owned storage", async () => {
-    const rootDirectory = await mkdtemp(path.join(os.tmpdir(), "toonflow-assets-"));
+    const rootDirectory = await mkdtemp(path.join(os.tmpdir(), "narrastage-assets-"));
     directories.push(rootDirectory);
     const payload = Buffer.from([
       0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x00,
@@ -76,7 +76,7 @@ describe("secure provider asset import", () => {
   });
 
   test("revalidates every redirect and refuses private DNS before opening it", async () => {
-    const rootDirectory = await mkdtemp(path.join(os.tmpdir(), "toonflow-assets-redirect-"));
+    const rootDirectory = await mkdtemp(path.join(os.tmpdir(), "narrastage-assets-redirect-"));
     directories.push(rootDirectory);
     const transport = new QueueTransport([
       response(302, { location: "https://metadata.internal/latest" }),
@@ -95,7 +95,7 @@ describe("secure provider asset import", () => {
   });
 
   test("injects a referenced credential only for explicitly allowed origins and streams redirects", async () => {
-    const rootDirectory = await mkdtemp(path.join(os.tmpdir(), "toonflow-assets-auth-"));
+    const rootDirectory = await mkdtemp(path.join(os.tmpdir(), "narrastage-assets-auth-"));
     directories.push(rootDirectory);
     const transport = new QueueTransport([
       response(302, { location: "https://storage.googleapis.com/generated/video.mp4" }),
@@ -130,7 +130,7 @@ describe("secure provider asset import", () => {
   });
 
   test("limits decoded bytes and removes partial files after a compression bomb", async () => {
-    const rootDirectory = await mkdtemp(path.join(os.tmpdir(), "toonflow-assets-bomb-"));
+    const rootDirectory = await mkdtemp(path.join(os.tmpdir(), "narrastage-assets-bomb-"));
     directories.push(rootDirectory);
     const transport = new QueueTransport([
       response(
@@ -153,7 +153,7 @@ describe("secure provider asset import", () => {
   });
 
   test("blocks loopback literals before the network transport", async () => {
-    const rootDirectory = await mkdtemp(path.join(os.tmpdir(), "toonflow-assets-loopback-"));
+    const rootDirectory = await mkdtemp(path.join(os.tmpdir(), "narrastage-assets-loopback-"));
     directories.push(rootDirectory);
     const transport = new QueueTransport([]);
     const gateway = new AssetGateway({

@@ -14,8 +14,8 @@ interface LocalApiPolicyInput {
 const loopbackHosts = new Set(["127.0.0.1", "::1", "localhost"]);
 
 export function resolveLocalApiPolicy(input: LocalApiPolicyInput): LocalApiPolicy {
-  const host = input.runtime === "desktop" ? "127.0.0.1" : input.env.TOONFLOW_HOST || "127.0.0.1";
-  const configuredOrigins = (input.env.TOONFLOW_ALLOWED_ORIGINS ?? "")
+  const host = input.runtime === "desktop" ? "127.0.0.1" : input.env.NARRASTAGE_HOST || "127.0.0.1";
+  const configuredOrigins = (input.env.NARRASTAGE_ALLOWED_ORIGINS ?? "")
     .split(",")
     .map((origin) => origin.trim())
     .filter(Boolean);

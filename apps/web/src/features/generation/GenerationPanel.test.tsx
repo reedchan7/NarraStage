@@ -76,12 +76,12 @@ describe("generation panel", () => {
           projectId={7}
           catalog={unavailableCatalog}
           token="Bearer fixture"
-          configuredOfferingId="toonflow:legacy-image"
+          configuredOfferingId="narrastage:legacy-image"
         />
       </QueryClientProvider>,
     );
 
-    expect(screen.getByRole("alert")).toHaveTextContent("toonflow:legacy-image");
+    expect(screen.getByRole("alert")).toHaveTextContent("narrastage:legacy-image");
     expect(screen.getByRole("combobox", { name: "模型服务" })).toHaveValue("");
     expect(screen.getByRole("button", { name: "开始生成" })).toBeDisabled();
   });

@@ -173,7 +173,7 @@ export async function generateContracts(repositoryRoot: string, check: boolean):
   const sourcePath = path.join(repositoryRoot, "packages/contracts/src/generated/source.json");
   const openapi = await readFile(openapiPath);
   const document = JSON.parse(openapi.toString("utf8")) as JsonObject;
-  const temporaryDirectory = await mkdtemp(path.join(tmpdir(), "toonflow-contracts-"));
+  const temporaryDirectory = await mkdtemp(path.join(tmpdir(), "narrastage-contracts-"));
   const temporaryGenerated = path.join(temporaryDirectory, "v2.ts");
   try {
     await writeFile(temporaryGenerated, renderOpenApiTypes(document), "utf8");

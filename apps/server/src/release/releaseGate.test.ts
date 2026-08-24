@@ -39,7 +39,7 @@ const evidenceTrust = {
     {
       id: "ci-executor",
       publicKeyPem: publicPem(executorKeys.publicKey),
-      repository: "reedchan7/Toonflow-app",
+      repository: "reedchan7/NarraStage",
       workflow: "provider-live-acceptance",
       environments: ["acceptance"],
     },
@@ -180,7 +180,7 @@ function acceptedMatrix(catalog: ProviderCatalog = builtinCatalog): {
       samples,
       executionAttestation: {
         executorId: "ci-executor",
-        repository: "reedchan7/Toonflow-app",
+        repository: "reedchan7/NarraStage",
         workflow: "provider-live-acceptance",
         environment: "acceptance",
         commitSha: "1".repeat(40),

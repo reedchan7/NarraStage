@@ -1,6 +1,6 @@
 {
   "info": {
-    "title": "Toonflow Provider API",
+    "title": "NarraStage Provider API",
     "version": "2.0.0"
   },
   "openapi": "3.1.0",
@@ -5544,7 +5544,7 @@
         "parameters": [
           {
             "in": "header",
-            "name": "X-Toonflow-Media-Type",
+            "name": "X-NarraStage-Media-Type",
             "required": true,
             "schema": {
               "type": "string"
@@ -5552,7 +5552,7 @@
           },
           {
             "in": "header",
-            "name": "X-Toonflow-Filename",
+            "name": "X-NarraStage-Filename",
             "required": true,
             "schema": {
               "type": "string"

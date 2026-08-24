@@ -80,7 +80,7 @@ test("Hono compatibility routes retain the legacy 100 MB JSON body limit", async
 });
 
 test("Hono compatibility routes stream sendFile responses without falling through to 204", async () => {
-  const directory = await mkdtemp(path.join(tmpdir(), "toonflow-send-file-"));
+  const directory = await mkdtemp(path.join(tmpdir(), "narrastage-send-file-"));
   directories.push(directory);
   const filePath = path.join(directory, "asset.bin");
   await writeFile(filePath, Buffer.from("owned-media"));

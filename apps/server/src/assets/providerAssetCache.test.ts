@@ -13,7 +13,7 @@ afterEach(async () => {
 });
 
 test("provider asset reuse is scoped by provider, credential version, hash, and expiry", async () => {
-  const directory = await mkdtemp(path.join(os.tmpdir(), "toonflow-provider-assets-"));
+  const directory = await mkdtemp(path.join(os.tmpdir(), "narrastage-provider-assets-"));
   directories.push(directory);
   const database = knex({
     client: "sqlite3",

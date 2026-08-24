@@ -129,10 +129,10 @@ export async function packageWeb(): Promise<void> {
   const supportedContractRange = `^${generatedSource.contractVersion}`;
   await command(webRoot, "bun", ["run", "build-only"], {
     ...globalThis.process.env,
-    VITE_TOONFLOW_WEB_REVISION: webRevision,
-    VITE_TOONFLOW_CONTRACT_RANGE: supportedContractRange,
-    VITE_TOONFLOW_OPENAPI_SHA256: openapiSha256,
-    VITE_TOONFLOW_GENERATED_CLIENT_SHA256: generatedClientSha256,
+    VITE_NARRASTAGE_WEB_REVISION: webRevision,
+    VITE_NARRASTAGE_CONTRACT_RANGE: supportedContractRange,
+    VITE_NARRASTAGE_OPENAPI_SHA256: openapiSha256,
+    VITE_NARRASTAGE_GENERATED_CLIENT_SHA256: generatedClientSha256,
   });
 
   const bundlePath = path.join(webRoot, "dist/index.html");

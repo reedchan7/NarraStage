@@ -352,7 +352,7 @@ export class GenerationJobRepository {
         sequence,
         provider_id: submittingRow.provider_id,
         offering_id: submittingRow.offering_id,
-        provider_idempotency_key: `toonflow:${id}:attempt:${sequence}`,
+        provider_idempotency_key: `narrastage:${id}:attempt:${sequence}`,
         state: "prepared",
         provider_handle: null,
         error_json: null,

@@ -3,8 +3,8 @@
 - SPEC: ./SPEC.md · version: 4 · normative digest: eaaf9fca4e4d8e23895dd3d9a88cdbb5a2fbe4229d45d41b503c8187bc99f9fa
 - Approved design: ./DESIGN_PLAN.md
 - Assurance: deep
-- Base revisions: Toonflow-app `56f88fb6034cea88266f3cd324a8a176a77ea5a9`; Toonflow-web `9c4cb0ec7d4f6b4067c7768e2df8cdc7f8587214`
-- Worktrees: `main@/Users/reedchan/Workspaces/github/reedchan7/Toonflow-app`; detached baseline at `/Users/reedchan/Workspaces/github/reedchan7/Toonflow-web`
+- Base revisions: NarraStage `56f88fb6034cea88266f3cd324a8a176a77ea5a9`; NarraStage-web `9c4cb0ec7d4f6b4067c7768e2df8cdc7f8587214`
+- Worktrees: `main@/Users/reedchan/Workspaces/github/reedchan7/NarraStage`; detached baseline at `/Users/reedchan/Workspaces/github/reedchan7/NarraStage-web`
 - Candidate mode: local-content-manifest
 - Authority: edit yes · commit no · branch no · push no · PR no · merge no · deploy no · paid live API no until its slice budget gate
 - Created: 2026-08-23 · Current phase: 7
@@ -25,12 +25,12 @@ The owner's in-thread “可以开始实现了，批准” pre-authorizes the ap
 
 | Path/state | SHA-256 / identity | Owner | Must remain unchanged? |
 |---|---|---|---|
-| Toonflow-app HEAD/index | `56f88fb6034cea88266f3cd324a8a176a77ea5a9`; tracked tree clean at pickup | repository baseline | unrelated paths yes |
+| NarraStage HEAD/index | `56f88fb6034cea88266f3cd324a8a176a77ea5a9`; tracked tree clean at pickup | repository baseline | unrelated paths yes |
 | `docs/features/001-multimodal-provider-architecture/SPEC.md` | `e38b2c579a7354c09ad10cc929c17aee1c813a6b40b35e332390fd60270dd00e`; normative digest above | task | yes except implementation status/amendment |
 | `docs/features/001-multimodal-provider-architecture/RESEARCH.md` | `50605aca66a76c211174ed2ca8804723c4f060ac163bb374397ea08c10827443` | task | append-only evidence allowed |
 | `docs/features/001-multimodal-provider-architecture/DESIGN_PLAN.md` | `8d17eecdae4d0dc5a730b6c2834389c6d378251d9b4d7918bec4792979ac5de0` | task | yes |
-| Toonflow-web HEAD | `9c4cb0ec7d4f6b4067c7768e2df8cdc7f8587214`, detached local clone | repository baseline | unrelated paths yes |
-| Toonflow-web `vite.config.js`, `vite.config.d.ts` | baseline `vue-tsc --build --force` emissions, SHA-256 `36eed22a…` / `4b96dd19…` | task-generated artifact | remove before first checkpoint |
+| NarraStage-web HEAD | `9c4cb0ec7d4f6b4067c7768e2df8cdc7f8587214`, detached local clone | repository baseline | unrelated paths yes |
+| NarraStage-web `vite.config.js`, `vite.config.d.ts` | baseline `vue-tsc --build --force` emissions, SHA-256 `36eed22a…` / `4b96dd19…` | task-generated artifact | remove before first checkpoint |
 | unrelated tracked/staged/unstaged files | none in either repository at pickup | user | yes |
 
 This PLAN is self-referential and is checkpointed by each slice manifest rather than a pre-edit hash.
@@ -40,7 +40,7 @@ This PLAN is self-referential and is checkpointed by each slice manifest rather 
 - 产品同时运行于 Bun/Express 服务端、独立 Vue Web 和 Electron 桌面端；默认没有公网 webhook。
 - renderer、REST 响应、日志、job payload、OpenAPI 与 Socket 事件均不得包含 secret。
 - provider operation 必须带 schema version 且可 JSON 序列化；大媒体不得嵌入 job JSON。
-- provider 返回的 URL 与 redirect 均按不可信输入处理；最终结果必须进入 Toonflow-owned storage。
+- provider 返回的 URL 与 redirect 均按不可信输入处理；最终结果必须进入 NarraStage-owned storage。
 - unsupported 与 unavailable 是不同状态；未知参数、隐式降级和静默 provider fallback 均被禁止。
 - 现有 `${vendorId}:${modelName}` 可继续读取；新 API 使用结构化 ID，不再依赖字符串 split。
 - 构建产物必须能追溯 backend revision、Web revision 和 API contract version。
@@ -78,7 +78,7 @@ This PLAN is self-referential and is checkpointed by each slice manifest rather 
 | agents/text | agents → `src/utils/ai.ts::textRequest` → VM vendor | RC-002 fixtures | traced | live behavior depends on provider credential |
 | image/video generation | Workbench/assets routes → `src/utils/ai.ts` → provider URL → local save | RC-003 + job/asset tests | traced | current polling is in-process and non-durable |
 | provider settings/secrets | Web vendor config → REST `inputValues` → SQLite/VM | AC-010/NFR-003 | traced high risk | current ordinary JSON may contain secret |
-| Electron boundary | renderer → local API / `toonflow://` → main | AC-010/AC-012/AC-013 | traced high risk | no narrow credential preload yet |
+| Electron boundary | renderer → local API / `narrastage://` → main | AC-010/AC-012/AC-013 | traced high risk | no narrow credential preload yet |
 | local/remote HTTP | `src/app.ts` CORS/listen/auth | AC-009/AC-010 | traced high risk | current listen/CORS are broader than target |
 | cross-repo contract | app REST → handwritten Web mappings → embedded bundle | AC-003/AC-013/NFR-007/NFR-009 | traced | provenance mismatch above |
 | provider outputs | adapters/VM → remote URLs → route downloads | AC-009/RC-003 | traced high risk | shared outbound policy absent |
@@ -256,7 +256,7 @@ Every AC-001–AC-021, RC-001–RC-004 and NFR-001–NFR-009 is mapped above; re
 
 - Web i18n audit reports 309 unused keys, 3 pre-existing missing keys and 377 hard-coded strings after the provider-platform locale additions. The 3 missing keys remain the normalized pre-existing baseline and no new missing keys were introduced; global historical cleanup is outside this feature unless it blocks an affected locale gate.
 - Web install reports existing package-license/peer warnings. They remain baseline fingerprints unless a slice changes the relevant dependency.
-- No `reedchan7/Toonflow-web` remote fork existed when inspected. Creating a remote repository or pushing is outside current authority; implementation remains in the local fixed-revision clone.
+- No `reedchan7/NarraStage-web` remote fork existed when inspected. Creating a remote repository or pushing is outside current authority; implementation remains in the local fixed-revision clone.
 
 ## Review log
 
@@ -299,14 +299,14 @@ Every AC-001–AC-021, RC-001–RC-004 and NFR-001–NFR-009 is mapped above; re
 ### Waivers, open work, and remaining risk
 
 - No waiver. Paid live requests were not run because no explicit USD budget was approved; MiniMax official also lacks a credential. `bun run release:evidence` intentionally fails with `evidence_missing` for all 12 enabled targets, so catalog evidence remains `contract_verified`, never `product_accepted`.
-- GitHub `provider-acceptance` Environment is not provisioned (`GET /repos/reedchan7/Toonflow-app/environments/provider-acceptance` returned 404). Required-reviewer policy and Environment-scoped provider/executor secrets remain an external release blocker.
+- GitHub `provider-acceptance` Environment is not provisioned (`GET /repos/reedchan7/NarraStage/environments/provider-acceptance` returned 404). Required-reviewer policy and Environment-scoped provider/executor secrets remain an external release blocker.
 - Web dependency audit is release-blocking: 39 high, 74 moderate and 14 low inherited findings. Backend audit found no vulnerabilities across 631 packages.
 - Real visual/a11y/product acceptance, NFR coverage/mutation thresholds and cross-platform packaged smoke remain open. External model/pricing lifecycle must be refreshed immediately before those live gates.
 
 ### Clean-checkout demo
 
-1. `bun run check && bun run provenance:check && bun run build` in Toonflow-app.
-2. `corepack yarn type-check && corepack yarn test:run && corepack yarn i18n:check && corepack yarn build-only` in Toonflow-web.
+1. `bun run check && bun run provenance:check && bun run build` in NarraStage.
+2. `corepack yarn type-check && corepack yarn test:run && corepack yarn i18n:check && corepack yarn build-only` in NarraStage-web.
 3. `bun run web:package` twice; manifest and embedded bundle SHA-256 must remain identical.
 
 ### State evidence

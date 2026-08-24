@@ -19,7 +19,7 @@ afterEach(async () => {
 
 describe("Electron credential vault", () => {
   test("persists only encrypted values with owner-only permissions and survives reload", async () => {
-    const directory = await mkdtemp(path.join(os.tmpdir(), "toonflow-vault-"));
+    const directory = await mkdtemp(path.join(os.tmpdir(), "narrastage-vault-"));
     directories.push(directory);
     const filePath = path.join(directory, "credentials.v1.json");
     const vault = new ElectronCredentialVault(filePath, codec);
@@ -39,7 +39,7 @@ describe("Electron credential vault", () => {
   });
 
   test("fails closed before touching disk when OS encryption is unavailable", async () => {
-    const directory = await mkdtemp(path.join(os.tmpdir(), "toonflow-vault-"));
+    const directory = await mkdtemp(path.join(os.tmpdir(), "narrastage-vault-"));
     directories.push(directory);
     const vault = new ElectronCredentialVault(path.join(directory, "credentials.v1.json"), {
       ...codec,
@@ -52,7 +52,7 @@ describe("Electron credential vault", () => {
   });
 
   test("rejects Electron's unprotected Linux basic_text backend", async () => {
-    const directory = await mkdtemp(path.join(os.tmpdir(), "toonflow-vault-"));
+    const directory = await mkdtemp(path.join(os.tmpdir(), "narrastage-vault-"));
     directories.push(directory);
     const vault = new ElectronCredentialVault(
       path.join(directory, "credentials.v1.json"),
@@ -69,7 +69,7 @@ describe("Electron credential vault", () => {
   });
 
   test("persists the temporary directory entry before moving the primary to backup", async () => {
-    const directory = await mkdtemp(path.join(os.tmpdir(), "toonflow-vault-"));
+    const directory = await mkdtemp(path.join(os.tmpdir(), "narrastage-vault-"));
     directories.push(directory);
     const filePath = path.join(directory, "credentials.v1.json");
     const events: string[] = [];
@@ -103,7 +103,7 @@ describe("Electron credential vault", () => {
   });
 
   test("does not expose a rejected mutation when the first directory sync fails", async () => {
-    const directory = await mkdtemp(path.join(os.tmpdir(), "toonflow-vault-"));
+    const directory = await mkdtemp(path.join(os.tmpdir(), "narrastage-vault-"));
     directories.push(directory);
     const filePath = path.join(directory, "credentials.v1.json");
     const vault = new ElectronCredentialVault(filePath, codec, process.platform, {
@@ -121,7 +121,7 @@ describe("Electron credential vault", () => {
   });
 
   test("recovers the highest revision after a crash between backup and primary renames", async () => {
-    const directory = await mkdtemp(path.join(os.tmpdir(), "toonflow-vault-"));
+    const directory = await mkdtemp(path.join(os.tmpdir(), "narrastage-vault-"));
     directories.push(directory);
     const filePath = path.join(directory, "credentials.v1.json");
     await Bun.write(
@@ -156,7 +156,7 @@ describe("Electron credential vault", () => {
   });
 
   test("does not resurrect a deleted secret from an older backup", async () => {
-    const directory = await mkdtemp(path.join(os.tmpdir(), "toonflow-vault-"));
+    const directory = await mkdtemp(path.join(os.tmpdir(), "narrastage-vault-"));
     directories.push(directory);
     const filePath = path.join(directory, "credentials.v1.json");
     await Bun.write(

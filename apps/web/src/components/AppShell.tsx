@@ -26,7 +26,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <NavLink className="brand" to="/projects" aria-label="Toonflow projects">
+        <NavLink className="brand" to="/projects" aria-label="NarraStage projects">
           <span className="brand-mark" aria-hidden="true">
             <Film size={18} strokeWidth={2.2} />
           </span>

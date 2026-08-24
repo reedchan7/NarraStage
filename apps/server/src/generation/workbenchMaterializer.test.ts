@@ -14,7 +14,7 @@ afterEach(async () => {
 });
 
 test("materializes a successful owned video into Workbench exactly once", async () => {
-  const directory = await mkdtemp(path.join(os.tmpdir(), "toonflow-materialize-"));
+  const directory = await mkdtemp(path.join(os.tmpdir(), "narrastage-materialize-"));
   directories.push(directory);
   const database = knex({
     client: "sqlite3",
