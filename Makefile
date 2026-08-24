@@ -5,6 +5,16 @@ DOCKER ?= docker
 DOCKER_IMAGE ?= narrastage
 PORT ?= 10588
 DATA_DIR ?= $(CURDIR)/data
+APP_BUNDLE ?= NarraStage.app
+APPLICATIONS_DIR ?= /Applications
+UNAME_S := $(shell uname -s)
+UNAME_M := $(shell uname -m)
+
+ifeq ($(UNAME_M),arm64)
+MAC_PACK_DIR := dist/mac-arm64
+else
+MAC_PACK_DIR := dist/mac
+endif
 
 # 分组约定：
 #   ##@ 标题     — 出现在 `make help` 里的分组名
@@ -115,7 +125,7 @@ ci: ## 运行完整 CI 检查和构建
 	$(BUN) run ci
 
 ##@ 构建
-.PHONY: web-build web-package build pack pack-local dist dist-win dist-mac dist-linux
+.PHONY: web-build web-package build pack pack-local install-app dist dist-win dist-mac dist-linux
 web-build: ## 构建 Web 客户端
 	$(BUN) run web:build
 
@@ -130,6 +140,16 @@ pack: ## 生成未打包的 Electron 应用目录
 
 pack-local: ## 跳过签名发布证据，生成本机验收用 Electron 应用目录
 	$(BUN) run pack:local
+
+install-app: ## 将本机桌面应用安装到 /Applications（仅 macOS；缺包时先 pack-local）
+	@if [ "$(UNAME_S)" != "Darwin" ]; then echo "install-app 仅支持 macOS" >&2; exit 1; fi
+	@if pgrep -x NarraStage >/dev/null; then echo "请先退出正在运行的 NarraStage，再执行 make install-app" >&2; exit 1; fi
+	@if [ ! -d "$(MAC_PACK_DIR)/$(APP_BUNDLE)" ]; then $(MAKE) pack-local; fi
+	@test -d "$(MAC_PACK_DIR)/$(APP_BUNDLE)" || { echo "未找到 $(MAC_PACK_DIR)/$(APP_BUNDLE)" >&2; exit 1; }
+	rm -rf "$(APPLICATIONS_DIR)/$(APP_BUNDLE)"
+	ditto "$(MAC_PACK_DIR)/$(APP_BUNDLE)" "$(APPLICATIONS_DIR)/$(APP_BUNDLE)"
+	-xattr -cr "$(APPLICATIONS_DIR)/$(APP_BUNDLE)"
+	@echo "已安装到 $(APPLICATIONS_DIR)/$(APP_BUNDLE)"
 
 dist: ## 构建当前平台安装包
 	$(BUN) run dist
