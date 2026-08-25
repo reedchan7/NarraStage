@@ -1,13 +1,27 @@
 import { z } from "zod";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { credentialRefSchema } from "@/security/credentials/types";
+import {
+  credentialRefSchema,
+  type CredentialStatus,
+  type CredentialVault,
+} from "@/security/credentials/types";
 
 export const credentialStatusRequestSchema = credentialRefSchema;
 export const credentialDeleteRequestSchema = credentialRefSchema;
 export const credentialSetRequestSchema = credentialRefSchema
   .extend({ value: z.string().trim().min(1).max(16_384) })
   .strict();
+
+export async function applyCredentialSet(
+  vault: Pick<CredentialVault, "set" | "status">,
+  request: unknown,
+): Promise<CredentialStatus> {
+  const parsed = credentialSetRequestSchema.parse(request);
+  const ref = { providerId: parsed.providerId, slot: parsed.slot };
+  await vault.set(ref, parsed.value);
+  return vault.status(ref);
+}
 
 export function assertTrustedCredentialSender(
   senderUrl: string,

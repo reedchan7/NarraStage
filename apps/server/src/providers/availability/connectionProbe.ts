@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { FalQueueTransport } from "@/providers/adapters/fal/transport";
 import { falH3Manifest } from "@/providers/adapters/fal/manifest";
+import { miniMaxH3Manifest } from "@/providers/adapters/minimax/h3Manifest";
 import { builtinCatalog } from "@/providers/catalog/builtinCatalog";
 import type { Offering } from "@/providers/domain/models";
 import type { ProviderId } from "@/providers/domain/ids";
@@ -94,6 +95,7 @@ export class ProviderConnectionProbe {
     if (providerId === "deepseek") return this.#checkDeepSeek(apiKey, offerings);
     if (providerId === "google") return this.#checkGoogle(apiKey, offerings);
     if (providerId === "fal") return this.#checkFal(offerings);
+    if (providerId === "minimax") return this.#checkMiniMax(apiKey, offerings);
     return this.#recordAll(
       providerId,
       offerings,
@@ -246,6 +248,25 @@ export class ProviderConnectionProbe {
       }
     }
     return this.#recordPerOffering("google", results);
+  }
+
+  async #checkMiniMax(
+    apiKey: string,
+    offerings: Offering[],
+  ): Promise<ProviderConnectionProbeResult> {
+    try {
+      await this.#request(`${miniMaxH3Manifest.baseUrl}/v1/models`, {
+        headers: { Authorization: `Bearer ${apiKey}` },
+      });
+      return this.#recordAll("minimax", offerings, {
+        health: "healthy",
+        capabilitiesObserved: false,
+        supportedOperations: [],
+        revisionObserved: false,
+      });
+    } catch (cause) {
+      return this.#recordAll("minimax", offerings, this.#failureOutcome(cause, true));
+    }
   }
 
   async #checkFal(offerings: Offering[]): Promise<ProviderConnectionProbeResult> {

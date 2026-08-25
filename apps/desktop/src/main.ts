@@ -9,11 +9,12 @@ import {
   LayeredCredentialVault,
 } from "@/security/credentials/runtime";
 import {
+  applyCredentialSet,
   assertTrustedCredentialSender,
   credentialDeleteRequestSchema,
-  credentialSetRequestSchema,
   credentialStatusRequestSchema,
 } from "@/security/credentialIpc";
+import { initializeRuntimeData } from "./runtimeData";
 
 // 加速 Electron 启动：跳过 GPU 信息收集，减少初始化耗时
 app.commandLine.appendSwitch("disable-gpu-shader-disk-cache");
@@ -22,8 +23,6 @@ app.commandLine.appendSwitch("disable-features", "CalculateNativeWinOcclusion");
 const ownsSingleInstanceLock = app.requestSingleInstanceLock();
 if (!ownsSingleInstanceLock) app.quit();
 
-const IMMUTABLE_RUNTIME_ENTRIES = new Set(["assets", "contracts", "models", "serve", "web"]);
-const MUTABLE_RUNTIME_ENTRIES = new Set(["skills", "vendor"]);
 const buildDirectory = path.dirname(fileURLToPath(import.meta.url));
 const isolatedUserDataDirectory =
   process.env.NARRASTAGE_USER_DATA_DIR?.trim() ?? process.env.TOONFLOW_USER_DATA_DIR?.trim();
@@ -37,72 +36,14 @@ if (!isolatedUserDataDirectory) {
   }
 }
 
-function copyDir(src: string, dest: string): void {
-  if (!fs.existsSync(src)) return;
-  fs.mkdirSync(dest, { recursive: true });
-  for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
-    const s = path.join(src, entry.name);
-    const d = path.join(dest, entry.name);
-    entry.isDirectory() ? copyDir(s, d) : fs.existsSync(d) || fs.copyFileSync(s, d);
-  }
-}
-
 declare const __APP_VERSION__: string;
 
-function compareVersions(a: string, b: string): number {
-  const pa = a
-    .split(".")
-    .map((n) => Number.parseInt(n, 10))
-    .filter((n) => Number.isFinite(n));
-  const pb = b
-    .split(".")
-    .map((n) => Number.parseInt(n, 10))
-    .filter((n) => Number.isFinite(n));
-  const len = Math.max(pa.length, pb.length);
-  for (let i = 0; i < len; i++) {
-    const va = pa[i] ?? 0;
-    const vb = pb[i] ?? 0;
-    if (va > vb) return 1;
-    if (va < vb) return -1;
-  }
-  return 0;
-}
-
 function initializeData(): void {
-  const srcDir = path.join(process.resourcesPath, "data");
-  const destDir = path.join(app.getPath("userData"), "data");
-  const versionFilePath = path.join(destDir, "version.txt");
-
-  let shouldForceReplace = false;
-  if (!fs.existsSync(versionFilePath)) {
-    shouldForceReplace = true;
-  } else {
-    const localVersion = fs.readFileSync(versionFilePath, "utf-8").trim();
-    if (compareVersions(localVersion, __APP_VERSION__) < 0) {
-      shouldForceReplace = true;
-    }
-  }
-
-  for (const dir of IMMUTABLE_RUNTIME_ENTRIES) {
-    const targetDir = path.join(destDir, dir);
-    if (shouldForceReplace) {
-      fs.rmSync(targetDir, { recursive: true, force: true });
-      copyDir(path.join(srcDir, dir), targetDir);
-      continue;
-    }
-    if (!fs.existsSync(targetDir)) {
-      copyDir(path.join(srcDir, dir), targetDir);
-    }
-  }
-
-  for (const dir of MUTABLE_RUNTIME_ENTRIES) {
-    copyDir(path.join(srcDir, dir), path.join(destDir, dir));
-  }
-
-  if (shouldForceReplace) {
-    fs.mkdirSync(destDir, { recursive: true });
-    fs.writeFileSync(versionFilePath, `${__APP_VERSION__}\n`, "utf-8");
-  }
+  initializeRuntimeData({
+    packagedDataDir: path.join(process.resourcesPath, "data"),
+    userDataDir: path.join(app.getPath("userData"), "data"),
+    appVersion: __APP_VERSION__,
+  });
 }
 
 const externalDependencies = new Map(
@@ -225,12 +166,7 @@ if (ownsSingleInstanceLock)
       });
       ipcMain.handle("narrastage:credentials:set", async (event, request) => {
         trustedRequest(event);
-        const parsed = credentialSetRequestSchema.parse(request);
-        await credentialVault.set(
-          { providerId: parsed.providerId, slot: parsed.slot },
-          parsed.value,
-        );
-        return credentialVault.status(parsed);
+        return applyCredentialSet(credentialVault, request);
       });
       ipcMain.handle("narrastage:credentials:delete", async (event, request) => {
         trustedRequest(event);

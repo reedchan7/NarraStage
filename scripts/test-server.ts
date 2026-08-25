@@ -3,7 +3,12 @@ import path from "node:path";
 
 const repositoryRoot = path.resolve(import.meta.dir, "..");
 const testFiles = await fg(
-  ["apps/server/src/**/*.test.ts", "apps/server/tests/**/*.test.ts", "scripts/**/*.test.ts"],
+  [
+    "apps/server/src/**/*.test.ts",
+    "apps/server/tests/**/*.test.ts",
+    "apps/desktop/src/**/*.test.ts",
+    "scripts/**/*.test.ts",
+  ],
   {
     absolute: true,
     cwd: repositoryRoot,

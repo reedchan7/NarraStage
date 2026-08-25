@@ -29,6 +29,36 @@ describe("typed API client", () => {
     expect(JSON.stringify(api)).not.toContain("apiKey");
   });
 
+  test("pings a stored provider without sending the secret over HTTP", async () => {
+    const fetchMock = vi.fn(() =>
+      Promise.resolve(
+        new Response(
+          JSON.stringify({
+            code: 200,
+            message: "ok",
+            data: {
+              schemaVersion: "2.0.0",
+              providerId: "deepseek",
+              health: "healthy",
+              offerings: [],
+            },
+          }),
+          { status: 200 },
+        ),
+      ),
+    );
+    globalThis.fetch = fetchMock as typeof fetch;
+
+    await expect(api.healthCheck("Bearer signed", "deepseek")).resolves.toMatchObject({
+      providerId: "deepseek",
+      health: "healthy",
+    });
+    expect(fetchMock.mock.calls[0]?.[0]).toBe("/api/v2/providers/deepseek/health-check");
+    expect(fetchMock.mock.calls[0]?.[1]).toMatchObject({ method: "POST" });
+    expect(JSON.stringify(fetchMock.mock.calls[0]?.[1])).not.toContain("sk-");
+    expect(JSON.stringify(fetchMock.mock.calls[0]?.[1])).not.toContain("apiKey");
+  });
+
   test("preserves visible server failures", async () => {
     globalThis.fetch = vi.fn(() =>
       Promise.resolve(
@@ -38,6 +68,65 @@ describe("typed API client", () => {
       ),
     ) as typeof fetch;
     await expect(api.login("reed", "wrong")).rejects.toEqual(new ApiError("用户名或密码错误", 400));
+  });
+
+  test("reads and writes simple-mode agent model bindings over the setting contract", async () => {
+    const fetchMock = vi.fn((input: RequestInfo | URL) => {
+      const path = String(input);
+      if (path.includes("getAgentDeploy")) {
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              code: 200,
+              message: "ok",
+              data: {
+                qrdinaryData: [
+                  {
+                    id: 1,
+                    key: "scriptAgent",
+                    name: "剧本Agent",
+                    desc: "决策",
+                    model: "",
+                    modelName: "",
+                    vendorId: null,
+                    disabled: 0,
+                  },
+                ],
+                advancedData: [],
+              },
+            }),
+          ),
+        );
+      }
+      return Promise.resolve(
+        new Response(JSON.stringify({ code: 200, message: "配置成功", data: "配置成功" })),
+      );
+    });
+    globalThis.fetch = fetchMock as typeof fetch;
+
+    await expect(api.agentDeploy("Bearer signed")).resolves.toMatchObject({
+      qrdinaryData: [{ key: "scriptAgent", modelName: "" }],
+    });
+    await expect(
+      api.updateAgentModel("Bearer signed", {
+        id: 1,
+        name: "剧本Agent",
+        desc: "决策",
+        model: "DeepSeek V4 Flash",
+        modelName: "deepseek:v4-flash:official",
+        vendorId: "deepseek",
+      }),
+    ).resolves.toBe("配置成功");
+    expect(fetchMock.mock.calls.map(([path]) => path)).toEqual([
+      "/api/setting/agentDeploy/getAgentDeploy",
+      "/api/setting/agentDeploy/updateAgentModel",
+    ]);
+    expect(JSON.parse(String(fetchMock.mock.calls[1]?.[1]?.body))).toMatchObject({
+      id: 1,
+      modelName: "deepseek:v4-flash:official",
+      vendorId: "deepseek",
+    });
+    expect(fetchMock.mock.calls[0]?.[1]).toMatchObject({ method: "POST" });
   });
 
   test("uses the server-owned scriptAgent memory contract for history and clearing", async () => {

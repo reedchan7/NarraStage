@@ -120,6 +120,40 @@ describe("provider connection probe", () => {
     });
   });
 
+  test("treats MiniMax auth success without creating a paid generation job", async () => {
+    const monitor = new ProviderHealthMonitor();
+    const vault = new MemoryCredentialVault();
+    await vault.set({ providerId: "minimax", slot: "apiKey" }, "test-key");
+    const requested: string[] = [];
+    const probe = new ProviderConnectionProbe({
+      credentialVault: vault,
+      healthMonitor: monitor,
+      fetch: async (url, init) => {
+        requested.push(`${init?.method ?? "GET"} ${url}`);
+        expect(new Headers(init?.headers).get("authorization")).toBe("Bearer test-key");
+        return Response.json({ object: "list", data: [{ id: "MiniMax-M2.7" }] });
+      },
+    });
+    expect(await probe.check("minimax")).toMatchObject({ health: "healthy" });
+    expect(requested).toEqual(["GET https://api.minimaxi.com/v1/models"]);
+    expect(monitor.get("minimax:h3:official")).toMatchObject({ health: "healthy" });
+  });
+
+  test("marks MiniMax as invalid when the platform rejects the key", async () => {
+    const monitor = new ProviderHealthMonitor();
+    const vault = new MemoryCredentialVault();
+    await vault.set({ providerId: "minimax", slot: "apiKey" }, "test-key");
+    const probe = new ProviderConnectionProbe({
+      credentialVault: vault,
+      healthMonitor: monitor,
+      fetch: async () => new Response("", { status: 401 }),
+    });
+    expect(await probe.check("minimax")).toMatchObject({
+      health: "unhealthy",
+      reasonCode: "credential.invalid",
+    });
+  });
+
   test("distinguishes invalid credentials from transient failures", async () => {
     const monitor = new ProviderHealthMonitor();
     const vault = new MemoryCredentialVault();

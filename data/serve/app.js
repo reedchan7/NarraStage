@@ -56049,6 +56049,19 @@ var init_manifest = __esm(() => {
   };
 });
 
+// apps/server/src/providers/adapters/minimax/h3Manifest.ts
+var miniMaxH3Manifest;
+var init_h3Manifest = __esm(() => {
+  miniMaxH3Manifest = {
+    offeringId: "minimax:h3:official",
+    providerModelId: "MiniMax-H3",
+    baseUrl: "https://api.minimaxi.com",
+    createPath: "/v2/video_generation",
+    queryPath: "/v2/query/video_generation",
+    cancelPath: "/v2/video_generation"
+  };
+});
+
 // apps/server/src/providers/availability/connectionProbe.ts
 import { createHash as createHash4 } from "node:crypto";
 function contentOperations(offering, methods) {
@@ -56092,6 +56105,8 @@ class ProviderConnectionProbe {
       return this.#checkGoogle(apiKey, offerings);
     if (providerId === "fal")
       return this.#checkFal(offerings);
+    if (providerId === "minimax")
+      return this.#checkMiniMax(apiKey, offerings);
     return this.#recordAll(providerId, offerings, inaccessible("provider.health_probe_unsupported"));
   }
   async#checkDeepSeek(apiKey, offerings) {
@@ -56185,6 +56200,21 @@ class ProviderConnectionProbe {
       }
     }
     return this.#recordPerOffering("google", results);
+  }
+  async#checkMiniMax(apiKey, offerings) {
+    try {
+      await this.#request(`${miniMaxH3Manifest.baseUrl}/v1/models`, {
+        headers: { Authorization: `Bearer ${apiKey}` }
+      });
+      return this.#recordAll("minimax", offerings, {
+        health: "healthy",
+        capabilitiesObserved: false,
+        supportedOperations: [],
+        revisionObserved: false
+      });
+    } catch (cause) {
+      return this.#recordAll("minimax", offerings, this.#failureOutcome(cause, true));
+    }
   }
   async#checkFal(offerings) {
     try {
@@ -56300,6 +56330,7 @@ var inaccessible = (reasonCode, health = "unhealthy") => ({
 var init_connectionProbe = __esm(() => {
   init_transport();
   init_manifest();
+  init_h3Manifest();
   init_builtinCatalog();
   ProviderProbeHttpError = class ProviderProbeHttpError extends Error {
     status;
@@ -62671,19 +62702,6 @@ var init_errors6 = __esm(() => {
       this.status = status;
       this.requestId = requestId3;
     }
-  };
-});
-
-// apps/server/src/providers/adapters/minimax/h3Manifest.ts
-var miniMaxH3Manifest;
-var init_h3Manifest = __esm(() => {
-  miniMaxH3Manifest = {
-    offeringId: "minimax:h3:official",
-    providerModelId: "MiniMax-H3",
-    baseUrl: "https://api.minimaxi.com",
-    createPath: "/v2/video_generation",
-    queryPath: "/v2/query/video_generation",
-    cancelPath: "/v2/video_generation"
   };
 });
 

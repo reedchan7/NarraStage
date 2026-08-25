@@ -102,6 +102,8 @@ type CatalogEnvelope =
   operations["getProviderCatalog"]["responses"][200]["content"]["application/json"];
 type ProviderEnvelope =
   operations["getProviderCredentialStatus"]["responses"][200]["content"]["application/json"];
+type HealthCheckEnvelope =
+  operations["checkProviderHealth"]["responses"][200]["content"]["application/json"];
 type SubmitJobOperation =
   operations["submitGenerationJob"]["requestBody"]["content"]["application/json"];
 type UploadAssetEnvelope =
@@ -116,6 +118,8 @@ export type Offering = CatalogResult["offerings"][number];
 export type ProviderStatusResult = ProviderEnvelope["data"];
 export type ProviderStatus = ProviderStatusResult["providers"][number];
 export type ProviderSlot = ProviderStatus["slots"][number];
+export type ProviderHealthCheckResult = HealthCheckEnvelope["data"];
+export type ProviderHealth = ProviderStatus["health"];
 export type SubmitGenerationJobInput = SubmitJobOperation;
 export type GenerationOperation = Extract<
   SubmitGenerationJobInput["operation"],
@@ -127,6 +131,35 @@ export type GenerationJobState = GenerationJob["state"];
 export type UploadAssetResult = UploadAssetEnvelope["data"];
 export type GenerationJobList = JobListEnvelope["data"];
 type ApiMeta = operations["getApiMeta"]["responses"][200]["content"]["application/json"];
+
+export interface AgentDeployRow {
+  id: number;
+  key: string;
+  name: string;
+  desc: string;
+  model: string;
+  modelName: string;
+  vendorId: string | null;
+  temperature?: number | null;
+  maxOutputTokens?: number | null;
+  disabled?: boolean | number | null;
+}
+
+export interface AgentDeployResult {
+  qrdinaryData: AgentDeployRow[];
+  advancedData: AgentDeployRow[];
+}
+
+export interface AgentModelUpdate {
+  id: number;
+  name: string;
+  desc: string;
+  model: string;
+  modelName: string;
+  vendorId: string | null;
+  temperature?: number;
+  maxOutputTokens?: number;
+}
 
 export class ApiError extends Error {
   readonly status: number;
@@ -198,21 +231,22 @@ async function assertApiCompatibility(): Promise<void> {
 
 export async function apiRequest<T>(
   path: `/api/${string}`,
-  options: RequestInit = {},
+  options: RequestInit & { timeoutMs?: number } = {},
   token?: string,
 ): Promise<T> {
+  const { timeoutMs = 20_000, ...request } = options;
   const controller = new AbortController();
-  const timeout = window.setTimeout(() => controller.abort(), 20_000);
-  const headers = new Headers(options.headers);
+  const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
+  const headers = new Headers(request.headers);
   headers.set("Accept", "application/json");
-  if (options.body && !headers.has("Content-Type")) {
+  if (request.body && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
   if (token) headers.set("Authorization", token);
 
   try {
     const response = await fetch(path, {
-      ...options,
+      ...request,
       headers,
       credentials: "same-origin",
       signal: controller.signal,
@@ -332,8 +366,29 @@ export const api = {
   providers(token: string) {
     return apiRequest<ProviderStatusResult>("/api/v2/providers", undefined, token);
   },
+  healthCheck(token: string, providerId: string) {
+    return apiRequest<ProviderHealthCheckResult>(
+      `/api/v2/providers/${encodeURIComponent(providerId)}/health-check`,
+      { method: "POST", timeoutMs: 60_000 },
+      token,
+    );
+  },
   catalog(token: string) {
     return apiRequest<CatalogResult>("/api/v2/catalog", undefined, token);
+  },
+  agentDeploy(token: string) {
+    return apiRequest<AgentDeployResult>(
+      "/api/setting/agentDeploy/getAgentDeploy",
+      { method: "POST" },
+      token,
+    );
+  },
+  updateAgentModel(token: string, input: AgentModelUpdate) {
+    return apiRequest<string>(
+      "/api/setting/agentDeploy/updateAgentModel",
+      { method: "POST", body: JSON.stringify(input) },
+      token,
+    );
   },
   async submitJob(token: string, input: SubmitGenerationJobInput) {
     await assertApiCompatibility();

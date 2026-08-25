@@ -4,10 +4,12 @@ import path from "node:path";
 
 describe("packaged contract provenance", () => {
   test("copies immutable contract artifacts into the Electron runtime data directory", async () => {
-    const mainSource = await readFile(path.join(process.cwd(), "apps/desktop/src/main.ts"), "utf8");
-    const builderSource = await readFile(path.join(process.cwd(), "electron-builder.yml"), "utf8");
+    const [runtimeSource, builderSource] = await Promise.all([
+      readFile(path.join(process.cwd(), "apps/desktop/src/runtimeData.ts"), "utf8"),
+      readFile(path.join(process.cwd(), "electron-builder.yml"), "utf8"),
+    ]);
 
-    expect(mainSource).toContain('"contracts"');
+    expect(runtimeSource).toContain('"contracts"');
     expect(builderSource).toContain("- from: data");
     expect(builderSource).not.toContain("!contracts/**");
   });
@@ -31,12 +33,17 @@ describe("packaged contract provenance", () => {
   });
 
   test("replaces immutable runtime code while preserving user-editable vendors and skills", async () => {
-    const mainSource = await readFile(path.join(process.cwd(), "apps/desktop/src/main.ts"), "utf8");
+    const [mainSource, runtimeSource] = await Promise.all([
+      readFile(path.join(process.cwd(), "apps/desktop/src/main.ts"), "utf8"),
+      readFile(path.join(process.cwd(), "apps/desktop/src/runtimeData.ts"), "utf8"),
+    ]);
 
-    expect(mainSource).toContain('const IMMUTABLE_RUNTIME_ENTRIES = new Set(["assets"');
-    expect(mainSource).toContain('const MUTABLE_RUNTIME_ENTRIES = new Set(["skills", "vendor"])');
-    expect(mainSource).toContain("for (const dir of MUTABLE_RUNTIME_ENTRIES)");
-    expect(mainSource).not.toMatch(/rmSync\([^\n]+MUTABLE_RUNTIME_ENTRIES/);
+    expect(mainSource).toContain("initializeRuntimeData");
+    expect(runtimeSource).toContain('export const IMMUTABLE_RUNTIME_ENTRIES = ["assets"');
+    expect(runtimeSource).toContain('export const MUTABLE_RUNTIME_ENTRIES = ["skills", "vendor"]');
+    expect(runtimeSource).toContain("for (const dir of MUTABLE_RUNTIME_ENTRIES)");
+    expect(runtimeSource).toContain("RUNTIME_PROVENANCE_STAMP");
+    expect(runtimeSource).not.toMatch(/rmSync\([^\n]+MUTABLE_RUNTIME_ENTRIES/);
   });
 
   test("packages Web only after generated contract provenance is verified", async () => {

@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { HashRouter, Navigate, Outlet, Route, Routes } from "react-router-dom";
 import { AppShell } from "@/components/AppShell";
 import { DesktopTitlebar } from "@/components/DesktopTitlebar";
+import { AppearanceSync } from "@/state/appearance";
 import { LoginPage } from "@/pages/LoginPage";
 import { AssetsPage } from "@/pages/AssetsPage";
 import { JobsPage } from "@/pages/JobsPage";
@@ -43,8 +44,9 @@ export function App() {
   const isDesktop = Boolean(window.narrastageWindow);
   return (
     <QueryClientProvider client={queryClient}>
+      <AppearanceSync />
       <DesktopTitlebar />
-      <div className={isDesktop ? "desktop-content" : undefined}>
+      <div className={isDesktop ? "app-frame desktop-content" : "app-frame"}>
         <HashRouter>
           <Routes>
             <Route path="/login" element={<LoginRoute />} />

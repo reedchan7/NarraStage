@@ -7,17 +7,36 @@ import {
   KeyRound,
   ListChecks,
   LogOut,
+  Monitor,
+  Moon,
   PanelsTopLeft,
+  Sun,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { NavLink } from "react-router-dom";
-import { localeLabels, type Locale } from "@/i18n/messages";
+import { localeLabels, type Locale, type MessageKey } from "@/i18n/messages";
 import { useI18n } from "@/i18n/useI18n";
+import { THEME_PREFERENCES } from "@/state/appearance";
+import { usePreferences, type ThemePreference } from "@/state/preferences";
 import { useSession } from "@/state/session";
 import { useWorkspace } from "@/state/workspace";
 
+const themeIcons = {
+  light: Sun,
+  dark: Moon,
+  system: Monitor,
+} as const;
+
+const themeLabels: Record<ThemePreference, MessageKey> = {
+  light: "settings.theme.light",
+  dark: "settings.theme.dark",
+  system: "settings.theme.system",
+};
+
 export function AppShell({ children }: { children: ReactNode }) {
   const { locale, setLocale, t } = useI18n();
+  const theme = usePreferences((state) => state.theme);
+  const setTheme = usePreferences((state) => state.setTheme);
   const session = useSession((state) => state.session);
   const signOut = useSession((state) => state.signOut);
   const projectId = useWorkspace((state) => state.projectId);
@@ -64,8 +83,27 @@ export function AppShell({ children }: { children: ReactNode }) {
         </nav>
 
         <div className="sidebar-footer">
+          <div className="theme-switch" role="radiogroup" aria-label={t("settings.theme")}>
+            {THEME_PREFERENCES.map((value) => {
+              const Icon = themeIcons[value];
+              const label = t(themeLabels[value]);
+              return (
+                <label key={value} title={label}>
+                  <input
+                    type="radio"
+                    name="appearance"
+                    value={value}
+                    checked={theme === value}
+                    aria-label={label}
+                    onChange={() => setTheme(value)}
+                  />
+                  <Icon size={15} strokeWidth={2.1} aria-hidden="true" />
+                </label>
+              );
+            })}
+          </div>
           <label className="locale-control">
-            <span className="sr-only">Language</span>
+            <span className="sr-only">{t("settings.language")}</span>
             <select
               value={locale}
               onChange={(event) => setLocale(event.currentTarget.value as Locale)}
