@@ -7,6 +7,7 @@ PORT ?= 10588
 DATA_DIR ?= $(CURDIR)/data
 APP_BUNDLE ?= NarraStage.app
 APPLICATIONS_DIR ?= /Applications
+INSTALLED_APP := $(APPLICATIONS_DIR)/$(APP_BUNDLE)
 UNAME_S := $(shell uname -s)
 UNAME_M := $(shell uname -m)
 
@@ -125,7 +126,7 @@ ci: ## 运行完整 CI 检查和构建
 	$(BUN) run ci
 
 ##@ 构建
-.PHONY: web-build web-package build pack pack-local install-app dist dist-win dist-mac dist-linux
+.PHONY: web-build web-package build pack pack-local install-app open dist dist-win dist-mac dist-linux
 web-build: ## 构建 Web 客户端
 	$(BUN) run web:build
 
@@ -146,10 +147,27 @@ install-app: ## 将本机桌面应用安装到 /Applications（仅 macOS；缺�
 	@if pgrep -x NarraStage >/dev/null; then echo "请先退出正在运行的 NarraStage，再执行 make install-app" >&2; exit 1; fi
 	@if [ ! -d "$(MAC_PACK_DIR)/$(APP_BUNDLE)" ]; then $(MAKE) pack-local; fi
 	@test -d "$(MAC_PACK_DIR)/$(APP_BUNDLE)" || { echo "未找到 $(MAC_PACK_DIR)/$(APP_BUNDLE)" >&2; exit 1; }
-	rm -rf "$(APPLICATIONS_DIR)/$(APP_BUNDLE)"
-	ditto "$(MAC_PACK_DIR)/$(APP_BUNDLE)" "$(APPLICATIONS_DIR)/$(APP_BUNDLE)"
-	-xattr -cr "$(APPLICATIONS_DIR)/$(APP_BUNDLE)"
-	@echo "已安装到 $(APPLICATIONS_DIR)/$(APP_BUNDLE)"
+	rm -rf "$(INSTALLED_APP)"
+	ditto "$(MAC_PACK_DIR)/$(APP_BUNDLE)" "$(INSTALLED_APP)"
+	-xattr -cr "$(INSTALLED_APP)"
+	@echo "已安装到 $(INSTALLED_APP)"
+
+open: ## 打包、安装并启动本机桌面应用（仅 macOS；继承当前环境变量）
+	@if [ "$(UNAME_S)" != "Darwin" ]; then echo "open 仅支持 macOS" >&2; exit 1; fi
+	$(MAKE) pack-local
+	@if pgrep -x NarraStage >/dev/null; then \
+		echo "正在退出已运行的 NarraStage…"; \
+		osascript -e 'tell application "NarraStage" to quit' >/dev/null 2>&1 || true; \
+		n=0; \
+		while pgrep -x NarraStage >/dev/null; do \
+			n=$$((n+1)); \
+			if [ $$n -ge 20 ]; then pkill -x NarraStage >/dev/null 2>&1 || true; break; fi; \
+			sleep 0.5; \
+		done; \
+	fi
+	@$(MAKE) --no-print-directory install-app
+	@"$(INSTALLED_APP)/Contents/MacOS/NarraStage" >/dev/null 2>&1 &
+	@echo "已启动 $(INSTALLED_APP)"
 
 dist: ## 构建当前平台安装包
 	$(BUN) run dist
